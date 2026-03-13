@@ -70,6 +70,8 @@ jobs:
             --base-url "${{ inputs.target_url }}" \
             --max-routes 1 \
             --skip-patterns \
+            --with-reports \
+            --output src/engine/.audit/report.html \
             $PROJECT_DIR_ARG \
             $AXE_TAGS_ARG
 
@@ -94,11 +96,7 @@ jobs:
           # checklist
           cp src/engine/.audit/checklist.html out/checklist.html 2>/dev/null || echo "<html><body>No checklist generated</body></html>" > out/checklist.html
           # PDF
-          if ls src/engine/.audit/*.pdf 1>/dev/null 2>&1; then
-            cp src/engine/.audit/*.pdf out/stakeholder.pdf
-          else
-            touch out/stakeholder.pdf
-          fi
+          cp src/engine/.audit/report.pdf out/stakeholder.pdf 2>/dev/null || touch out/stakeholder.pdf
 
       - name: Upload scan artifact
         uses: actions/upload-artifact@v4
