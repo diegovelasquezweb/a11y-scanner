@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback, useEffect, useId } from "react";
+import { useState, useCallback, useId } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import type { Finding, SeverityTotals } from "@/types/scan";
 
 const FIXED_JIRA_BASE_URL = "https://wondersauce.atlassian.net";
-const STORAGE_KEY = "a11y_jira_settings";
+
 
 // Wondersauce Jira issue type IDs (from /rest/api/2/project/{key})
 const ISSUE_TYPE_MAP: Record<string, string> = {
@@ -18,7 +18,6 @@ const ISSUE_TYPE_MAP: Record<string, string> = {
 const ISSUE_TYPE_OPTIONS = Object.keys(ISSUE_TYPE_MAP);
 
 interface JiraSettings {
-  projectKey: string;
   pid: string;
   issueType: string;
 }
@@ -31,34 +30,11 @@ interface JiraIntegrationProps {
 }
 
 const defaultSettings: JiraSettings = {
-  projectKey: "",
   pid: "",
   issueType: "Task",
 };
 
-function loadSettings(): JiraSettings {
-  if (typeof window === "undefined") return defaultSettings;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultSettings;
-    const parsed = JSON.parse(raw) as Partial<JiraSettings>;
-    return {
-      projectKey: parsed.projectKey || "",
-      pid: parsed.pid || "",
-      issueType: parsed.issueType || "Task",
-    };
-  } catch {
-    return defaultSettings;
-  }
-}
 
-function saveSettings(settings: JiraSettings): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-  } catch {
-    // silent fail
-  }
-}
 
 function buildJiraPayload(
   targetUrl: string,
@@ -112,13 +88,8 @@ export function JiraIntegration({
   const [settings, setSettings] = useState<JiraSettings>(defaultSettings);
   const [feedback, setFeedback] = useState("");
 
-  const projectKeyFieldId = useId();
   const pidFieldId = useId();
   const issueTypeFieldId = useId();
-
-  useEffect(() => {
-    setSettings(loadSettings());
-  }, []);
 
   const isConfigured = Boolean(settings.pid.trim());
 
@@ -129,7 +100,6 @@ export function JiraIntegration({
 
   const handleSendToJira = useCallback(async () => {
     const next: JiraSettings = {
-      projectKey: settings.projectKey.trim().toUpperCase(),
       pid: settings.pid.trim(),
       issueType: settings.issueType.trim() || "Task",
     };
@@ -140,7 +110,6 @@ export function JiraIntegration({
     }
 
     setSettings(next);
-    saveSettings(next);
 
     const { summary, description } = buildJiraPayload(targetUrl, totals, findings);
     const issueTypeId = ISSUE_TYPE_MAP[next.issueType] || ISSUE_TYPE_MAP.Task;
@@ -168,7 +137,7 @@ export function JiraIntegration({
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
               <span className="text-sm text-slate-700 font-medium truncate">
-                Jira: <span className="font-bold text-slate-900">{settings.projectKey || `pid:${settings.pid}`}</span>
+                Jira: <span className="font-bold text-slate-900">pid:{settings.pid}</span>
                 <span className="text-slate-400 ml-1">@ wondersauce.atlassian.net</span>
               </span>
             </>
@@ -221,7 +190,7 @@ export function JiraIntegration({
                   Send to Jira
                 </Dialog.Title>
                 <Dialog.Description className="text-sm text-slate-500 mt-1">
-                  Opens a prefilled Jira issue on wondersauce.atlassian.net.
+                  Opens a prefilled Jira issue.
                   You must be logged in to Jira in your browser.
                 </Dialog.Description>
               </div>
@@ -246,25 +215,6 @@ export function JiraIntegration({
               className="space-y-4"
             >
               <div>
-                <label htmlFor={projectKeyFieldId} className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  Project Key
-                </label>
-                <input
-                  id={projectKeyFieldId}
-                  type="text"
-                  value={settings.projectKey}
-                  onChange={(e) =>
-                    setSettings((prev) => ({ ...prev, projectKey: e.target.value.toUpperCase() }))
-                  }
-                  placeholder="SANDBOX"
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors uppercase"
-                />
-                <p className="text-xs text-slate-400 mt-1.5">
-                  Optional label for display (e.g. WEB, PROJ)
-                </p>
-              </div>
-
-              <div>
                 <label htmlFor={pidFieldId} className="block text-sm font-semibold text-slate-700 mb-1.5">
                   Project ID <span className="text-rose-500">*</span>
                 </label>
@@ -276,11 +226,11 @@ export function JiraIntegration({
                   onChange={(e) =>
                     setSettings((prev) => ({ ...prev, pid: e.target.value.replace(/\D/g, "") }))
                   }
-                  placeholder="10001"
+                  placeholder="16368"
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                 />
                 <p className="text-xs text-slate-400 mt-1.5">
-                  Numeric Jira project ID. Find it in Jira project settings or any issue JSON.
+                  &#123;JIRA_DOMAIN&#125;/rest/api/2/project/&#123;PROJECT_KEY&#125;
                 </p>
               </div>
 
