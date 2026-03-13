@@ -227,15 +227,15 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5 min-w-0">
             {hasError ? (
-              <svg className="w-4 h-4 text-rose-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <svg className="w-4 h-4 text-rose-500 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
             ) : allDone ? (
-              <svg className="w-4 h-4 text-emerald-500 flex-shrink-0 motion-reduce:transition-none" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <svg className="w-4 h-4 text-emerald-500 shrink-0 motion-reduce:transition-none" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
             ) : (
-              <span className="w-4 h-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin motion-reduce:animate-none flex-shrink-0" aria-hidden="true" />
+              <span className="w-4 h-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin motion-reduce:animate-none shrink-0" aria-hidden="true" />
             )}
             <span className={`text-sm font-bold truncate ${hasError ? "text-rose-700" : allDone ? "text-emerald-700" : "text-slate-800"}`}>
               {hasError
@@ -245,7 +245,7 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
                   : `Step ${doneCount + 1} of ${TOTAL_STEPS}`}
             </span>
           </div>
-          <span className="flex-shrink-0 text-xs font-medium text-slate-500 tabular-nums">
+          <span className="shrink-0 text-xs font-medium text-slate-500 tabular-nums">
             {elapsed.toFixed(1)}s
           </span>
         </div>
@@ -307,7 +307,7 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
           <div className="space-y-1.5">
             {completedSteps.map((step) => (
               <div key={step.key} className="flex items-center gap-2 text-xs motion-reduce:animate-none animate-in fade-in-0 slide-in-from-top-1 duration-300">
-                <svg className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <svg className="w-3.5 h-3.5 text-emerald-500 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 <span className="text-slate-600">{step.label}</span>

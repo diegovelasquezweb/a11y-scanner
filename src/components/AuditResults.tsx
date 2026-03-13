@@ -27,6 +27,7 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
   const [filterValue, setFilterValue] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [allExpanded, setAllExpanded] = useState(false);
+  const [jiraOpen, setJiraOpen] = useState(false);
 
   const filteredFindings = useMemo((): Finding[] => {
     let findings = result.findings;
@@ -66,14 +67,7 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
   }, []);
 
   return (
-    <div id="results">
-      <JiraIntegration
-        targetUrl={result.targetUrl}
-        totals={result.totals}
-        findings={result.findings}
-        scanId={scanId}
-        onRunNewTest={onRunNewTest || (() => window.location.assign("/"))}
-      />
+    <div id="results" className="pb-28">
 
       <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -185,6 +179,82 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
         )}
       </div>
 
+      {/* Fixed action footer */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none">
+        <nav
+          aria-label="Scan actions"
+          className="pointer-events-auto mb-5 flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200/80 shadow-2xl shadow-slate-900/10"
+        >
+          {/* New Scan */}
+          <FooterAction
+            label="New Scan"
+            onClick={onRunNewTest || (() => window.location.assign("/"))}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            }
+          />
+
+          <div className="w-px h-8 bg-slate-200 mx-1" aria-hidden="true" />
+
+          {/* Configure Jira */}
+          <FooterAction
+            label="Configure Jira"
+            onClick={() => setJiraOpen(true)}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            }
+          />
+
+          {/* Send to Jira */}
+          <FooterAction
+            label="Send to Jira"
+            onClick={() => setJiraOpen(true)}
+            variant="primary"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+            }
+          />
+
+          {/* Stakeholder Report (PDF) */}
+          <FooterAction
+            label="Stakeholder Report"
+            onClick={() => window.open(`/api/scan/${scanId}/pdf`, "_blank", "noopener,noreferrer")}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            }
+          />
+
+          {/* Manual Checklist */}
+          <FooterAction
+            label="Checklist"
+            onClick={() => window.open(`/api/scan/${scanId}/checklist`, "_blank", "noopener,noreferrer")}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            }
+          />
+        </nav>
+      </div>
+
+      {/* Jira dialog — controlled from footer */}
+      <JiraIntegration
+        targetUrl={result.targetUrl}
+        totals={result.totals}
+        findings={result.findings}
+        open={jiraOpen}
+        onOpenChange={setJiraOpen}
+      />
+
       <footer className="mt-10 py-6 border-t border-slate-200 text-center">
         <p className="text-slate-600 text-sm font-medium">
           Powered by{" "}
@@ -199,5 +269,33 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
         </p>
       </footer>
     </div>
+  );
+}
+
+interface FooterActionProps {
+  label: string;
+  onClick: () => void;
+  icon: React.ReactNode;
+  variant?: "default" | "primary";
+}
+
+function FooterAction({ label, onClick, icon, variant = "default" }: FooterActionProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all group ${
+        variant === "primary"
+          ? "bg-sky-600 text-white hover:bg-sky-700 shadow-md shadow-sky-600/20"
+          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+      }`}
+    >
+      <span className={`transition-transform group-hover:scale-110 ${variant === "primary" ? "text-white" : ""}`}>
+        {icon}
+      </span>
+      <span className="text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
+        {label}
+      </span>
+    </button>
   );
 }
