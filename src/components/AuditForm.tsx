@@ -1,0 +1,240 @@
+"use client";
+
+import { useState, useRef, useId } from "react";
+import type { ScanStatus } from "@/types/scan";
+
+interface AuditFormProps {
+  status: ScanStatus;
+  errorMessage: string;
+  onSubmit: (targetUrl: string, githubRepoUrl: string) => void;
+}
+
+export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
+  const [targetUrl, setTargetUrl] = useState("");
+  const [githubRepoUrl, setGithubRepoUrl] = useState("");
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const targetInputRef = useRef<HTMLInputElement>(null);
+  const targetErrorId = useId();
+  const repoErrorId = useId();
+  const statusId = useId();
+
+  const validate = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (!targetUrl.trim()) {
+      errors.targetUrl = "Target URL is required.";
+    } else {
+      try {
+        const parsed = new URL(targetUrl);
+        if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+          errors.targetUrl = "URL must start with https:// or http://";
+        }
+      } catch {
+        errors.targetUrl = "Please enter a valid URL (e.g. https://example.com).";
+      }
+    }
+
+    if (githubRepoUrl.trim()) {
+      try {
+        const parsed = new URL(githubRepoUrl);
+        if (parsed.hostname !== "github.com") {
+          errors.githubRepoUrl = "Must be a GitHub URL (https://github.com/owner/repo).";
+        } else if (parsed.pathname.split("/").filter(Boolean).length < 2) {
+          errors.githubRepoUrl = "Must include owner and repo (https://github.com/owner/repo).";
+        }
+      } catch {
+        errors.githubRepoUrl = "Please enter a valid GitHub URL.";
+      }
+    }
+
+    setValidationErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      targetInputRef.current?.focus();
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (status === "running") return;
+    if (!validate()) return;
+    onSubmit(targetUrl.trim(), githubRepoUrl.trim());
+  };
+
+  const isRunning = status === "running";
+
+  return (
+    <div className="premium-card rounded-2xl p-8 mb-12">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="px-3 h-10 rounded-lg bg-slate-900 text-white font-bold text-base font-mono flex items-center justify-center shadow-md">
+          a11y
+        </div>
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-900">
+            Web Accessibility Scanner
+          </h1>
+          <p className="text-sm text-slate-500">
+            WCAG 2.2 AA audit powered by axe-core + Playwright
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} noValidate>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Target URL */}
+          <div>
+            <label
+              htmlFor="target-url"
+              className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2"
+            >
+              Target URL <span className="text-rose-500">*</span>
+            </label>
+            <input
+              ref={targetInputRef}
+              type="url"
+              id="target-url"
+              value={targetUrl}
+              onChange={(e) => {
+                setTargetUrl(e.target.value);
+                if (validationErrors.targetUrl) {
+                  setValidationErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.targetUrl;
+                    return next;
+                  });
+                }
+              }}
+              placeholder="https://example.com"
+              required
+              aria-describedby={
+                validationErrors.targetUrl ? targetErrorId : undefined
+              }
+              aria-invalid={!!validationErrors.targetUrl}
+              disabled={isRunning}
+              className={`w-full px-4 py-3 bg-white border rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm ${
+                validationErrors.targetUrl
+                  ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/10"
+                  : "border-slate-200"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            />
+            {validationErrors.targetUrl && (
+              <p
+                id={targetErrorId}
+                className="mt-2 text-xs font-medium text-rose-600"
+                role="alert"
+              >
+                {validationErrors.targetUrl}
+              </p>
+            )}
+          </div>
+
+          {/* GitHub Repo URL */}
+          <div>
+            <label
+              htmlFor="github-repo"
+              className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2"
+            >
+              GitHub Repo URL{" "}
+              <span className="text-slate-400 font-normal normal-case tracking-normal">
+                (optional, enables source pattern scan)
+              </span>
+            </label>
+            <input
+              type="url"
+              id="github-repo"
+              value={githubRepoUrl}
+              onChange={(e) => {
+                setGithubRepoUrl(e.target.value);
+                if (validationErrors.githubRepoUrl) {
+                  setValidationErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.githubRepoUrl;
+                    return next;
+                  });
+                }
+              }}
+              placeholder="https://github.com/owner/repo"
+              aria-describedby={
+                validationErrors.githubRepoUrl ? repoErrorId : undefined
+              }
+              aria-invalid={!!validationErrors.githubRepoUrl}
+              disabled={isRunning}
+              className={`w-full px-4 py-3 bg-white border rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm ${
+                validationErrors.githubRepoUrl
+                  ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/10"
+                  : "border-slate-200"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            />
+            {validationErrors.githubRepoUrl && (
+              <p
+                id={repoErrorId}
+                className="mt-2 text-xs font-medium text-rose-600"
+                role="alert"
+              >
+                {validationErrors.githubRepoUrl}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <button
+            type="submit"
+            disabled={isRunning}
+            className="px-8 py-3 bg-slate-900 text-white font-bold text-sm rounded-2xl shadow-md hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {isRunning ? (
+              <>
+                <svg
+                  className="animate-spin h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Scanning...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Run Audit
+              </>
+            )}
+          </button>
+
+          {/* Status indicator */}
+          <div aria-live="polite" aria-atomic="true" id={statusId}>
+            {isRunning && (
+              <p className="text-sm text-slate-500 font-medium">
+                Running accessibility scan... This may take up to 60 seconds.
+              </p>
+            )}
+            {status === "error" && errorMessage && (
+              <p className="text-sm text-rose-600 font-medium" role="alert">
+                {errorMessage}
+              </p>
+            )}
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}

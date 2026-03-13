@@ -1,26 +1,115 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+  --color-primary-light: hsl(var(--primary-h), var(--primary-s), 95%);
+  --color-primary-dark: hsl(var(--primary-h), var(--primary-s), 30%);
+  --font-sans: "Inter", "Outfit", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --primary-h: 226;
+  --primary-s: 70%;
+  --primary-l: 50%;
+}
+
+html {
+  scroll-padding-top: 80px;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.011em;
+}
+
+/* Glass header */
+.glass-header {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+
+/* Premium card */
+.premium-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.08),
+    0 4px 6px -2px rgba(0, 0, 0, 0.04);
+}
+
+/* Issue card left border by severity */
+.issue-card {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.issue-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 4px 0 0 4px;
+  opacity: 0.8;
+}
+
+.issue-card[data-severity="Critical"]::before {
+  background: #e11d48;
+}
+.issue-card[data-severity="Serious"]::before {
+  background: #f97316;
+}
+.issue-card[data-severity="Moderate"]::before {
+  background: #f59e0b;
+}
+.issue-card[data-severity="Minor"]::before {
+  background: #10b981;
+}
+
+/* Score gauge */
+.score-gauge {
+  transform: rotate(-90deg);
+}
+.score-gauge-bg {
+  fill: none;
+  stroke: #f1f5f9;
+  stroke-width: 3;
+}
+.score-gauge-val {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 1s ease-out;
+}
+
+/* Card body expand/collapse */
+.card-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+.card-body.expanded {
+  grid-template-rows: 1fr;
+}
+.card-body > div {
+  overflow: hidden;
 }
