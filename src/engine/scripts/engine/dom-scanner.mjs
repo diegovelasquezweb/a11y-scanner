@@ -25,6 +25,10 @@ const STACK_DETECTION = loadAssetJson(
   ASSET_PATHS.discovery.stackDetection,
   "assets/discovery/stack-detection.json",
 );
+const WCAG_REFERENCE = loadAssetJson(
+  ASSET_PATHS.reporting.wcagReference,
+  "assets/reporting/wcag-reference.json",
+);
 const AXE_TAGS = [
   "wcag2a",
   "wcag2aa",
@@ -622,10 +626,13 @@ async function runCdpChecks(page) {
           }
         } catch { /* fallback: no selector */ }
 
+        const cdpNameMeta = CDP_RULE_MAP["cdp-missing-accessible-name"] || {};
         violations.push({
           id: "cdp-missing-accessible-name",
+          canonical_rule_id: cdpNameMeta.canonical || "button-name",
+          wcag_criterion_id: cdpNameMeta.wcagCriterionId || "4.1.2",
           impact: "serious",
-          tags: ["wcag2a", "wcag412", "cdp-check"],
+          tags: cdpNameMeta.tags || ["wcag2a", "wcag412", "cdp-check"],
           description: `Interactive element with role "${role}" has no accessible name`,
           help: "Interactive elements must have an accessible name",
           helpUrl: "https://dequeuniversity.com/rules/axe/4.11/button-name",
@@ -650,10 +657,13 @@ async function runCdpChecks(page) {
 
       // Check: aria-hidden on focusable elements
       if (hidden && focusable) {
+        const cdpHiddenMeta = CDP_RULE_MAP["cdp-aria-hidden-focusable"] || {};
         violations.push({
           id: "cdp-aria-hidden-focusable",
+          canonical_rule_id: cdpHiddenMeta.canonical || "aria-hidden-focus",
+          wcag_criterion_id: cdpHiddenMeta.wcagCriterionId || "4.1.2",
           impact: "serious",
-          tags: ["wcag2a", "wcag412", "cdp-check"],
+          tags: cdpHiddenMeta.tags || ["wcag2a", "wcag412", "cdp-check"],
           description: `Focusable element with role "${role}" is aria-hidden`,
           help: "aria-hidden elements must not be focusable",
           helpUrl: "https://dequeuniversity.com/rules/axe/4.11/aria-hidden-focus",
@@ -682,6 +692,60 @@ async function runCdpChecks(page) {
     log.warn(`CDP checks failed (non-fatal): ${err.message}`);
   }
   return violations;
+}
+
+/**
+ * Pa11y technique → canonical axe rule ID map.
+ * Loaded from wcag-reference.json (pa11yCanonicalMap key).
+ * @type {Object<string, string>}
+ */
+const PA11Y_CANONICAL_MAP = WCAG_REFERENCE.pa11yCanonicalMap || {};
+
+/**
+ * CDP rule metadata loaded from wcag-reference.json.
+ * Maps CDP rule IDs to canonical axe equivalents for dedup and enrichment.
+ * @type {Object<string, { canonical: string, axeEquivalents: string[], wcagCriterionId: string, tags: string[] }>}
+ */
+const CDP_RULE_MAP = WCAG_REFERENCE.cdpRuleMap || {};
+
+/**
+ * Given a pa11y issue.code (e.g. "WCAG2AA.Principle1.Guideline1_4.1_4_3.G145.Fail"),
+ * returns the canonical axe rule ID or null.
+ * @param {string} code - The pa11y issue code.
+ * @returns {{ canonicalRuleId: string|null, wcagCriterionId: string|null }}
+ */
+function canonicalizePa11yCode(code) {
+  let wcagCriterionId = null;
+  let canonicalRuleId = null;
+
+  if (!code) return { canonicalRuleId, wcagCriterionId };
+
+  // Extract WCAG criterion: e.g. "1_4_3" → "1.4.3"
+  const wcagMatch = code.match(/Guideline(\d+)_(\d+)\.(\d+)_(\d+)_(\d+)/);
+  if (wcagMatch) {
+    wcagCriterionId = `${wcagMatch[3]}.${wcagMatch[4]}.${wcagMatch[5]}`;
+  }
+
+  // Extract technique fragment: everything after the criterion segment
+  // e.g. "WCAG2AA.Principle1.Guideline1_4.1_4_3.G145.Fail" → "G145.Fail"
+  const parts = code.split(".");
+  // Find index of the criterion part (e.g. "1_4_3")
+  let techStartIdx = -1;
+  for (let i = 0; i < parts.length; i++) {
+    if (/^\d+_\d+(_\d+)?$/.test(parts[i])) {
+      techStartIdx = i + 1;
+      break;
+    }
+  }
+
+  if (techStartIdx > 0 && techStartIdx < parts.length) {
+    const techFragment = parts.slice(techStartIdx).join(".").toLowerCase();
+    if (PA11Y_CANONICAL_MAP[techFragment]) {
+      canonicalRuleId = PA11Y_CANONICAL_MAP[techFragment];
+    }
+  }
+
+  return { canonicalRuleId, wcagCriterionId };
 }
 
 /**
@@ -725,20 +789,21 @@ async function runPa11yChecks(routeUrl, axeTags) {
 
       const impact = impactMap[issue.typeCode] || "moderate";
 
-      // Extract WCAG criterion from pa11y code (e.g., "WCAG2AA.Principle1.Guideline1_3.1_3_1.H71.SameName")
-      let wcagCriterion = "";
-      const wcagMatch = issue.code?.match(/Guideline(\d+)_(\d+)\.(\d+)_(\d+)_(\d+)/);
-      if (wcagMatch) {
-        wcagCriterion = `${wcagMatch[3]}.${wcagMatch[4]}.${wcagMatch[5]}`;
-      }
+      // Canonicalize pa11y code → axe rule ID + WCAG criterion
+      const { canonicalRuleId, wcagCriterionId } = canonicalizePa11yCode(issue.code);
 
-      // Create a stable rule ID from the pa11y code
-      const ruleId = `pa11y-${(issue.code || "unknown").replace(/\./g, "-").toLowerCase().slice(0, 60)}`;
+      // The "id" field uses the canonical rule ID when available for intelligence lookup,
+      // otherwise falls back to the original pa11y-prefixed ID.
+      const sourceRuleId = `pa11y-${(issue.code || "unknown").replace(/\./g, "-").toLowerCase().slice(0, 60)}`;
+      const ruleId = canonicalRuleId || sourceRuleId;
 
       violations.push({
         id: ruleId,
+        source_rule_id: sourceRuleId,
+        canonical_rule_id: canonicalRuleId,
+        wcag_criterion_id: wcagCriterionId,
         impact,
-        tags: ["pa11y-check", ...(wcagCriterion ? [`wcag${wcagCriterion.replace(/\./g, "")}`] : [])],
+        tags: ["pa11y-check", ...(wcagCriterionId ? [`wcag${wcagCriterionId.replace(/\./g, "")}`] : [])],
         description: issue.message || "pa11y detected an accessibility issue",
         help: issue.message?.split(".")[0] || "Accessibility issue detected by HTML CodeSniffer",
         helpUrl: wcagCriterion
@@ -769,52 +834,96 @@ async function runPa11yChecks(routeUrl, axeTags) {
 }
 
 /**
+ * Normalizes a CSS selector for deduplication purposes.
+ * Strips nth-child indices and whitespace differences.
+ * @param {string} selector
+ * @returns {string}
+ */
+function normalizeSelector(selector) {
+  if (!selector) return "";
+  return selector
+    .replace(/:nth-child\(\d+\)/g, "")
+    .replace(/:nth-of-type\(\d+\)/g, "")
+    .replace(/\[\d+\]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+/**
+ * Returns the canonical rule ID for deduplication.
+ * For pa11y violations this is the canonical_rule_id field (axe-style).
+ * For axe/cdp violations this is the id field.
+ * @param {Object} violation
+ * @returns {string}
+ */
+function getDedupeRuleId(violation) {
+  return violation.canonical_rule_id || violation.id || "";
+}
+
+/**
  * Merges violations from multiple sources (axe-core, CDP, pa11y) and deduplicates.
- * Deduplication is based on rule ID + first target selector combination.
+ * Deduplication uses canonical rule ID + normalized selector.
+ * Priority: axe > cdp > pa11y — richer payloads survive.
  * @param {Object[]} axeViolations - Violations from axe-core.
  * @param {Object[]} cdpViolations - Violations from CDP checks.
  * @param {Object[]} pa11yViolations - Violations from pa11y.
  * @returns {Object[]} Merged and deduplicated violations array.
  */
 function mergeViolations(axeViolations, cdpViolations, pa11yViolations) {
-  const seen = new Set();
+  const seen = new Map(); // key → violation (keeps highest-priority source)
   const merged = [];
 
-  // axe-core results are primary — add them first
+  /**
+   * Builds a dedup key from canonical rule ID + normalized first selector.
+   * @param {Object} v
+   * @returns {string}
+   */
+  function makeKey(v) {
+    const ruleId = getDedupeRuleId(v);
+    const target = normalizeSelector(v.nodes?.[0]?.target?.[0] || "");
+    return `${ruleId}::${target}`;
+  }
+
+  // axe-core results are primary — add them first (highest priority)
   for (const v of axeViolations) {
-    const key = `${v.id}::${v.nodes?.[0]?.target?.[0] || ""}`;
-    seen.add(key);
+    const key = makeKey(v);
+    seen.set(key, v);
     merged.push(v);
   }
 
   // Add CDP violations if not already covered by axe
   for (const v of cdpViolations) {
-    // Map CDP rule IDs to axe equivalents for dedup
-    const axeEquiv = {
-      "cdp-missing-accessible-name": ["button-name", "link-name", "input-name", "aria-command-name"],
-      "cdp-aria-hidden-focusable": ["aria-hidden-focus"],
-    };
-    const equivRules = axeEquiv[v.id] || [];
-    const target = v.nodes?.[0]?.target?.[0] || "";
+    // Resolve axe equivalents from externalized CDP rule map
+    const cdpMeta = CDP_RULE_MAP[v.id] || {};
+    const equivRules = cdpMeta.axeEquivalents || [];
+    const target = normalizeSelector(v.nodes?.[0]?.target?.[0] || "");
     const isDuplicate = equivRules.some((r) => seen.has(`${r}::${target}`));
     if (!isDuplicate) {
-      const key = `${v.id}::${target}`;
+      const key = makeKey(v);
       if (!seen.has(key)) {
-        seen.add(key);
+        seen.set(key, v);
         merged.push(v);
       }
     }
   }
 
-  // Add pa11y violations if not already covered
+  // Add pa11y violations only if the canonical rule + selector isn't already covered
   for (const v of pa11yViolations) {
-    const target = v.nodes?.[0]?.target?.[0] || "";
-    const key = `${v.id}::${target}`;
-    // Also check if axe already found the same selector with a similar rule
-    const selectorCovered = [...seen].some((k) => k.endsWith(`::${target}`) && target);
-    if (!seen.has(key) && (!selectorCovered || !target)) {
-      seen.add(key);
-      merged.push(v);
+    const key = makeKey(v);
+    if (!seen.has(key)) {
+      // Also check if any axe/cdp violation covers the same normalized selector
+      // with the same canonical rule (handles case where pa11y id differs but canonical matches)
+      const canonicalId = v.canonical_rule_id;
+      const target = normalizeSelector(v.nodes?.[0]?.target?.[0] || "");
+      let alreadyCovered = false;
+      if (canonicalId && target) {
+        alreadyCovered = seen.has(`${canonicalId}::${target}`);
+      }
+      if (!alreadyCovered) {
+        seen.set(key, v);
+        merged.push(v);
+      }
     }
   }
 

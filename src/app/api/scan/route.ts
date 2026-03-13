@@ -215,6 +215,8 @@ export async function POST(request: NextRequest) {
       (item: Record<string, unknown>, index: number) => ({
         id: String(item.id ?? `A11Y-${String(index + 1).padStart(3, "0")}`),
         ruleId: String(item.rule_id ?? ""),
+        sourceRuleId: item.source_rule_id ? String(item.source_rule_id) : null,
+        wcagCriterionId: item.wcag_criterion_id ? String(item.wcag_criterion_id) : null,
         category: item.category ?? null,
         title: String(item.title ?? "Untitled finding"),
         severity: String(item.severity ?? "Unknown"),
@@ -224,7 +226,7 @@ export async function POST(request: NextRequest) {
         url: String(item.url ?? ""),
         selector: String(item.selector ?? ""),
         primarySelector: String(item.primary_selector ?? item.selector ?? ""),
-        impactedUsers: String(item.impacted_users ?? "Users relying on assistive technology"),
+        impactedUsers: String(item.impacted_users ?? ""),
         actual: String(item.actual ?? ""),
         primaryFailureMode: item.primary_failure_mode ?? null,
         relationshipHint: item.relationship_hint ?? null,
@@ -333,16 +335,56 @@ export async function POST(request: NextRequest) {
       personaGroups[key] = { label: config.label, count: 0, icon: key };
     }
 
+    // Build a reverse lookup: WCAG criterion → persona keys (from wcagCriterionMap + personaMapping rules)
+    const criterionToPersonas: Record<string, Set<string>> = {};
+    const wcagCriterionMap = wcagRef.wcagCriterionMap as Record<string, string>;
+    for (const [personaKey, mapping] of Object.entries(personaMapping)) {
+      for (const rule of mapping.rules) {
+        const criterion = wcagCriterionMap[rule];
+        if (criterion) {
+          if (!criterionToPersonas[criterion]) criterionToPersonas[criterion] = new Set();
+          criterionToPersonas[criterion].add(personaKey);
+        }
+      }
+    }
+
     for (const f of findings) {
       const ruleId = ((f as { ruleId: string }).ruleId || "").toLowerCase();
+      const wcagCriterionId = (f as { wcagCriterionId: string | null }).wcagCriterionId || "";
       const users = ((f as { impactedUsers: string }).impactedUsers || "").toLowerCase();
+
+      // Track which personas matched via rule to avoid double-counting
+      const matchedPersonas = new Set<string>();
 
       for (const [personaKey, mapping] of Object.entries(personaMapping)) {
         if (!personaGroups[personaKey]) continue;
+
+        // 1. Strong match: canonical rule ID matches persona rules
         const matchesRule = mapping.rules.some((r: string) => ruleId === r.toLowerCase());
-        const matchesKeyword = mapping.keywords.some((kw: string) => users.includes(kw.toLowerCase()));
-        if (matchesRule || matchesKeyword) {
+        if (matchesRule) {
+          matchedPersonas.add(personaKey);
           personaGroups[personaKey].count++;
+          continue;
+        }
+
+        // 2. Strong match: WCAG criterion maps to this persona
+        if (wcagCriterionId && criterionToPersonas[wcagCriterionId]?.has(personaKey)) {
+          matchedPersonas.add(personaKey);
+          personaGroups[personaKey].count++;
+          continue;
+        }
+      }
+
+      // 3. Weak fallback: keyword matching ONLY for personas not already matched via rules
+      // Only apply if no strong matches were found at all (prevents inflation)
+      if (matchedPersonas.size === 0 && users) {
+        for (const [personaKey, mapping] of Object.entries(personaMapping)) {
+          if (!personaGroups[personaKey]) continue;
+          if (matchedPersonas.has(personaKey)) continue;
+          const matchesKeyword = mapping.keywords.some((kw: string) => users.includes(kw.toLowerCase()));
+          if (matchesKeyword) {
+            personaGroups[personaKey].count++;
+          }
         }
       }
     }

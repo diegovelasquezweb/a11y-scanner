@@ -78,6 +78,45 @@ const APG_PATTERNS = WCAG_REFERENCE.apgPatterns;
 const MDN = WCAG_REFERENCE.mdn || {};
 const WCAG_CRITERION_MAP = WCAG_REFERENCE.wcagCriterionMap || {};
 
+/**
+ * Reverse map: WCAG criterion ID → first intelligence rule ID that covers it.
+ * Used as a fallback when a pa11y violation has a wcag_criterion_id but no direct RULES match.
+ * Only maps to rules that actually have fix content in intelligence.json.
+ * @type {Object<string, string>}
+ */
+const WCAG_CRITERION_TO_RULE = {};
+for (const [ruleId, criterion] of Object.entries(WCAG_CRITERION_MAP)) {
+  // Only add if the rule has intelligence fix content AND not already mapped
+  if (!WCAG_CRITERION_TO_RULE[criterion] && RULES[ruleId]?.fix) {
+    WCAG_CRITERION_TO_RULE[criterion] = ruleId;
+  }
+}
+
+/**
+ * Resolves the best intelligence rule info for a violation.
+ * Precedence: canonical_rule_id → v.id → wcag_criterion_id fallback.
+ * @param {Object} v - The violation object.
+ * @returns {{ ruleInfo: Object, resolvedRuleId: string }}
+ */
+function resolveRuleIntelligence(v) {
+  // 1. Try canonical_rule_id (pa11y canonicalized to axe ID)
+  if (v.canonical_rule_id && RULES[v.canonical_rule_id]) {
+    return { ruleInfo: RULES[v.canonical_rule_id], resolvedRuleId: v.canonical_rule_id };
+  }
+  // 2. Try violation id directly (axe, cdp)
+  if (RULES[v.id]) {
+    return { ruleInfo: RULES[v.id], resolvedRuleId: v.id };
+  }
+  // 3. Fallback: look up by wcag_criterion_id
+  const wcagCriterion = v.wcag_criterion_id || WCAG_CRITERION_MAP[v.id] || null;
+  if (wcagCriterion && WCAG_CRITERION_TO_RULE[wcagCriterion]) {
+    const fallbackRuleId = WCAG_CRITERION_TO_RULE[wcagCriterion];
+    return { ruleInfo: RULES[fallbackRuleId], resolvedRuleId: fallbackRuleId };
+  }
+  // 4. No intelligence found
+  return { ruleInfo: {}, resolvedRuleId: v.id };
+}
+
 function mergeUnique(first = [], second = []) {
   return [...new Set([...(first || []), ...(second || [])])];
 }
@@ -801,9 +840,13 @@ function buildFindings(inputPayload, cliArgs) {
         const role = explicitRole ?? detectImplicitRole(tag, firstNode?.html);
         const apgUrl = role ? APG_PATTERNS[role] : null;
 
-        const ruleInfo = RULES[v.id] || {};
+        const { ruleInfo, resolvedRuleId } = resolveRuleIntelligence(v);
         const fixInfo = ruleInfo.fix || {};
         const resolvedGuardrails = resolveGuardrails(ruleInfo, null);
+        // Preserve source traceability for pa11y findings
+        const sourceRuleId = v.source_rule_id || null;
+        // Resolve WCAG criterion: prefer violation-level, then map by resolved rule ID
+        const wcagCriterionId = v.wcag_criterion_id || WCAG_CRITERION_MAP[resolvedRuleId] || WCAG_CRITERION_MAP[v.id] || null;
 
         let recFix = apgUrl
           ? `Reference: ${apgUrl}`
@@ -825,16 +868,17 @@ function buildFindings(inputPayload, cliArgs) {
 
         findings.push({
           id: "",
-          rule_id: v.id,
+          rule_id: resolvedRuleId,
+          source_rule_id: sourceRuleId,
           title: v.help,
           severity: IMPACT_MAP[v.impact] || "Medium",
           wcag: mapWcag(v.tags),
-          wcag_criterion_id: WCAG_CRITERION_MAP[v.id] ?? null,
-          wcag_classification: classifyWcag(v.tags, WCAG_CRITERION_MAP[v.id] ?? null),
+          wcag_criterion_id: wcagCriterionId,
+          wcag_classification: classifyWcag(v.tags, wcagCriterionId),
           area: `${route.path}`,
           url: route.url,
           selector: selectors.join(", "),
-          impacted_users: getImpactedUsers(v.id, v.tags),
+          impacted_users: getImpactedUsers(resolvedRuleId, v.tags),
           primary_selector: bestSelector,
           actual:
             firstNode?.failureSummary || `Found ${nodes.length} instance(s).`,
@@ -842,13 +886,13 @@ function buildFindings(inputPayload, cliArgs) {
           relationship_hint: failureInsights.relationshipHint,
           failure_checks: failureInsights.failureChecks,
           related_context: failureInsights.relatedContext,
-          expected: getExpected(v.id),
+          expected: getExpected(resolvedRuleId),
           category: ruleInfo.category ?? null,
           fix_description: fixInfo.description ?? null,
           fix_code: fixInfo.code ?? null,
           fix_code_lang: codeLang,
           recommended_fix: recFix.trim(),
-          mdn: MDN[v.id] ?? null,
+          mdn: MDN[resolvedRuleId] ?? MDN[v.id] ?? null,
           effort: null,
           related_rules: Array.isArray(ruleInfo.related_rules)
             ? ruleInfo.related_rules
@@ -869,14 +913,14 @@ function buildFindings(inputPayload, cliArgs) {
           screenshot_path: v.screenshot_path || null,
           file_search_pattern:
             ownership.status === "primary" ? fileSearchPattern : null,
-          managed_by_library: getManagedByLibrary(v.id, ctx.uiLibraries),
+          managed_by_library: getManagedByLibrary(resolvedRuleId, ctx.uiLibraries),
           ownership_status: ownership.status,
           ownership_reason: ownership.reason,
           primary_source_scope: ownership.primarySourceScope,
           search_strategy: ownership.searchStrategy,
           component_hint: extractComponentHint(bestSelector) ?? derivePageHint(route.path),
-          verification_command: `pnpm a11y --base-url ${route.url} --routes ${route.path} --only-rule ${v.id} --max-routes 1`,
-          verification_command_fallback: `node scripts/audit.mjs --base-url ${route.url} --routes ${route.path} --only-rule ${v.id} --max-routes 1`,
+          verification_command: `pnpm a11y --base-url ${route.url} --routes ${route.path} --only-rule ${resolvedRuleId} --max-routes 1`,
+          verification_command_fallback: `node scripts/audit.mjs --base-url ${route.url} --routes ${route.path} --only-rule ${resolvedRuleId} --max-routes 1`,
         });
       }
     }

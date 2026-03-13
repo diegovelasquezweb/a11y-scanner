@@ -339,11 +339,15 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                     The Fix
                   </h4>
                   <div className="relative z-10 space-y-4">
-                    {finding.fixDescription && (
+                    {finding.fixDescription ? (
                       <p className="text-sm text-indigo-800 leading-relaxed">
                         {finding.fixDescription}
                       </p>
-                    )}
+                    ) : finding.recommendedFix ? (
+                      <p className="text-sm text-indigo-800/80 leading-relaxed">
+                        {finding.recommendedFix}
+                      </p>
+                    ) : null}
                     {finding.fixCode && (
                       <div className="relative group/code">
                         <pre

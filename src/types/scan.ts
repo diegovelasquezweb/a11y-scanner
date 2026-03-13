@@ -6,6 +6,8 @@ export interface Evidence {
 export interface Finding {
   id: string;
   ruleId: string;
+  sourceRuleId: string | null;
+  wcagCriterionId: string | null;
   category: string | null;
   title: string;
   severity: "Critical" | "Serious" | "Moderate" | "Minor";
