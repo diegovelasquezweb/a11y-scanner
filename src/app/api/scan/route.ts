@@ -372,6 +372,14 @@ export async function POST(request: NextRequest) {
 
     // Persist result
     saveScanResult(scanId, resultData);
+
+    // Persist checklist.html if generated
+    const checklistPath = path.join(auditDir, "checklist.html");
+    if (fs.existsSync(checklistPath)) {
+      const checklistDest = path.join(SCANS_DIR, `${scanId}.checklist.html`);
+      fs.copyFileSync(checklistPath, checklistDest);
+    }
+
     saveScanStatus(scanId, "completed");
 
     return NextResponse.json({

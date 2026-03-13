@@ -102,6 +102,7 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
       {status === "completed" && result && (
         <AuditResults
           result={result}
+          scanId={scanId}
           onRunNewTest={() => window.location.assign("/")}
         />
       )}

@@ -19,10 +19,11 @@ const WCAG_PRINCIPLES: Record<string, string> = {
 
 interface AuditResultsProps {
   result: NonNullable<ScanResult["data"]>;
+  scanId: string;
   onRunNewTest?: () => void;
 }
 
-export function AuditResults({ result, onRunNewTest }: AuditResultsProps) {
+export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps) {
   const [filterValue, setFilterValue] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [allExpanded, setAllExpanded] = useState(false);
@@ -70,6 +71,7 @@ export function AuditResults({ result, onRunNewTest }: AuditResultsProps) {
         targetUrl={result.targetUrl}
         totals={result.totals}
         findings={result.findings}
+        scanId={scanId}
         onRunNewTest={onRunNewTest || (() => window.location.assign("/"))}
       />
 

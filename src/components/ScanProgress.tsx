@@ -196,14 +196,6 @@ export default function ScanProgress({ isScanning, scanComplete }: ScanProgressP
                     </span>
                   )}
                 </div>
-                {status === "done" && step.key === "intelligence" && info && (info.fixCodes || info.frameworkNotes || info.guardrails || info.relatedRules) && (
-                  <div className="ml-8 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-400">
-                    {!!info.fixCodes && <span>{info.fixCodes} fix codes</span>}
-                    {!!info.relatedRules && <span>{info.relatedRules} related rules</span>}
-                    {!!info.guardrails && <span>{info.guardrails} guardrails</span>}
-                    {!!info.frameworkNotes && <span>{info.frameworkNotes} framework notes</span>}
-                  </div>
-                )}
               </li>
             );
           })}

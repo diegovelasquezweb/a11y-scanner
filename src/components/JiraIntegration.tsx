@@ -26,6 +26,7 @@ interface JiraIntegrationProps {
   targetUrl: string;
   totals: SeverityTotals;
   findings: Finding[];
+  scanId: string;
   onRunNewTest: () => void;
 }
 
@@ -82,6 +83,7 @@ export function JiraIntegration({
   targetUrl,
   totals,
   findings,
+  scanId,
   onRunNewTest,
 }: JiraIntegrationProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -166,6 +168,16 @@ export function JiraIntegration({
             className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
           >
             Send to Jira
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              window.open(`/api/scan/${scanId}/checklist`, "_blank", "noopener,noreferrer")
+            }
+            className="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-colors"
+          >
+            Open Manual Checklist
           </button>
 
           <button
