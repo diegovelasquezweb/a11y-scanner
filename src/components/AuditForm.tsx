@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useId, useMemo } from "react";
+import { useState, useRef, useId, useMemo, useEffect } from "react";
 import * as Slider from "@radix-ui/react-slider";
 import * as Toggle from "@radix-ui/react-toggle";
 import * as Tooltip from "@radix-ui/react-tooltip";
@@ -10,6 +10,7 @@ import {
   CONFORMANCE_TAG_MAP,
   DEFAULT_CONFORMANCE,
 } from "@/types/scan";
+import { WcagEducation, WcagEducationTrigger } from "@/components/WcagEducation";
 
 interface AuditFormProps {
   status: ScanStatus;
@@ -24,9 +25,17 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
   const [bestPractices, setBestPractices] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const targetInputRef = useRef<HTMLInputElement>(null);
+  const scanErrorRef = useRef<HTMLDivElement>(null);
   const targetErrorId = useId();
   const repoErrorId = useId();
   const statusId = useId();
+
+  // Move focus to scan error message when status changes to "error"
+  useEffect(() => {
+    if (status === "error" && errorMessage && scanErrorRef.current) {
+      scanErrorRef.current.focus();
+    }
+  }, [status, errorMessage]);
 
   const sliderIndex = CONFORMANCE_LEVELS.findIndex((l) => l.id === conformance);
 
@@ -85,6 +94,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
   const isRunning = status === "running";
 
   return (
+    <WcagEducation>
     <div className="premium-card rounded-2xl p-8 w-full max-w-2xl">
       <div className="mb-6">
         <div className="flex items-center gap-2">
@@ -299,8 +309,8 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
             </p>
           </div>
 
-          {/* Best Practices toggle */}
-          <div className="mt-3">
+          {/* Best Practices toggle + Understanding WCAG link */}
+          <div className="mt-3 flex items-center justify-between">
             <Toggle.Root
               pressed={bestPractices}
               onPressedChange={(pressed) => setBestPractices(pressed)}
@@ -324,6 +334,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
                 (beyond WCAG)
               </span>
             </Toggle.Root>
+            <WcagEducationTrigger />
           </div>
         </fieldset>
 
@@ -340,7 +351,14 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
             </button>
 
             {/* Error indicator */}
-            <div aria-live="polite" aria-atomic="true" id={statusId}>
+            <div
+              ref={scanErrorRef}
+              tabIndex={-1}
+              aria-live="polite"
+              aria-atomic="true"
+              id={statusId}
+              className="outline-none"
+            >
               {status === "error" && errorMessage && (
                 <p className="text-sm text-rose-600 font-medium" role="alert">
                   {errorMessage}
@@ -351,5 +369,6 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
         )}
       </form>
     </div>
+    </WcagEducation>
   );
 }

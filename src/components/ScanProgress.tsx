@@ -49,18 +49,25 @@ interface CompletedStep {
 
 interface ScanProgressProps {
   isScanning: boolean;
+  scanId?: string | null;
+  scanError?: string | null;
+  onSkipDelay?: () => void;
+  onRetry?: () => void;
 }
 
-export default function ScanProgress({ isScanning }: ScanProgressProps) {
+export default function ScanProgress({ isScanning, scanId, scanError, onSkipDelay, onRetry }: ScanProgressProps) {
   const [elapsed, setElapsed] = useState(0);
   const [currentStepLabel, setCurrentStepLabel] = useState<string>("Preparing...");
   const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
+
+  const [failedStep, setFailedStep] = useState<string | null>(null);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const seenDoneRef = useRef<Set<string>>(new Set());
   const progressRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
 
   // Reset state when scanning starts/stops
   useEffect(() => {
@@ -69,6 +76,7 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
       setElapsed(0);
       setCurrentStepLabel("Preparing...");
       setCompletedSteps([]);
+      setFailedStep(null);
       seenDoneRef.current = new Set();
 
       timerRef.current = setInterval(() => {
@@ -119,6 +127,10 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
       if (info.status === "running") {
         runningLabel = step.label;
       }
+
+      if (info.status === "error") {
+        setFailedStep(step.label);
+      }
     }
 
     if (runningLabel) {
@@ -161,6 +173,22 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
 
   const doneCount = completedSteps.length;
   const allDone = doneCount >= TOTAL_STEPS;
+  const hasError = !!(scanError || failedStep);
+
+  // Focus error message when error appears
+  useEffect(() => {
+    if (hasError && errorRef.current) {
+      errorRef.current.focus();
+    }
+  }, [hasError]);
+
+  // Stop polling when error occurs
+  useEffect(() => {
+    if (hasError && intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, [hasError]);
 
   if (!isScanning) return null;
 
@@ -175,17 +203,23 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
         {/* Header: Step X of 7 + elapsed */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            {allDone ? (
+            {hasError ? (
+              <svg className="w-4 h-4 text-rose-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            ) : allDone ? (
               <svg className="w-4 h-4 text-emerald-500 flex-shrink-0 motion-reduce:transition-none" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
             ) : (
               <span className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin motion-reduce:animate-none flex-shrink-0" aria-hidden="true" />
             )}
-            <span className={`text-sm font-bold truncate ${allDone ? "text-emerald-700" : "text-slate-800"}`}>
-              {allDone
-                ? "Scan complete — loading results..."
-                : `Step ${doneCount + 1} of ${TOTAL_STEPS}`}
+            <span className={`text-sm font-bold truncate ${hasError ? "text-rose-700" : allDone ? "text-emerald-700" : "text-slate-800"}`}>
+              {hasError
+                ? `Failed at: ${failedStep || currentStepLabel}`
+                : allDone
+                  ? "Scan complete — loading results..."
+                  : `Step ${doneCount + 1} of ${TOTAL_STEPS}`}
             </span>
           </div>
           <span className="flex-shrink-0 text-xs font-medium text-slate-500 tabular-nums">
@@ -194,7 +228,7 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
         </div>
 
         {/* Current step label — isolated aria-live so only this text is announced */}
-        {!allDone && (
+        {!allDone && !hasError && (
           <p
             aria-live="polite"
             aria-atomic="true"
@@ -202,6 +236,43 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
           >
             {currentStepLabel}
           </p>
+        )}
+
+        {/* Error message + retry */}
+        {hasError && (
+          <div
+            ref={errorRef}
+            tabIndex={-1}
+            role="alert"
+            className="mb-3 outline-none"
+          >
+            {scanError && (
+              <p className="text-sm text-rose-600 mb-2">{scanError}</p>
+            )}
+            {onRetry && (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:ring-offset-2 rounded"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Try again
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Skip delay button — shown when scan is complete and results are pending */}
+        {allDone && !hasError && scanId && onSkipDelay && (
+          <button
+            type="button"
+            onClick={onSkipDelay}
+            className="mb-3 text-sm font-semibold text-indigo-600 hover:text-indigo-800 underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:ring-offset-2 rounded"
+          >
+            View results now
+          </button>
         )}
 
         {/* Progressbar — semantic */}
@@ -214,7 +285,7 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
           className="h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3"
         >
           <div
-            className={`h-full rounded-full transition-all duration-500 ease-out motion-reduce:transition-none ${allDone ? "bg-emerald-500" : "bg-indigo-500"}`}
+            className={`h-full rounded-full transition-all duration-500 ease-out motion-reduce:transition-none ${hasError ? "bg-rose-500" : allDone ? "bg-emerald-500" : "bg-indigo-500"}`}
             style={{ width: `${(doneCount / TOTAL_STEPS) * 100}%` }}
           />
         </div>

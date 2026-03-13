@@ -114,6 +114,55 @@ body {
   overflow: hidden;
 }
 
+/* WCAG education side panel */
+.wcag-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+  z-index: 50;
+  animation: wcag-overlay-in 0.25s ease-out;
+}
+.wcag-panel-overlay[data-state="closed"] {
+  animation: wcag-overlay-out 0.2s ease-in;
+}
+
+.wcag-panel-content {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 28rem;
+  z-index: 51;
+  background: var(--background);
+  border-left: 1px solid #e2e8f0;
+  box-shadow: -8px 0 30px -5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  animation: wcag-panel-in 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.wcag-panel-content[data-state="closed"] {
+  animation: wcag-panel-out 0.2s ease-in;
+}
+
+@keyframes wcag-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes wcag-overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes wcag-panel-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes wcag-panel-out {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
 /* Reduced motion: disable non-essential animations */
 @media (prefers-reduced-motion: reduce) {
   .premium-card,
@@ -128,5 +177,12 @@ body {
 
   .score-gauge-val {
     transition: none;
+  }
+
+  .wcag-panel-overlay,
+  .wcag-panel-overlay[data-state="closed"],
+  .wcag-panel-content,
+  .wcag-panel-content[data-state="closed"] {
+    animation: none;
   }
 }
