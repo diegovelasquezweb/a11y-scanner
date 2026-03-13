@@ -29,7 +29,6 @@ export default function Home() {
       const data = await response.json();
 
       if (data.scanId) {
-        // Redirect to scan results page
         router.push(`/scan/${data.scanId}`);
         return;
       }
@@ -48,9 +47,9 @@ export default function Home() {
   }, [router]);
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-12">
+    <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
       <a
-        href="#scan-form"
+        href="#target-url"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-slate-900 focus:text-white focus:rounded-lg focus:shadow-lg"
       >
         Skip to scan form
@@ -58,7 +57,7 @@ export default function Home() {
 
       <AuditForm status={status} errorMessage={errorMessage} onSubmit={handleSubmit} />
 
-      <ScanProgress isScanning={status === "running"} scanComplete={false} />
+      <ScanProgress isScanning={status === "running"} />
     </main>
   );
 }

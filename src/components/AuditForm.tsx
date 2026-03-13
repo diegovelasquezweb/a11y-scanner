@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useRef, useId, useCallback } from "react";
-import * as ToggleGroup from "@radix-ui/react-toggle-group";
-import type { ScanStatus } from "@/types/scan";
-import { WCAG_LEVELS } from "@/types/scan";
-
-const DEFAULT_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
+import { useState, useRef, useId, useMemo } from "react";
+import * as Toggle from "@radix-ui/react-toggle";
+import type { ScanStatus, ConformanceLevel } from "@/types/scan";
+import {
+  CONFORMANCE_LEVELS,
+  CONFORMANCE_TAG_MAP,
+  DEFAULT_CONFORMANCE,
+} from "@/types/scan";
 
 interface AuditFormProps {
   status: ScanStatus;
@@ -16,12 +18,21 @@ interface AuditFormProps {
 export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
   const [targetUrl, setTargetUrl] = useState("");
   const [githubRepoUrl, setGithubRepoUrl] = useState("");
-  const [selectedLevels, setSelectedLevels] = useState<Set<string>>(new Set(DEFAULT_TAGS));
+  const [conformance, setConformance] = useState<ConformanceLevel>(DEFAULT_CONFORMANCE);
+  const [bestPractices, setBestPractices] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const targetInputRef = useRef<HTMLInputElement>(null);
   const targetErrorId = useId();
   const repoErrorId = useId();
   const statusId = useId();
+
+  const sliderIndex = CONFORMANCE_LEVELS.findIndex((l) => l.id === conformance);
+
+  const axeTags = useMemo(() => {
+    const tags = [...CONFORMANCE_TAG_MAP[conformance]];
+    if (bestPractices) tags.push("best-practice");
+    return tags;
+  }, [conformance, bestPractices]);
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
@@ -66,35 +77,21 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
     e.preventDefault();
     if (status === "running") return;
     if (!validate()) return;
-    const tags = Array.from(selectedLevels);
-    onSubmit(targetUrl.trim(), githubRepoUrl.trim(), tags);
+    onSubmit(targetUrl.trim(), githubRepoUrl.trim(), axeTags);
   };
-
-  const handleLevelChange = useCallback((values: string[]) => {
-    const next = new Set<string>();
-    for (const id of values) {
-      const level = WCAG_LEVELS.find((l) => l.id === id);
-      if (level) level.tags.forEach((t) => next.add(t));
-    }
-    setSelectedLevels(next);
-  }, []);
 
   const isRunning = status === "running";
 
   return (
-    <div className="premium-card rounded-2xl p-8 mb-12">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="px-3 h-10 rounded-lg bg-slate-900 text-white font-bold text-base font-mono flex items-center justify-center shadow-md">
-          a11y
-        </div>
-        <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">
-            Web Accessibility Scanner
-          </h1>
-          <p className="text-sm text-slate-500">
-            WCAG 2.2 AA audit powered by axe-core + Playwright
-          </p>
-        </div>
+    <div className="premium-card rounded-2xl p-8 w-full max-w-2xl">
+      <div className="mb-8">
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          Web Accessibility Scanner
+        </h1>
+        <p className="text-sm text-slate-500 mt-2 leading-relaxed max-w-lg">
+          Scan any URL to detect accessibility issues with actionable recommendations.
+          Powered by three complementary engines for comprehensive WCAG coverage.
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} noValidate>
@@ -195,50 +192,123 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
           </div>
         </div>
 
-        {/* WCAG Level Toggle Group */}
+        {/* WCAG Conformance Level Slider */}
         <fieldset className="mb-6" disabled={isRunning}>
-          <legend className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-3">
-            WCAG Levels & Rules
+          <legend className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-4">
+            WCAG Conformance Level
           </legend>
-          <ToggleGroup.Root
-            type="multiple"
-            value={Array.from(selectedLevels)}
-            onValueChange={handleLevelChange}
-            className="flex flex-wrap gap-3"
-          >
-            {WCAG_LEVELS.map((level) => {
-              const isPressed = level.tags.every((t) => selectedLevels.has(t));
-              return (
-                <ToggleGroup.Item
-                  key={level.id}
-                  value={level.id}
-                  disabled={isRunning}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium cursor-pointer transition-all select-none bg-white text-slate-600 border-slate-200 hover:border-slate-300 data-[state=on]:bg-slate-900 data-[state=on]:text-white data-[state=on]:border-slate-900 data-[state=on]:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  <span
-                    className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                      isPressed
-                        ? "bg-white border-white"
-                        : "border-slate-300"
+
+          <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-5">
+            {/* Slider track */}
+            <div className="relative px-1 mb-3">
+              <div
+                className="h-2 bg-indigo-200 rounded-full"
+                aria-hidden="true"
+              />
+              {/* Filled track */}
+              <div
+                className="absolute top-0 left-0 h-2 bg-indigo-500 rounded-full transition-all duration-200"
+                style={{ width: `${(sliderIndex / (CONFORMANCE_LEVELS.length - 1)) * 100}%` }}
+                aria-hidden="true"
+              />
+              {/* Thumb */}
+              <input
+                type="range"
+                min={0}
+                max={CONFORMANCE_LEVELS.length - 1}
+                step={1}
+                value={sliderIndex}
+                onChange={(e) => {
+                  const idx = parseInt(e.target.value, 10);
+                  setConformance(CONFORMANCE_LEVELS[idx].id);
+                }}
+                disabled={isRunning}
+                aria-label="WCAG conformance level"
+                aria-valuetext={`Level ${conformance}`}
+                className="absolute top-0 left-0 w-full h-2 opacity-0 cursor-pointer disabled:cursor-not-allowed"
+              />
+              <div
+                className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-indigo-600 rounded-full shadow-md border-2 border-white transition-all duration-200 pointer-events-none"
+                style={{ left: `calc(${(sliderIndex / (CONFORMANCE_LEVELS.length - 1)) * 100}% - 10px)` }}
+                aria-hidden="true"
+              />
+            </div>
+
+            {/* Labels under slider */}
+            <div className="flex justify-between px-0.5">
+              {CONFORMANCE_LEVELS.map((level) => {
+                const isActive = conformance === level.id;
+                return (
+                  <button
+                    key={level.id}
+                    type="button"
+                    onClick={() => setConformance(level.id)}
+                    disabled={isRunning}
+                    className={`text-center transition-colors disabled:cursor-not-allowed ${
+                      isActive ? "" : "opacity-60 hover:opacity-80"
                     }`}
-                    aria-hidden="true"
                   >
-                    {isPressed && (
-                      <svg className="w-3 h-3 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </span>
-                  <span className="leading-tight">
-                    <span className="block">{level.label}</span>
-                    <span className={`block text-[10px] ${isPressed ? "text-slate-300" : "text-slate-400"}`}>
+                    <span
+                      className={`block text-sm font-bold ${
+                        isActive ? "text-indigo-700" : "text-slate-500"
+                      }`}
+                    >
+                      {level.label}
+                    </span>
+                    <span
+                      className={`block text-[11px] ${
+                        isActive ? "text-indigo-500" : "text-slate-400"
+                      }`}
+                    >
                       {level.description}
                     </span>
-                  </span>
-                </ToggleGroup.Item>
-              );
-            })}
-          </ToggleGroup.Root>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Current selection summary */}
+            <p className="mt-4 pt-3 border-t border-indigo-100 text-sm text-slate-600">
+              Current:{" "}
+              <span className="font-bold text-indigo-700">WCAG {conformance}</span>
+              {conformance === "AA" && (
+                <span className="text-slate-400 ml-1">(Recommended for most websites)</span>
+              )}
+              {conformance === "A" && (
+                <span className="text-slate-400 ml-1">(Minimum baseline)</span>
+              )}
+              {conformance === "AAA" && (
+                <span className="text-slate-400 ml-1">(Strictest — not required by most regulations)</span>
+              )}
+            </p>
+          </div>
+
+          {/* Best Practices toggle */}
+          <div className="mt-3">
+            <Toggle.Root
+              pressed={bestPractices}
+              onPressedChange={(pressed) => setBestPractices(pressed)}
+              disabled={isRunning}
+              className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border text-sm font-medium cursor-pointer transition-all select-none bg-white text-slate-600 border-slate-200 hover:border-slate-300 data-[state=on]:bg-slate-900 data-[state=on]:text-white data-[state=on]:border-slate-900 data-[state=on]:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span
+                className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                  bestPractices ? "bg-white border-white" : "border-slate-300"
+                }`}
+                aria-hidden="true"
+              >
+                {bestPractices && (
+                  <svg className="w-3 h-3 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </span>
+              Include Best Practices
+              <span className={`text-[10px] ${bestPractices ? "text-slate-300" : "text-slate-400"}`}>
+                (beyond WCAG)
+              </span>
+            </Toggle.Root>
+          </div>
         </fieldset>
 
         <div className="flex items-center gap-4">
@@ -283,11 +353,6 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
 
           {/* Status indicator */}
           <div aria-live="polite" aria-atomic="true" id={statusId}>
-            {isRunning && (
-              <p className="text-sm text-slate-500 font-medium">
-                Running accessibility scan...
-              </p>
-            )}
             {status === "error" && errorMessage && (
               <p className="text-sm text-rose-600 font-medium" role="alert">
                 {errorMessage}

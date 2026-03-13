@@ -97,54 +97,23 @@ export interface ScanResult {
 
 export type ScanStatus = "idle" | "running" | "success" | "error";
 
-export interface WcagLevel {
-  id: string;
-  label: string;
-  tags: string[];
-  description: string;
-}
+/** Conformance level options for the WCAG slider (A → AA → AAA). */
+export type ConformanceLevel = "A" | "AA" | "AAA";
 
-export const WCAG_LEVELS: WcagLevel[] = [
-  {
-    id: "wcag2a",
-    label: "WCAG 2.0 A",
-    tags: ["wcag2a"],
-    description: "Minimum level of conformance",
-  },
-  {
-    id: "wcag2aa",
-    label: "WCAG 2.0 AA",
-    tags: ["wcag2aa"],
-    description: "Standard compliance target",
-  },
-  {
-    id: "wcag21a",
-    label: "WCAG 2.1 A",
-    tags: ["wcag21a"],
-    description: "Mobile accessibility basics",
-  },
-  {
-    id: "wcag21aa",
-    label: "WCAG 2.1 AA",
-    tags: ["wcag21aa"],
-    description: "Current legal standard (EU/ADA)",
-  },
-  {
-    id: "wcag22a",
-    label: "WCAG 2.2 A",
-    tags: ["wcag22a"],
-    description: "Latest standard (level A)",
-  },
-  {
-    id: "wcag22aa",
-    label: "WCAG 2.2 AA",
-    tags: ["wcag22aa"],
-    description: "Latest recommended target",
-  },
-  {
-    id: "best-practice",
-    label: "Best Practices",
-    tags: ["best-practice"],
-    description: "Industry best practices (beyond WCAG)",
-  },
+/**
+ * Maps a conformance level to the full set of axe-core tags it requires.
+ * Each higher level is cumulative — AA includes all A tags, AAA includes all AA tags.
+ */
+export const CONFORMANCE_TAG_MAP: Record<ConformanceLevel, string[]> = {
+  A: ["wcag2a", "wcag21a", "wcag22a"],
+  AA: ["wcag2a", "wcag21a", "wcag22a", "wcag2aa", "wcag21aa", "wcag22aa"],
+  AAA: ["wcag2a", "wcag21a", "wcag22a", "wcag2aa", "wcag21aa", "wcag22aa", "wcag2aaa"],
+};
+
+export const CONFORMANCE_LEVELS: { id: ConformanceLevel; label: string; description: string }[] = [
+  { id: "A", label: "Level A", description: "Less strict" },
+  { id: "AA", label: "Level AA", description: "Standard" },
+  { id: "AAA", label: "Level AAA", description: "More strict" },
 ];
+
+export const DEFAULT_CONFORMANCE: ConformanceLevel = "AA";

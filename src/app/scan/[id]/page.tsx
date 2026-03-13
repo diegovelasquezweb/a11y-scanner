@@ -96,7 +96,7 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
       )}
 
       {status === "scanning" && (
-        <ScanProgress isScanning={true} scanComplete={false} />
+        <ScanProgress isScanning={true} />
       )}
 
       {status === "completed" && result && (
