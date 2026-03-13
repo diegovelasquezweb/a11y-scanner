@@ -35,7 +35,12 @@ async function getLocalProgress(scanId: string) {
   const fs = await import("node:fs");
   const path = await import("node:path");
 
-  const progressPath = path.join(process.cwd(), "src", "engine", ".audit", "progress.json");
+  const { createRequire } = await import("node:module");
+  const req = createRequire(import.meta.url);
+  const auditScriptPath = req.resolve("@diegovelasquezweb/a11y-engine/scripts/audit.mjs");
+  // SKILL_ROOT in utils.mjs (scripts/core) = __dirname/../.. = package root (a11y-engine/)
+  const engineBase = path.dirname(path.dirname(auditScriptPath));
+  const progressPath = path.join(engineBase, ".audit", "progress.json");
 
   try {
     if (!fs.existsSync(progressPath)) {

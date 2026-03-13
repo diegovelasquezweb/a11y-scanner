@@ -86,8 +86,14 @@ async function runLocal(params: {
   const { scanId, targetUrl, githubRepoUrl, axeTags } = params;
 
   const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
-  const engineBase = path.join(process.cwd(), "node_modules", "@diegovelasquezweb", "a11y-engine");
-  const auditDir = path.join(process.cwd(), ".audit");
+  // Resolve real path of the npm package (pnpm uses deep .pnpm/ paths, not the symlink)
+  const { createRequire } = await import("node:module");
+  const req = createRequire(import.meta.url);
+  const auditScriptPath = req.resolve("@diegovelasquezweb/a11y-engine/scripts/audit.mjs");
+  // SKILL_ROOT in utils.mjs = scripts/core/__dirname/../.. = package root
+  // audit.mjs is in scripts/, utils.mjs is in scripts/core/ → SKILL_ROOT = a11y-engine/
+  const engineBase = path.dirname(path.dirname(auditScriptPath));
+  const auditDir = path.join(engineBase, ".audit");
 
   fs.mkdirSync(SCANS_DIR, { recursive: true });
   fs.mkdirSync(auditDir, { recursive: true });
@@ -132,10 +138,9 @@ async function runLocal(params: {
       }
 
       const axeTagsFlag = axeTags?.length ? `--axe-tags ${axeTags.join(",")}` : "";
-      const auditScript = path.join(engineBase, "scripts", "audit.mjs");
 
       const cmd = [
-        "node", auditScript,
+        "node", auditScriptPath,
         "--base-url", `"${targetUrl}"`,
         "--max-routes", "1",
         "--skip-patterns",
@@ -145,7 +150,7 @@ async function runLocal(params: {
         axeTagsFlag,
       ].filter(Boolean).join(" ");
 
-      await execAsync(cmd, { timeout: 55000, cwd: process.cwd() });
+      await execAsync(cmd, { timeout: 55000, cwd: engineBase });
 
       writeProgress("intelligence", "done");
 
