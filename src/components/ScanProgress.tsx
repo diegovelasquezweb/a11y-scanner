@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import Link from "next/link";
 
 interface StepInfo {
   status: "pending" | "running" | "done" | "error";
@@ -51,11 +52,10 @@ interface ScanProgressProps {
   isScanning: boolean;
   scanId?: string | null;
   scanError?: string | null;
-  onSkipDelay?: () => void;
   onRetry?: () => void;
 }
 
-export default function ScanProgress({ isScanning, scanId, scanError, onSkipDelay, onRetry }: ScanProgressProps) {
+export default function ScanProgress({ isScanning, scanId, scanError, onRetry }: ScanProgressProps) {
   const [elapsed, setElapsed] = useState(0);
   const [currentStepLabel, setCurrentStepLabel] = useState<string>("Preparing...");
   const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
@@ -265,14 +265,16 @@ export default function ScanProgress({ isScanning, scanId, scanError, onSkipDela
         )}
 
         {/* Skip delay button — shown when scan is complete and results are pending */}
-        {allDone && !hasError && scanId && onSkipDelay && (
-          <button
-            type="button"
-            onClick={onSkipDelay}
-            className="mb-3 text-sm font-semibold text-sky-600 hover:text-sky-800 underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:ring-offset-2 rounded"
+        {allDone && !hasError && scanId && (
+          <Link
+            href={`/scan/${scanId}`}
+            className="mb-3 inline-flex items-center gap-2 px-5 py-2.5 bg-sky-600 text-white font-bold text-sm rounded-md shadow-md hover:bg-sky-700 focus:outline-none focus:ring-4 focus:ring-sky-600/20 transition-all"
           >
-            View results now
-          </button>
+            View Results
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
         )}
 
         {/* Progressbar — semantic */}

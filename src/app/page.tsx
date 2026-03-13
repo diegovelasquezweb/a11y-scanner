@@ -1,18 +1,15 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useCallback } from "react";
 import type { ScanStatus } from "@/types/scan";
 import { AuditForm } from "@/components/AuditForm";
 import ScanProgress from "@/components/ScanProgress";
 
 
 export default function Home() {
-  const router = useRouter();
   const [status, setStatus] = useState<ScanStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [pendingScanId, setPendingScanId] = useState<string | null>(null);
-  const delayResolveRef = useRef<(() => void) | null>(null);
 
   const [scanError, setScanError] = useState<string | null>(null);
 
@@ -23,13 +20,6 @@ export default function Home() {
     setErrorMessage("");
     setScanError(null);
     setPendingScanId(null);
-  }, []);
-
-  const handleSkipDelay = useCallback(() => {
-    if (delayResolveRef.current) {
-      delayResolveRef.current();
-      delayResolveRef.current = null;
-    }
   }, []);
 
   const handleSubmit = useCallback(async (targetUrl: string, githubRepoUrl: string, axeTags: string[]) => {
@@ -53,13 +43,6 @@ export default function Home() {
 
       if (data.scanId) {
         setPendingScanId(data.scanId);
-        // Pause 3s so user can read final progress — skippable via "View results now"
-        await new Promise<void>((resolve) => {
-          delayResolveRef.current = resolve;
-          setTimeout(resolve, 3000);
-        });
-        delayResolveRef.current = null;
-        router.push(`/scan/${data.scanId}`);
         return;
       }
 
@@ -72,7 +55,7 @@ export default function Home() {
         err instanceof Error ? err.message : "Network error. Please try again."
       );
     }
-  }, [router]);
+  }, []);
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
@@ -106,7 +89,6 @@ export default function Home() {
           isScanning={isScanning}
           scanId={pendingScanId}
           scanError={scanError}
-          onSkipDelay={handleSkipDelay}
           onRetry={handleRetry}
         />
       </div>
