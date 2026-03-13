@@ -35,19 +35,49 @@ async function getLocalProgress(scanId: string) {
   const fs = await import("node:fs");
   const path = await import("node:path");
 
-  const { createRequire } = await import("node:module");
-  const req = createRequire(import.meta.url);
-  const auditScriptPath = req.resolve("@diegovelasquezweb/a11y-engine/scripts/audit.mjs");
-  // SKILL_ROOT in utils.mjs (scripts/core) = __dirname/../.. = package root (a11y-engine/)
-  const engineBase = path.dirname(path.dirname(auditScriptPath));
-  const progressPath = path.join(engineBase, ".audit", "progress.json");
+  const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
+  const statusPath = path.join(SCANS_DIR, `${scanId}.status.json`);
+
+  const now = new Date().toISOString();
+  const ALL_KEYS = ["page", "axe", "cdp", "pa11y", "merge", "intelligence"] as const;
 
   try {
-    if (!fs.existsSync(progressPath)) {
-      return NextResponse.json({ steps: {}, currentStep: null, scanId });
+    if (!fs.existsSync(statusPath)) {
+      // Scan just started, not written yet
+      return NextResponse.json({
+        steps: { page: { status: "running", updatedAt: now } },
+        currentStep: "page",
+        scanId,
+      });
     }
-    const data = JSON.parse(fs.readFileSync(progressPath, "utf-8"));
-    return NextResponse.json({ ...data, scanId });
+
+    const statusData = JSON.parse(fs.readFileSync(statusPath, "utf-8")) as {
+      status: string;
+      error?: string;
+    };
+
+    if (statusData.status === "scanning") {
+      return NextResponse.json({
+        steps: { page: { status: "running", updatedAt: now } },
+        currentStep: "page",
+        scanId,
+      });
+    }
+
+    if (statusData.status === "error") {
+      return NextResponse.json({
+        steps: { page: { status: "error", updatedAt: now } },
+        currentStep: "page",
+        scanId,
+      });
+    }
+
+    // completed — mark all steps done so the frontend redirects
+    const steps: Record<string, { status: string; updatedAt: string }> = {};
+    for (const key of ALL_KEYS) {
+      steps[key] = { status: "done", updatedAt: now };
+    }
+    return NextResponse.json({ steps, currentStep: null, scanId });
   } catch {
     return NextResponse.json({ steps: {}, currentStep: null, scanId });
   }
