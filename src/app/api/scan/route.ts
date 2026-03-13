@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { execSync } from "node:child_process";
+import { exec } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import { promisify } from "node:util";
+
+const execAsync = promisify(exec);
 
 export const maxDuration = 60;
 
@@ -105,16 +108,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Initialize progress
-    writeProgress("browser", "running");
+    writeProgress("page", "running");
 
     // Clone repo if provided
     let projectDirFlag = "";
     if (githubRepoUrl) {
       cloneDir = path.join(tmpDir, "repo");
       try {
-        execSync(`git clone --depth 1 ${githubRepoUrl} ${cloneDir}`, {
+        await execAsync(`git clone --depth 1 ${githubRepoUrl} ${cloneDir}`, {
           timeout: 30000,
-          stdio: "pipe",
         });
         projectDirFlag = `--project-dir ${cloneDir}`;
       } catch (cloneError) {
@@ -142,9 +144,8 @@ export async function POST(request: NextRequest) {
       .filter(Boolean)
       .join(" ");
 
-    execSync(cmd, {
+    await execAsync(cmd, {
       timeout: 55000,
-      stdio: "pipe",
       cwd: engineBase,
     });
 
@@ -198,7 +199,7 @@ export async function POST(request: NextRequest) {
       try {
         const sourceScript = path.join(engineBase, "scripts", "engine", "source-scanner.mjs");
         const sourceCmd = `node ${sourceScript} --project-dir ${cloneDir}`;
-        execSync(sourceCmd, { timeout: 30000, stdio: "pipe", cwd: engineBase });
+        await execAsync(sourceCmd, { timeout: 30000, cwd: engineBase });
 
         const sourceFindingsPath = path.join(auditDir, "source-findings.json");
         if (fs.existsSync(sourceFindingsPath)) {

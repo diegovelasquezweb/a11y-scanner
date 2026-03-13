@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import Link from "next/link";
 
 interface StepInfo {
   status: "pending" | "running" | "done" | "error";
@@ -20,12 +19,11 @@ interface ProgressData {
 }
 
 const STEPS = [
-  { key: "browser", label: "Acquiring browser" },
   { key: "page", label: "Loading page" },
   { key: "axe", label: "Running axe-core" },
   { key: "cdp", label: "Running CDP checks" },
   { key: "pa11y", label: "Running pa11y" },
-  { key: "merge", label: "Merging results" },
+  { key: "merge", label: "Processing" },
   { key: "intelligence", label: "Enriching with intelligence" },
 ] as const;
 
@@ -35,9 +33,6 @@ function formatStepDetail(key: string, info: StepInfo): string | null {
   if (key === "axe" && info.found !== undefined) return `${info.found} found`;
   if (key === "cdp" && info.found !== undefined) return `${info.found} found`;
   if (key === "pa11y" && info.found !== undefined) return `${info.found} found`;
-  if (key === "merge" && info.merged !== undefined) {
-    return `${info.merged} unique (axe: ${info.axe ?? 0}, cdp: ${info.cdp ?? 0}, pa11y: ${info.pa11y ?? 0})`;
-  }
   if (key === "intelligence" && info.enriched !== undefined) return `${info.enriched} enriched`;
   return null;
 }
@@ -50,15 +45,17 @@ interface CompletedStep {
 
 interface ScanProgressProps {
   isScanning: boolean;
-  scanId?: string | null;
+  initialScanId?: string | null;
   scanError?: string | null;
   onRetry?: () => void;
 }
 
-export default function ScanProgress({ isScanning, scanId, scanError, onRetry }: ScanProgressProps) {
+export default function ScanProgress({ isScanning, initialScanId, scanError, onRetry }: ScanProgressProps) {
   const [elapsed, setElapsed] = useState(0);
-  const [currentStepLabel, setCurrentStepLabel] = useState<string>("Preparing...");
+  const [currentStepLabel, setCurrentStepLabel] = useState<string>("Loading page");
   const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
+  const [doneCount, setDoneCount] = useState(0);
+  const [scanId, setScanId] = useState<string | null>(initialScanId || null);
 
   const [failedStep, setFailedStep] = useState<string | null>(null);
 
@@ -69,32 +66,20 @@ export default function ScanProgress({ isScanning, scanId, scanError, onRetry }:
   const progressRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
 
-  // Reset state when scanning starts/stops
+  // Timer for elapsed time
   useEffect(() => {
-    if (isScanning) {
-      startTimeRef.current = Date.now();
-      setElapsed(0);
-      setCurrentStepLabel("Preparing...");
-      setCompletedSteps([]);
-      setFailedStep(null);
-      seenDoneRef.current = new Set();
+    if (!isScanning) return;
 
-      timerRef.current = setInterval(() => {
-        if (startTimeRef.current) {
-          setElapsed((Date.now() - startTimeRef.current) / 1000);
-        }
-      }, 100);
-
-      // Move focus to progress region when scan starts
-      requestAnimationFrame(() => {
-        progressRef.current?.focus();
-      });
-    } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
+    startTimeRef.current = Date.now();
+    timerRef.current = setInterval(() => {
+      if (startTimeRef.current) {
+        setElapsed((Date.now() - startTimeRef.current) / 1000);
       }
-    }
+    }, 100);
+
+    requestAnimationFrame(() => {
+      progressRef.current?.focus();
+    });
 
     return () => {
       if (timerRef.current) {
@@ -108,12 +93,18 @@ export default function ScanProgress({ isScanning, scanId, scanError, onRetry }:
     const steps = data.steps || {};
     let runningLabel: string | null = null;
 
+    // Capture scanId from progress data
+    if (data.scanId) {
+      setScanId(data.scanId);
+    }
+
     for (const step of STEPS) {
       const info = steps[step.key];
       if (!info) continue;
 
       if (info.status === "done" && !seenDoneRef.current.has(step.key)) {
         seenDoneRef.current.add(step.key);
+        setDoneCount(seenDoneRef.current.size);
         setCompletedSteps((prev) => [
           ...prev,
           {
@@ -171,9 +162,26 @@ export default function ScanProgress({ isScanning, scanId, scanError, onRetry }:
     };
   }, [isScanning, processSnapshot]);
 
-  const doneCount = completedSteps.length;
   const allDone = doneCount >= TOTAL_STEPS;
   const hasError = !!(scanError || failedStep);
+
+  // Stop timer when scan completes
+  useEffect(() => {
+    if (allDone && timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, [allDone]);
+
+  // Auto-redirect to results after 3 seconds
+  useEffect(() => {
+    if (allDone && !hasError && scanId) {
+      const timeout = setTimeout(() => {
+        window.location.href = `/scan/${scanId}`;
+      }, 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [allDone, hasError, scanId]);
 
   // Focus error message when error appears
   useEffect(() => {
@@ -262,19 +270,6 @@ export default function ScanProgress({ isScanning, scanId, scanError, onRetry }:
               </button>
             )}
           </div>
-        )}
-
-        {/* Skip delay button — shown when scan is complete and results are pending */}
-        {allDone && !hasError && scanId && (
-          <Link
-            href={`/scan/${scanId}`}
-            className="mb-3 inline-flex items-center gap-2 px-5 py-2.5 bg-sky-600 text-white font-bold text-sm rounded-md shadow-md hover:bg-sky-700 focus:outline-none focus:ring-4 focus:ring-sky-600/20 transition-all"
-          >
-            View Results
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
         )}
 
         {/* Progressbar — semantic */}

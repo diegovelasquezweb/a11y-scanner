@@ -86,8 +86,9 @@ export default function Home() {
         }`}
       >
         <ScanProgress
+          key={pendingScanId || "idle"}
           isScanning={isScanning}
-          scanId={pendingScanId}
+          initialScanId={pendingScanId}
           scanError={scanError}
           onRetry={handleRetry}
         />
