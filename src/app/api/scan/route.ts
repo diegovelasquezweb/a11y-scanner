@@ -86,13 +86,10 @@ async function runLocal(params: {
   const { scanId, targetUrl, githubRepoUrl, axeTags } = params;
 
   const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
-  // Resolve real path of the npm package (pnpm uses deep .pnpm/ paths, not the symlink)
-  const { createRequire } = await import("node:module");
-  const req = createRequire(import.meta.url);
-  const auditScriptPath = req.resolve("@diegovelasquezweb/a11y-engine/scripts/audit.mjs");
-  // SKILL_ROOT in utils.mjs = scripts/core/__dirname/../.. = package root
-  // audit.mjs is in scripts/, utils.mjs is in scripts/core/ → SKILL_ROOT = a11y-engine/
-  const engineBase = path.dirname(path.dirname(auditScriptPath));
+  // Use fs.realpathSync to resolve the pnpm symlink to the real package location
+  const symlinkBase = path.join(process.cwd(), "node_modules", "@diegovelasquezweb", "a11y-engine");
+  const engineBase = fs.realpathSync(symlinkBase);
+  const auditScriptPath = path.join(engineBase, "scripts", "audit.mjs");
   const auditDir = path.join(engineBase, ".audit");
 
   fs.mkdirSync(SCANS_DIR, { recursive: true });
