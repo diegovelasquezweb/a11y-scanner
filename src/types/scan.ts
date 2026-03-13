@@ -68,6 +68,12 @@ export interface PersonaGroup {
   icon: string;
 }
 
+export interface DetectedStack {
+  framework: string | null;
+  cms: string | null;
+  uiLibraries: string[];
+}
+
 export interface ScanResult {
   success: boolean;
   error?: string;
@@ -82,7 +88,60 @@ export interface ScanResult {
     findings: Finding[];
     quickWins: Finding[];
     totalFindings: number;
+    detectedStack?: DetectedStack;
   };
 }
 
 export type ScanStatus = "idle" | "running" | "success" | "error";
+
+export interface WcagLevel {
+  id: string;
+  label: string;
+  tags: string[];
+  description: string;
+}
+
+export const WCAG_LEVELS: WcagLevel[] = [
+  {
+    id: "wcag2a",
+    label: "WCAG 2.0 A",
+    tags: ["wcag2a"],
+    description: "Minimum level of conformance",
+  },
+  {
+    id: "wcag2aa",
+    label: "WCAG 2.0 AA",
+    tags: ["wcag2aa"],
+    description: "Standard compliance target",
+  },
+  {
+    id: "wcag21a",
+    label: "WCAG 2.1 A",
+    tags: ["wcag21a"],
+    description: "Mobile accessibility basics",
+  },
+  {
+    id: "wcag21aa",
+    label: "WCAG 2.1 AA",
+    tags: ["wcag21aa"],
+    description: "Current legal standard (EU/ADA)",
+  },
+  {
+    id: "wcag22a",
+    label: "WCAG 2.2 A",
+    tags: ["wcag22a"],
+    description: "Latest standard (level A)",
+  },
+  {
+    id: "wcag22aa",
+    label: "WCAG 2.2 AA",
+    tags: ["wcag22aa"],
+    description: "Latest recommended target",
+  },
+  {
+    id: "best-practice",
+    label: "Best Practices",
+    tags: ["best-practice"],
+    description: "Industry best practices (beyond WCAG)",
+  },
+];

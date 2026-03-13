@@ -9,6 +9,7 @@ export const maxDuration = 60;
 interface ScanRequestBody {
   targetUrl: string;
   githubRepoUrl?: string;
+  axeTags?: string[];
 }
 
 function validateUrl(url: string): boolean {
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = (await request.json()) as ScanRequestBody;
-    const { targetUrl, githubRepoUrl } = body;
+    const { targetUrl, githubRepoUrl, axeTags } = body;
 
     if (!targetUrl || !validateUrl(targetUrl)) {
       return NextResponse.json(
@@ -51,10 +52,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create temp working directory for .audit output
+    // Create temp working directory for repo clone
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "a11y-scan-"));
-    const auditDir = path.join(tmpDir, ".audit");
+
+    // The engine writes to SKILL_ROOT/.audit (src/engine/.audit)
+    const engineBase = path.join(process.cwd(), "src", "engine");
+    const auditDir = path.join(engineBase, ".audit");
+    // Clean previous audit data
+    if (fs.existsSync(auditDir)) {
+      fs.rmSync(auditDir, { recursive: true, force: true });
+    }
     fs.mkdirSync(auditDir, { recursive: true });
+
+    // Helper to write progress file for SSE polling
+    const progressPath = path.join(auditDir, "progress.json");
+    function writeProgress(step: string, status: string, extra: Record<string, unknown> = {}) {
+      let progress: Record<string, unknown> = {};
+      try {
+        if (fs.existsSync(progressPath)) {
+          progress = JSON.parse(fs.readFileSync(progressPath, "utf-8"));
+        }
+      } catch { /* ignore */ }
+      const steps = (progress.steps || {}) as Record<string, unknown>;
+      steps[step] = { status, updatedAt: new Date().toISOString(), ...extra };
+      progress.steps = steps;
+      progress.currentStep = step;
+      fs.writeFileSync(progressPath, JSON.stringify(progress, null, 2));
+    }
+
+    // Initialize progress
+    writeProgress("browser", "running");
 
     // Clone repo if provided
     let projectDirFlag = "";
@@ -72,9 +99,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Determine engine paths
-    const engineBase = path.join(process.cwd(), "src", "engine");
     const auditScript = path.join(engineBase, "scripts", "audit.mjs");
+
+    // Build axe-tags flag
+    const axeTagsFlag = axeTags && axeTags.length > 0
+      ? `--axe-tags ${axeTags.join(",")}`
+      : "";
 
     // Build command
     const cmd = [
@@ -86,23 +116,19 @@ export async function POST(request: NextRequest) {
       "1",
       "--skip-patterns",
       projectDirFlag,
+      axeTagsFlag,
     ]
       .filter(Boolean)
       .join(" ");
 
-    // Set env to redirect .audit output to tmpDir
-    const env = {
-      ...process.env,
-      A11Y_AUDIT_DIR: auditDir,
-      A11Y_ASSET_DIR: path.join(engineBase, "assets"),
-    };
-
     execSync(cmd, {
       timeout: 55000,
       stdio: "pipe",
-      env,
       cwd: engineBase,
     });
+
+    // Mark intelligence processing step
+    writeProgress("intelligence", "running");
 
     // Read findings
     const findingsPath = path.join(auditDir, "a11y-findings.json");
@@ -114,6 +140,7 @@ export async function POST(request: NextRequest) {
     }
 
     const rawFindings = JSON.parse(fs.readFileSync(findingsPath, "utf-8"));
+    writeProgress("intelligence", "done");
 
     // Run source scanner if we have a cloned repo
     let sourcePatternFindings: unknown[] = [];
@@ -121,7 +148,7 @@ export async function POST(request: NextRequest) {
       try {
         const sourceScript = path.join(engineBase, "scripts", "engine", "source-scanner.mjs");
         const sourceCmd = `node ${sourceScript} --project-dir ${cloneDir}`;
-        execSync(sourceCmd, { timeout: 30000, stdio: "pipe", env, cwd: engineBase });
+        execSync(sourceCmd, { timeout: 30000, stdio: "pipe", cwd: engineBase });
 
         const sourceFindingsPath = path.join(auditDir, "source-findings.json");
         if (fs.existsSync(sourceFindingsPath)) {
@@ -164,7 +191,19 @@ export async function POST(request: NextRequest) {
         effort: item.effort ?? null,
         relatedRules: Array.isArray(item.related_rules) ? item.related_rules : [],
         fixCodeLang: item.fix_code_lang ?? "html",
-        screenshotPath: null,
+        screenshotPath: item.screenshot_path
+          ? (() => {
+              try {
+                const filename = String(item.screenshot_path).replace(/^screenshots\//, "");
+                const absPath = path.join(auditDir, "screenshots", filename);
+                if (fs.existsSync(absPath)) {
+                  const data = fs.readFileSync(absPath);
+                  return `data:image/png;base64,${data.toString("base64")}`;
+                }
+              } catch { /* ignore */ }
+              return null;
+            })()
+          : null,
         falsePositiveRisk: item.false_positive_risk ?? null,
         guardrails: item.guardrails ?? null,
         fixDifficultyNotes: item.fix_difficulty_notes ?? null,
@@ -201,23 +240,28 @@ export async function POST(request: NextRequest) {
       if (sev in totals) totals[sev as keyof typeof totals] += 1;
     }
 
-    // Compute score
-    const baseScore = 100;
-    const penalties = { Critical: 25, Serious: 15, Moderate: 5, Minor: 2 };
+    // Compute score using official compliance-config.json
+    const complianceConfigPath = path.join(engineBase, "assets", "reporting", "compliance-config.json");
+    const complianceConfig = JSON.parse(fs.readFileSync(complianceConfigPath, "utf-8"));
+    const officialPenalties = complianceConfig.complianceScore.penalties as Record<string, number>;
+    const gradeThresholds = complianceConfig.gradeThresholds as { min: number; label: string }[];
+
     const rawScore =
-      baseScore -
-      totals.Critical * penalties.Critical -
-      totals.Serious * penalties.Serious -
-      totals.Moderate * penalties.Moderate -
-      totals.Minor * penalties.Minor;
+      complianceConfig.complianceScore.baseScore -
+      totals.Critical * (officialPenalties.Critical ?? 15) -
+      totals.Serious * (officialPenalties.Serious ?? 5) -
+      totals.Moderate * (officialPenalties.Moderate ?? 2) -
+      totals.Minor * (officialPenalties.Minor ?? 0.5);
     const score = Math.max(0, Math.min(100, Math.round(rawScore)));
 
-    // Score label
+    // Score label from official grade thresholds
     let label = "Critical";
-    if (score >= 90) label = "Excellent";
-    else if (score >= 75) label = "Good";
-    else if (score >= 55) label = "Fair";
-    else if (score >= 30) label = "Poor";
+    for (const threshold of gradeThresholds) {
+      if (score >= threshold.min) {
+        label = threshold.label;
+        break;
+      }
+    }
 
     // WCAG status
     let wcagStatus: "Pass" | "Conditional Pass" | "Fail" = "Pass";
@@ -232,26 +276,38 @@ export async function POST(request: NextRequest) {
       )
       .slice(0, 3);
 
-    // Persona groups (simplified)
-    const personaGroups: Record<string, { label: string; count: number; icon: string }> = {
-      screenReader: { label: "Screen Reader Users", count: 0, icon: "sr" },
-      keyboard: { label: "Keyboard Users", count: 0, icon: "kb" },
-      vision: { label: "Low Vision Users", count: 0, icon: "vis" },
-      cognitive: { label: "Cognitive Disabilities", count: 0, icon: "cog" },
-    };
+    // Persona groups using official wcag-reference.json mapping
+    const wcagRefPath = path.join(engineBase, "assets", "reporting", "wcag-reference.json");
+    const wcagRef = JSON.parse(fs.readFileSync(wcagRefPath, "utf-8"));
+    const personaConfig = wcagRef.personaConfig as Record<string, { label: string; icon: string }>;
+    const personaMapping = wcagRef.personaMapping as Record<string, { rules: string[]; keywords: string[] }>;
+
+    const personaGroups: Record<string, { label: string; count: number; icon: string }> = {};
+    for (const [key, config] of Object.entries(personaConfig)) {
+      personaGroups[key] = { label: config.label, count: 0, icon: key };
+    }
 
     for (const f of findings) {
+      const ruleId = ((f as { ruleId: string }).ruleId || "").toLowerCase();
       const users = ((f as { impactedUsers: string }).impactedUsers || "").toLowerCase();
-      const rule = ((f as { ruleId: string }).ruleId || "").toLowerCase();
-      if (users.includes("screen reader") || rule.includes("aria") || rule.includes("label"))
-        personaGroups.screenReader.count++;
-      if (users.includes("keyboard") || rule.includes("focus") || rule.includes("tabindex"))
-        personaGroups.keyboard.count++;
-      if (users.includes("vision") || rule.includes("contrast") || rule.includes("color"))
-        personaGroups.vision.count++;
-      if (users.includes("cognitive") || rule.includes("language") || rule.includes("heading"))
-        personaGroups.cognitive.count++;
+
+      for (const [personaKey, mapping] of Object.entries(personaMapping)) {
+        if (!personaGroups[personaKey]) continue;
+        const matchesRule = mapping.rules.some((r: string) => ruleId === r.toLowerCase());
+        const matchesKeyword = mapping.keywords.some((kw: string) => users.includes(kw.toLowerCase()));
+        if (matchesRule || matchesKeyword) {
+          personaGroups[personaKey].count++;
+        }
+      }
     }
+
+    // Extract detected stack from metadata
+    const projectContext = rawFindings.metadata?.projectContext || {};
+    const detectedStack = {
+      framework: projectContext.framework || null,
+      cms: projectContext.cms || null,
+      uiLibraries: projectContext.uiLibraries || [],
+    };
 
     return NextResponse.json({
       success: true,
@@ -267,6 +323,7 @@ export async function POST(request: NextRequest) {
         quickWins,
         totalFindings: findings.length,
         sourcePatternFindings,
+        detectedStack,
       },
     });
   } catch (error) {

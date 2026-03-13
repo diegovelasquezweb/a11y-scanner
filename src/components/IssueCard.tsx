@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { Finding } from "@/types/scan";
 
 function escapeHtml(str: string): string {
@@ -34,12 +34,23 @@ type TabKey = "problem" | "fix" | "technical" | "visual";
 
 interface IssueCardProps {
   finding: Finding;
+  forceExpanded?: boolean;
 }
 
-export function IssueCard({ finding }: IssueCardProps) {
+export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("problem");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const tablistRef = useRef<HTMLDivElement>(null);
+  const prevForceExpanded = useRef(forceExpanded);
+
+  // Sync with global expand/collapse only when the global toggle actually changes
+  useEffect(() => {
+    if (forceExpanded !== prevForceExpanded.current) {
+      prevForceExpanded.current = forceExpanded;
+      setIsExpanded(!!forceExpanded);
+    }
+  }, [forceExpanded]);
 
   const styles = SEVERITY_STYLES[finding.severity] ?? SEVERITY_STYLES.Minor;
 
@@ -88,6 +99,34 @@ export function IssueCard({ finding }: IssueCardProps) {
 
   const availableTabs = tabs.filter((t) => t.available);
 
+  // Keyboard navigation for tabs
+  const handleTabKeyDown = useCallback(
+    (e: React.KeyboardEvent, currentKey: TabKey) => {
+      const currentIndex = availableTabs.findIndex((t) => t.key === currentKey);
+      let nextIndex = currentIndex;
+
+      if (e.key === "ArrowRight") {
+        nextIndex = (currentIndex + 1) % availableTabs.length;
+      } else if (e.key === "ArrowLeft") {
+        nextIndex = (currentIndex - 1 + availableTabs.length) % availableTabs.length;
+      } else if (e.key === "Home") {
+        nextIndex = 0;
+      } else if (e.key === "End") {
+        nextIndex = availableTabs.length - 1;
+      } else {
+        return;
+      }
+
+      e.preventDefault();
+      setActiveTab(availableTabs[nextIndex].key);
+
+      // Focus the new tab button
+      const tabButtons = tablistRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+      tabButtons?.[nextIndex]?.focus();
+    },
+    [availableTabs]
+  );
+
   const stackNotes = [
     ...(finding.frameworkNotes
       ? Object.entries(finding.frameworkNotes).map(([fw, note]) => ({
@@ -116,81 +155,137 @@ export function IssueCard({ finding }: IssueCardProps) {
       {/* Header */}
       <button
         type="button"
-        className="w-full text-left px-6 py-5 flex items-start justify-between gap-4 cursor-pointer"
+        className="card-header w-full text-left p-5 md:p-6 bg-gradient-to-r from-white to-slate-50/80 cursor-pointer select-none relative focus:outline-none focus:ring-4 focus:ring-indigo-500/20"
         aria-expanded={isExpanded}
+        aria-controls={`body-${finding.id}`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <span
-              className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${styles.badge} uppercase tracking-widest shadow-sm`}
-            >
-              {finding.severity}
-            </span>
-            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${effort.style} uppercase tracking-widest shadow-sm`}>
-              {effort.text}
-            </span>
-            {finding.wcag && (
-              <span className="wcag-label px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-widest shadow-sm">
-                WCAG {finding.wcag}
+        <div className="flex items-start gap-4">
+          <div className="flex-1 min-w-0">
+            {/* Badges row */}
+            <div className="flex flex-wrap items-center gap-2.5 mb-3.5">
+              <span
+                className={`px-3 py-1 rounded-full text-[11px] font-bold border ${styles.badge} shadow-sm backdrop-blur-sm uppercase tracking-wider`}
+              >
+                {finding.severity}
               </span>
-            )}
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200/60 uppercase tracking-widest shadow-sm">
-              {normalizeBadgeText(finding.ruleId)}
-            </span>
-            {finding.category && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-500 border border-slate-200/50 uppercase tracking-widest">
-                {normalizeBadgeText(finding.category, true)}
+              <span
+                className={`px-3 py-1 rounded-full text-[11px] font-bold border ${effort.style} shadow-sm backdrop-blur-sm uppercase tracking-wider`}
+              >
+                {effort.text}
               </span>
+              {finding.wcag && (
+                <span className="wcag-label px-3 py-1 rounded-full text-[11px] font-bold bg-indigo-50/80 text-indigo-700 border border-indigo-100/80 shadow-sm backdrop-blur-sm">
+                  WCAG {finding.wcag}
+                </span>
+              )}
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
+                {normalizeBadgeText(finding.ruleId)}
+              </span>
+              {finding.category && (
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-violet-50 text-violet-700 border border-violet-200">
+                  {normalizeBadgeText(finding.category, true)}
+                </span>
+              )}
+            </div>
+            {/* Title */}
+            <h3 className="searchable-field text-lg md:text-xl font-extrabold text-slate-900 leading-tight mb-3 group-hover:text-indigo-900 transition-colors">
+              {finding.title}
+            </h3>
+            {/* Selector chip */}
+            {finding.selector && (
+              <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px] text-slate-600 font-medium">
+                <div className="flex items-center gap-1.5 min-w-0 bg-slate-50/50 px-2 py-1 rounded-md border border-slate-100">
+                  <svg
+                    className="w-3.5 h-3.5 text-slate-500 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                    />
+                  </svg>
+                  <code className="text-[12px] text-slate-800 font-mono truncate min-w-0 flex-1">
+                    {finding.selector}
+                  </code>
+                </div>
+              </div>
             )}
           </div>
-          <h3 className="searchable-field text-base font-bold text-slate-900 leading-snug">
-            {finding.title}
-          </h3>
-          <p className="searchable-field text-xs text-slate-500 font-mono mt-1 truncate">
-            {finding.area}
-          </p>
+          {/* Chevron */}
+          <div className="bg-white p-1.5 rounded-full border border-slate-200 shadow-sm group-hover:bg-slate-50 transition-colors mt-1 flex-shrink-0">
+            <svg
+              className={`card-chevron w-5 h-5 text-slate-500 transition-transform duration-300 ${
+                isExpanded ? "rotate-180" : ""
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         </div>
-        <svg
-          className={`card-chevron w-5 h-5 text-slate-400 transition-transform duration-300 mt-1 flex-shrink-0 ${
-            isExpanded ? "rotate-180" : ""
-          }`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
       </button>
 
       {/* Body */}
-      <div className={`card-body ${isExpanded ? "expanded" : ""}`}>
+      <div
+        className={`card-body ${isExpanded ? "expanded" : ""}`}
+        id={`body-${finding.id}`}
+      >
         <div>
-          <div className="px-6 pb-6">
+          <div className="p-6 md:p-8 bg-slate-50/30 border-t border-slate-100/60">
             {/* Tabs */}
-            <div role="tablist" aria-label="Issue details" className="flex gap-2 mb-6 bg-slate-50/80 p-1.5 rounded-xl flex-wrap">
-              {availableTabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  role="tab"
-                  type="button"
-                  aria-selected={activeTab === tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors ${
-                    activeTab === tab.key
-                      ? "bg-white text-indigo-700 border border-indigo-200 shadow-sm"
-                      : "text-slate-600 border border-transparent hover:bg-white/70"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+            <div
+              ref={tablistRef}
+              className="rounded-xl border border-slate-200 bg-slate-100/70 p-2 mb-4"
+            >
+              <div
+                role="tablist"
+                aria-label={`Issue detail sections for ${finding.id}`}
+                className="flex flex-wrap gap-2"
+              >
+                {availableTabs.map((tab, idx) => {
+                  const isActive = activeTab === tab.key;
+                  return (
+                    <button
+                      key={tab.key}
+                      role="tab"
+                      type="button"
+                      aria-selected={isActive}
+                      aria-controls={`panel-${finding.id}-${tab.key}`}
+                      tabIndex={isActive ? 0 : -1}
+                      id={`tab-${finding.id}-${tab.key}`}
+                      onClick={() => setActiveTab(tab.key)}
+                      onKeyDown={(e) => handleTabKeyDown(e, tab.key)}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors ${
+                        isActive
+                          ? "bg-white text-indigo-700 border border-indigo-200 shadow-sm"
+                          : "text-slate-600 border border-transparent hover:bg-white/70"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Problem Panel */}
-            {activeTab === "problem" && (
-              <div className="grid grid-cols-1 gap-6">
+            {/* Tab Panels */}
+            <div className="space-y-4">
+              {/* Problem Panel */}
+              <div
+                role="tabpanel"
+                id={`panel-${finding.id}-problem`}
+                aria-labelledby={`tab-${finding.id}-problem`}
+                className={activeTab === "problem" ? "" : "hidden"}
+              >
                 <div className="bg-white rounded-xl border border-slate-200/60 shadow-sm p-5 space-y-5">
                   <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
                     <div className="p-1 bg-slate-100 rounded-md">
@@ -228,150 +323,192 @@ export function IssueCard({ finding }: IssueCardProps) {
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* Fix Panel */}
-            {activeTab === "fix" && (
-              <div className="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100/80 rounded-xl p-5 relative overflow-hidden shadow-sm">
-                <h4 className="text-[11px] font-black text-indigo-700 uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2">
-                  <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  The Fix
-                </h4>
-                <div className="relative z-10 space-y-4">
-                  {finding.fixDescription && (
-                    <p className="text-sm text-indigo-800 leading-relaxed">
-                      {finding.fixDescription}
-                    </p>
-                  )}
-                  {finding.fixCode && (
-                    <div className="relative group/code">
-                      <pre
-                        tabIndex={0}
-                        className="bg-slate-900 text-emerald-300 p-3 rounded-lg overflow-x-auto text-xs font-mono border border-slate-700 whitespace-pre-wrap"
-                      >
-                        {finding.fixCode}
-                      </pre>
-                      <button
-                        type="button"
-                        aria-label="Copy code snippet"
-                        title="Copy code snippet"
-                        onClick={() => copyToClipboard(finding.fixCode!, `fix-${finding.id}`)}
-                        className={`absolute top-2 right-2 p-1.5 rounded-lg text-white opacity-0 group-hover/code:opacity-100 transition-all ${
-                          copiedId === `fix-${finding.id}`
-                            ? "bg-emerald-500"
-                            : "bg-indigo-500/50 hover:bg-indigo-500"
-                        }`}
-                      >
-                        {copiedId === `fix-${finding.id}` ? (
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M5 13l4 4L19 7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        ) : (
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                      </button>
-                    </div>
-                  )}
-                  {finding.mdn && (
-                    <div className="pt-1">
-                      <a
-                        href={finding.mdn}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-colors flex items-center gap-1.5 uppercase tracking-wider"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18 18.246 18.477 16.5 18c-1.746 0-3.332.477-4.5 1.253" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        MDN Docs
-                      </a>
-                    </div>
-                  )}
-                  {finding.fixDifficultyNotes && (
-                    <div className="mt-4 pt-3 border-t border-indigo-100/50">
-                      <h4 className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                        Implementation Notes
-                      </h4>
-                      <p className="text-[12px] text-amber-900/80 leading-relaxed bg-amber-50/60 border border-amber-100/60 rounded-lg p-3">
-                        {finding.fixDifficultyNotes}
+              {/* Fix Panel */}
+              <div
+                role="tabpanel"
+                id={`panel-${finding.id}-fix`}
+                aria-labelledby={`tab-${finding.id}-fix`}
+                className={activeTab === "fix" ? "" : "hidden"}
+              >
+                <div className="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100/80 rounded-xl p-5 relative overflow-hidden shadow-sm">
+                  <h4 className="text-[11px] font-black text-indigo-700 uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    The Fix
+                  </h4>
+                  <div className="relative z-10 space-y-4">
+                    {finding.fixDescription && (
+                      <p className="text-sm text-indigo-800 leading-relaxed">
+                        {finding.fixDescription}
                       </p>
-                    </div>
-                  )}
-                  {stackNotes.length > 0 && (
-                    <div className="mt-4 pt-3 border-t border-indigo-100/50">
-                      <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                        Stack Notes
-                      </h4>
-                      <div className="space-y-2">
-                        {stackNotes.map(({ key, note, style }) => (
-                          <div key={key} className="flex gap-2 items-start">
-                            <span className={`flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold border ${style} uppercase tracking-wider mt-0.5`}>
-                              {key}
-                            </span>
-                            <p className="text-[12px] text-slate-600 leading-relaxed">{note}</p>
-                          </div>
-                        ))}
+                    )}
+                    {finding.fixCode && (
+                      <div className="relative group/code">
+                        <pre
+                          tabIndex={0}
+                          className="bg-slate-900 text-emerald-300 p-3 rounded-lg overflow-x-auto text-xs font-mono border border-slate-700 whitespace-pre-wrap"
+                        >
+                          <code>{finding.fixCode}</code>
+                        </pre>
+                        <button
+                          type="button"
+                          aria-label="Copy code snippet"
+                          title="Copy code snippet"
+                          onClick={() => copyToClipboard(finding.fixCode!, `fix-${finding.id}`)}
+                          className={`absolute top-2 right-2 p-1.5 rounded-lg text-white opacity-0 group-hover/code:opacity-100 transition-all ${
+                            copiedId === `fix-${finding.id}`
+                              ? "bg-emerald-500"
+                              : "bg-indigo-500/50 hover:bg-indigo-500"
+                          }`}
+                        >
+                          {copiedId === `fix-${finding.id}` ? (
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M5 13l4 4L19 7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          ) : (
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          )}
+                        </button>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Technical Evidence Panel */}
-            {activeTab === "technical" && finding.evidence.length > 0 && (
-              <div className="bg-slate-900 rounded-xl p-6 border border-slate-700 shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" aria-hidden="true" />
-                <h4 className="text-[11px] font-black text-slate-600 uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2">
-                  Technical Evidence
-                </h4>
-                <div className="relative z-10 space-y-4">
-                  {finding.evidence.map((item, idx) => (
-                    <div key={idx} className="mb-4 last:mb-0">
-                      {item.html && (
-                        <div className="mb-2">
-                          <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider block mb-1">
-                            Source
-                          </span>
-                          <pre
-                            tabIndex={0}
-                            className="bg-slate-900 text-slate-50 p-3 rounded-lg overflow-x-auto text-xs font-mono border border-slate-700"
-                          >
-                            <code>{escapeHtml(item.html)}</code>
-                          </pre>
+                    )}
+                    {finding.mdn && (
+                      <div className="pt-1">
+                        <a
+                          href={finding.mdn}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-colors flex items-center gap-1.5 uppercase tracking-wider"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18 18.246 18.477 16.5 18c-1.746 0-3.332.477-4.5 1.253" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          MDN Docs
+                        </a>
+                      </div>
+                    )}
+                    {finding.fixDifficultyNotes && (
+                      <div className="mt-4 pt-3 border-t border-indigo-100/50">
+                        <h4 className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                          Implementation Notes
+                        </h4>
+                        <p className="text-[12px] text-amber-900/80 leading-relaxed bg-amber-50/60 border border-amber-100/60 rounded-lg p-3">
+                          {finding.fixDifficultyNotes}
+                        </p>
+                      </div>
+                    )}
+                    {stackNotes.length > 0 && (
+                      <div className="mt-4 pt-3 border-t border-indigo-100/50">
+                        <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                          Stack Notes
+                        </h4>
+                        <div className="space-y-2">
+                          {stackNotes.map(({ key, note, style }) => (
+                            <div key={key} className="flex gap-2 items-start">
+                              <span className={`flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold border ${style} uppercase tracking-wider mt-0.5`}>
+                                {key}
+                              </span>
+                              <p className="text-[12px] text-slate-600 leading-relaxed">{note}</p>
+                            </div>
+                          ))}
                         </div>
-                      )}
-                      {item.failureSummary && (
-                        <div className="mt-2 p-3 bg-rose-50 border-l-4 border-rose-500 text-rose-700 text-xs font-mono whitespace-pre-wrap">
-                          {item.failureSummary}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Visual Evidence Panel */}
-            {activeTab === "visual" && finding.screenshotPath && (
-              <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm">
-                <h4 className="text-[11px] font-black text-slate-600 uppercase tracking-widest mb-4 flex items-center gap-2">
-                  Visual Evidence
-                </h4>
-                <div className="bg-slate-50/50 p-2 rounded-xl border border-slate-200/60 inline-block shadow-sm">
-                  <img
-                    src={finding.screenshotPath}
-                    alt={`Screenshot of ${finding.title}`}
-                    className="rounded-lg border border-slate-200 shadow-sm max-h-[360px] w-auto object-contain bg-white"
-                    loading="lazy"
-                  />
+              {/* Technical Evidence Panel */}
+              {finding.evidence.length > 0 && (
+                <div
+                  role="tabpanel"
+                  id={`panel-${finding.id}-technical`}
+                  aria-labelledby={`tab-${finding.id}-technical`}
+                  className={activeTab === "technical" ? "" : "hidden"}
+                >
+                  <div className="bg-slate-900 rounded-xl p-6 border border-slate-700 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" aria-hidden="true" />
+                    <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2">
+                      Technical Evidence
+                    </h4>
+                    <div className="relative z-10 space-y-4">
+                      {finding.evidence.map((item, idx) => (
+                        <div key={idx} className="mb-4 last:mb-0">
+                          {item.html && (
+                            <div className="mb-2">
+                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                                Source
+                              </span>
+                              <div className="relative group/evidence">
+                                <pre
+                                  tabIndex={0}
+                                  className="bg-slate-800 text-slate-50 p-3 rounded-lg overflow-x-auto text-xs font-mono border border-slate-700"
+                                >
+                                  <code>{escapeHtml(item.html)}</code>
+                                </pre>
+                                <button
+                                  type="button"
+                                  aria-label="Copy source HTML"
+                                  title="Copy source HTML"
+                                  onClick={() => copyToClipboard(item.html!, `ev-${finding.id}-${idx}`)}
+                                  className={`absolute top-2 right-2 p-1.5 rounded-lg text-white opacity-0 group-hover/evidence:opacity-100 transition-all ${
+                                    copiedId === `ev-${finding.id}-${idx}`
+                                      ? "bg-emerald-500"
+                                      : "bg-slate-600/50 hover:bg-slate-600"
+                                  }`}
+                                >
+                                  {copiedId === `ev-${finding.id}-${idx}` ? (
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                      <path d="M5 13l4 4L19 7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  ) : (
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                      <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                          {item.failureSummary && (
+                            <div className="mt-2 p-3 bg-rose-950/30 border-l-4 border-rose-500 text-rose-300 text-xs font-mono whitespace-pre-wrap rounded-r-lg">
+                              {item.failureSummary}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* Visual Evidence Panel */}
+              {finding.screenshotPath && (
+                <div
+                  role="tabpanel"
+                  id={`panel-${finding.id}-visual`}
+                  aria-labelledby={`tab-${finding.id}-visual`}
+                  className={activeTab === "visual" ? "" : "hidden"}
+                >
+                  <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm">
+                    <h4 className="text-[11px] font-black text-slate-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      Visual Evidence
+                    </h4>
+                    <div className="bg-slate-50/50 p-2 rounded-xl border border-slate-200/60 inline-block shadow-sm">
+                      <img
+                        src={finding.screenshotPath}
+                        alt={`Screenshot of ${finding.title}`}
+                        className="rounded-lg border border-slate-200 shadow-sm max-h-[360px] w-auto object-contain bg-white"
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

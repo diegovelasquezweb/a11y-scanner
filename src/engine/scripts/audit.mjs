@@ -158,6 +158,7 @@ async function main() {
   const affectedOnly = argv.includes("--affected-only");
   const ignoreFindings = getArgValue("ignore-findings");
   const excludeSelectors = getArgValue("exclude-selectors");
+  const axeTags = getArgValue("axe-tags");
 
   const waitUntil = getArgValue("wait-until");
   const framework = getArgValue("framework");
@@ -253,6 +254,7 @@ async function main() {
     if (viewport) {
       scanArgs.push("--viewport", `${viewport.width}x${viewport.height}`);
     }
+    if (axeTags) scanArgs.push("--axe-tags", axeTags);
 
     await runScript("engine/dom-scanner.mjs", scanArgs, childEnv);
 

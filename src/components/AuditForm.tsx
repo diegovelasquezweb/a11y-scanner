@@ -2,16 +2,20 @@
 
 import { useState, useRef, useId } from "react";
 import type { ScanStatus } from "@/types/scan";
+import { WCAG_LEVELS } from "@/types/scan";
+
+const DEFAULT_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
 
 interface AuditFormProps {
   status: ScanStatus;
   errorMessage: string;
-  onSubmit: (targetUrl: string, githubRepoUrl: string) => void;
+  onSubmit: (targetUrl: string, githubRepoUrl: string, axeTags: string[]) => void;
 }
 
 export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
   const [targetUrl, setTargetUrl] = useState("");
   const [githubRepoUrl, setGithubRepoUrl] = useState("");
+  const [selectedLevels, setSelectedLevels] = useState<Set<string>>(new Set(DEFAULT_TAGS));
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const targetInputRef = useRef<HTMLInputElement>(null);
   const targetErrorId = useId();
@@ -61,7 +65,8 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
     e.preventDefault();
     if (status === "running") return;
     if (!validate()) return;
-    onSubmit(targetUrl.trim(), githubRepoUrl.trim());
+    const tags = Array.from(selectedLevels);
+    onSubmit(targetUrl.trim(), githubRepoUrl.trim(), tags);
   };
 
   const isRunning = status === "running";
@@ -180,6 +185,66 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
           </div>
         </div>
 
+        {/* WCAG Level Checkboxes */}
+        <fieldset className="mb-6">
+          <legend className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-3">
+            WCAG Levels & Rules
+          </legend>
+          <div className="flex flex-wrap gap-3">
+            {WCAG_LEVELS.map((level) => {
+              const isChecked = level.tags.every((t) => selectedLevels.has(t));
+              return (
+                <label
+                  key={level.id}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium cursor-pointer transition-all select-none ${
+                    isChecked
+                      ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                  } ${isRunning ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    disabled={isRunning}
+                    onChange={() => {
+                      setSelectedLevels((prev) => {
+                        const next = new Set(prev);
+                        if (isChecked) {
+                          level.tags.forEach((t) => next.delete(t));
+                        } else {
+                          level.tags.forEach((t) => next.add(t));
+                        }
+                        return next;
+                      });
+                    }}
+                    className="sr-only"
+                  />
+                  <span
+                    className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                      isChecked
+                        ? "bg-white border-white"
+                        : "border-slate-300"
+                    }`}
+                    aria-hidden="true"
+                  >
+                    {isChecked && (
+                      <svg className="w-3 h-3 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </span>
+                  <span className="leading-tight">
+                    <span className="block">{level.label}</span>
+                    <span className={`block text-[10px] ${isChecked ? "text-slate-300" : "text-slate-400"}`}>
+                      {level.description}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+
         <div className="flex items-center gap-4">
           <button
             type="submit"
@@ -224,7 +289,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
           <div aria-live="polite" aria-atomic="true" id={statusId}>
             {isRunning && (
               <p className="text-sm text-slate-500 font-medium">
-                Running accessibility scan... This may take up to 60 seconds.
+                Running accessibility scan...
               </p>
             )}
             {status === "error" && errorMessage && (

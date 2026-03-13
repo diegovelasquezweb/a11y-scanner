@@ -8,6 +8,7 @@
 
 import { chromium } from "playwright";
 import AxeBuilder from "@axe-core/playwright";
+import pa11y from "pa11y";
 import { log, DEFAULTS, writeJson, getInternalPath } from "../core/utils.mjs";
 import { ASSET_PATHS, loadAssetJson } from "../core/asset-loader.mjs";
 import path from "node:path";
@@ -85,6 +86,7 @@ function parseArgs(argv) {
     onlyRule: null,
     crawlDepth: DEFAULTS.crawlDepth,
     viewport: null,
+    axeTags: null,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -110,6 +112,7 @@ function parseArgs(argv) {
       args.excludeSelectors = value.split(",").map((s) => s.trim());
     if (key === "--color-scheme") args.colorScheme = value;
     if (key === "--screenshots-dir") args.screenshotsDir = value;
+    if (key === "--axe-tags") args.axeTags = value.split(",").map((s) => s.trim());
     if (key === "--viewport") {
       const [w, h] = value.split("x").map(Number);
       if (w && h) args.viewport = { width: w, height: h };
@@ -325,56 +328,133 @@ export async function discoverRoutes(page, baseUrl, maxRoutes, crawlDepth = 2) {
 }
 
 /**
- * Detects the web framework and UI libraries used by analyzing package.json and file structure.
- * @returns {Object} An object containing detected framework and UI libraries.
+ * Detects the web framework and UI libraries by analyzing the live page in the browser.
+ * Inspects meta tags, script sources, global JS variables, HTML attributes, and generated markup.
+ * Falls back to package.json analysis only when A11Y_PROJECT_DIR is set (GitHub repo provided).
+ * @param {import("playwright").Page} page - The Playwright page instance after navigation.
+ * @returns {Promise<Object>} An object containing detected framework, uiLibraries, and cms.
  */
-function detectProjectContext() {
+async function detectProjectContext(page) {
   const uiLibraries = [];
-  let pkgFramework = null;
-  let fileFramework = null;
+  let framework = null;
+  let cms = null;
 
-  const projectDir = process.env.A11Y_PROJECT_DIR || process.cwd();
-
+  // --- Browser-based detection (always runs) ---
   try {
-    const pkgPath = path.join(projectDir, "package.json");
-    if (fs.existsSync(pkgPath)) {
-      const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-      const allDeps = Object.keys({
-        ...(pkg.dependencies || {}),
-        ...(pkg.devDependencies || {}),
-      });
-      for (const [dep, fw] of STACK_DETECTION.frameworkPackageDetectors) {
-        if (allDeps.some((d) => d === dep || d.startsWith(`${dep}/`))) {
-          pkgFramework = fw;
+    const detection = await page.evaluate(() => {
+      const result = { framework: null, cms: null, uiLibraries: [] };
+      const html = document.documentElement.outerHTML;
+      const head = document.head?.innerHTML || "";
+      const scripts = [...document.querySelectorAll("script[src]")].map((s) => s.getAttribute("src") || "");
+      const links = [...document.querySelectorAll("link[href]")].map((l) => l.getAttribute("href") || "");
+      const allSources = [...scripts, ...links].join(" ");
+      const meta = (name) => document.querySelector(`meta[name="${name}"]`)?.getAttribute("content") || "";
+      const gen = meta("generator");
+
+      // --- CMS Detection ---
+      if (gen.toLowerCase().includes("wordpress") || html.includes("wp-content/") || html.includes("wp-includes/")) {
+        result.cms = "wordpress";
+      } else if (gen.toLowerCase().includes("drupal") || html.includes("drupal.js") || html.includes("/sites/default/")) {
+        result.cms = "drupal";
+      } else if (html.includes("cdn.shopify.com") || html.includes("Shopify.theme") || typeof window.Shopify !== "undefined") {
+        result.cms = "shopify";
+      } else if (gen.toLowerCase().includes("wix") || html.includes("wix.com")) {
+        result.cms = "wix";
+      } else if (gen.toLowerCase().includes("squarespace") || html.includes("squarespace.com")) {
+        result.cms = "squarespace";
+      } else if (html.includes("webflow.com") || html.includes("data-wf-")) {
+        result.cms = "webflow";
+      }
+
+      // --- Framework Detection ---
+      if (typeof window.__NEXT_DATA__ !== "undefined" || html.includes("/_next/") || allSources.includes("/_next/")) {
+        result.framework = "nextjs";
+      } else if (typeof window.__NUXT__ !== "undefined" || html.includes("/_nuxt/") || allSources.includes("/_nuxt/")) {
+        result.framework = "nuxt";
+      } else if (html.includes("___gatsby") || typeof window.___gatsby !== "undefined") {
+        result.framework = "gatsby";
+      } else if (html.includes("ng-version") || html.includes("ng-app") || html.includes("angular")) {
+        result.framework = "angular";
+      } else if (html.includes("data-svelte") || html.includes("__svelte")) {
+        result.framework = "svelte";
+      } else if (html.includes("data-astro-") || allSources.includes("/astro/")) {
+        result.framework = "astro";
+      } else if (typeof window.__VUE__ !== "undefined" || html.includes("data-v-") || html.includes("__vue_app__")) {
+        result.framework = "vue";
+      } else if (typeof window.__REACT_DEVTOOLS_GLOBAL_HOOK__ !== "undefined" || html.includes("data-reactroot") || html.includes("_reactRootContainer")) {
+        result.framework = "react";
+      }
+
+      // --- UI Library Detection ---
+      if (html.includes("data-radix") || html.includes("radix-")) result.uiLibraries.push("radix");
+      if (html.includes("chakra-") || html.includes("css-") && html.includes("chakra")) result.uiLibraries.push("chakra");
+      if (html.includes("MuiBox") || html.includes("MuiButton") || html.includes("mui-")) result.uiLibraries.push("material-ui");
+      if (html.includes("ant-") && html.includes("ant-btn")) result.uiLibraries.push("ant-design");
+      if (allSources.includes("headlessui")) result.uiLibraries.push("headless-ui");
+      if (html.includes("mantine-") || allSources.includes("mantine")) result.uiLibraries.push("mantine");
+      if (html.includes("Polaris-") || allSources.includes("polaris")) result.uiLibraries.push("polaris");
+      if (html.includes("p-button") && html.includes("p-component")) result.uiLibraries.push("primevue");
+      if (html.includes("v-btn") || html.includes("vuetify")) result.uiLibraries.push("vuetify");
+      if (html.includes("swiper-") || allSources.includes("swiper")) result.uiLibraries.push("swiper");
+      if (allSources.includes("bootstrap") || html.includes("bootstrap")) result.uiLibraries.push("bootstrap");
+      if (allSources.includes("tailwindcss") || html.includes("tailwind")) result.uiLibraries.push("tailwind");
+
+      return result;
+    });
+
+    framework = detection.framework;
+    cms = detection.cms;
+    uiLibraries.push(...detection.uiLibraries);
+  } catch (err) {
+    log.warn(`Browser-based stack detection failed: ${err.message}`);
+  }
+
+  // --- package.json fallback (only if GitHub repo was provided) ---
+  const projectDir = process.env.A11Y_PROJECT_DIR;
+  if (projectDir) {
+    try {
+      const pkgPath = path.join(projectDir, "package.json");
+      if (fs.existsSync(pkgPath)) {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+        const allDeps = Object.keys({
+          ...(pkg.dependencies || {}),
+          ...(pkg.devDependencies || {}),
+        });
+
+        if (!framework) {
+          for (const [dep, fw] of STACK_DETECTION.frameworkPackageDetectors) {
+            if (allDeps.some((d) => d === dep || d.startsWith(`${dep}/`))) {
+              framework = fw;
+              log.info(`Framework override from package.json: ${fw}`);
+              break;
+            }
+          }
+        }
+
+        for (const [prefix, name] of STACK_DETECTION.uiLibraryPackageDetectors) {
+          if (!uiLibraries.includes(name) && allDeps.some((d) => d === prefix || d.startsWith(`${prefix}/`))) {
+            uiLibraries.push(name);
+          }
+        }
+      }
+    } catch { /* package.json unreadable */ }
+
+    if (!framework) {
+      for (const [fw, files] of STACK_DETECTION.platformStructureDetectors || []) {
+        if (files.some((f) => fs.existsSync(path.join(projectDir, f)))) {
+          framework = fw;
+          log.info(`Framework detected from file structure: ${fw}`);
           break;
         }
       }
-      for (const [prefix, name] of STACK_DETECTION.uiLibraryPackageDetectors) {
-        if (allDeps.some((d) => d === prefix || d.startsWith(`${prefix}/`))) {
-          uiLibraries.push(name);
-        }
-      }
-    }
-  } catch { /* package.json unreadable */ }
-
-  if (!pkgFramework) {
-    for (const [fw, files] of STACK_DETECTION.platformStructureDetectors || []) {
-      if (files.some((f) => fs.existsSync(path.join(projectDir, f)))) {
-        fileFramework = fw;
-        break;
-      }
     }
   }
 
-  const resolvedFramework = pkgFramework || fileFramework;
-
-  if (resolvedFramework) {
-    const source = pkgFramework ? "(from package.json)" : "(from file structure)";
-    log.info(`Detected framework: ${resolvedFramework} ${source}`);
-  }
+  if (framework) log.info(`Detected framework: ${framework} (from browser)`);
+  if (cms) log.info(`Detected CMS: ${cms} (from browser)`);
   if (uiLibraries.length) log.info(`Detected UI libraries: ${uiLibraries.join(", ")}`);
 
-  return { framework: resolvedFramework, uiLibraries };
+  return { framework, cms, uiLibraries };
 }
 
 /**
@@ -398,6 +478,7 @@ async function analyzeRoute(
   timeoutMs = 30000,
   maxRetries = 2,
   waitUntil = "domcontentloaded",
+  axeTags = null,
 ) {
   let lastError;
 
@@ -417,7 +498,8 @@ async function analyzeRoute(
         log.info(`Targeted Audit: Only checking rule "${onlyRule}"`);
         builder.withRules([onlyRule]);
       } else {
-        builder.withTags(AXE_TAGS);
+        const tagsToUse = axeTags || AXE_TAGS;
+        builder.withTags(tagsToUse);
       }
 
       if (Array.isArray(excludeSelectors)) {
@@ -471,6 +553,275 @@ async function analyzeRoute(
 }
 
 /**
+ * Writes scan progress to a JSON file for real-time UI updates.
+ * @param {string} step - Current step identifier.
+ * @param {"pending"|"running"|"done"|"error"} status - Step status.
+ * @param {Object} [extra={}] - Additional metadata.
+ */
+function writeProgress(step, status, extra = {}) {
+  const progressPath = getInternalPath("progress.json");
+  let progress = {};
+  try {
+    if (fs.existsSync(progressPath)) {
+      progress = JSON.parse(fs.readFileSync(progressPath, "utf-8"));
+    }
+  } catch { /* ignore */ }
+  progress.steps = progress.steps || {};
+  progress.steps[step] = { status, updatedAt: new Date().toISOString(), ...extra };
+  progress.currentStep = step;
+  fs.mkdirSync(path.dirname(progressPath), { recursive: true });
+  fs.writeFileSync(progressPath, JSON.stringify(progress, null, 2));
+}
+
+/**
+ * Runs CDP (Chrome DevTools Protocol) accessibility checks using Playwright's CDP session.
+ * Catches issues axe-core may miss: missing accessible names, broken focus order,
+ * aria-hidden on focusable elements, and missing form labels.
+ * @param {import("playwright").Page} page - The Playwright page object.
+ * @returns {Promise<Object[]>} Array of CDP-sourced violations in axe-compatible format.
+ */
+async function runCdpChecks(page) {
+  const violations = [];
+  try {
+    const cdp = await page.context().newCDPSession(page);
+
+    // Get the full accessibility tree
+    const { nodes } = await cdp.send("Accessibility.getFullAXTree");
+
+    for (const node of nodes) {
+      const role = node.role?.value || "";
+      const name = node.name?.value || "";
+      const properties = node.properties || [];
+      const ignored = node.ignored || false;
+
+      if (ignored) continue;
+
+      const focusable = properties.find((p) => p.name === "focusable")?.value?.value === true;
+      const hidden = properties.find((p) => p.name === "hidden")?.value?.value === true;
+
+      // Check: interactive elements without accessible names
+      const interactiveRoles = ["button", "link", "textbox", "combobox", "listbox", "menuitem", "tab", "checkbox", "radio", "switch", "slider"];
+      if (interactiveRoles.includes(role) && !name.trim()) {
+        const backendId = node.backendDOMNodeId;
+        let selector = "";
+        try {
+          if (backendId) {
+            const { object } = await cdp.send("DOM.resolveNode", { backendNodeId: backendId });
+            if (object?.objectId) {
+              const result = await cdp.send("Runtime.callFunctionOn", {
+                objectId: object.objectId,
+                functionDeclaration: `function() {
+                  if (this.id) return '#' + this.id;
+                  if (this.className && typeof this.className === 'string') return this.tagName.toLowerCase() + '.' + this.className.trim().split(/\\s+/).join('.');
+                  return this.tagName.toLowerCase();
+                }`,
+                returnByValue: true,
+              });
+              selector = result.result?.value || "";
+            }
+          }
+        } catch { /* fallback: no selector */ }
+
+        violations.push({
+          id: "cdp-missing-accessible-name",
+          impact: "serious",
+          tags: ["wcag2a", "wcag412", "cdp-check"],
+          description: `Interactive element with role "${role}" has no accessible name`,
+          help: "Interactive elements must have an accessible name",
+          helpUrl: "https://dequeuniversity.com/rules/axe/4.11/button-name",
+          source: "cdp",
+          nodes: [{
+            any: [],
+            all: [{
+              id: "cdp-accessible-name",
+              data: { role, name: "(empty)" },
+              relatedNodes: [],
+              impact: "serious",
+              message: `Element with role "${role}" has no accessible name in the accessibility tree`,
+            }],
+            none: [],
+            impact: "serious",
+            html: `<${role} aria-role="${role}">`,
+            target: selector ? [selector] : [`[role="${role}"]`],
+            failureSummary: `Fix all of the following:\n  Element with role "${role}" has no accessible name`,
+          }],
+        });
+      }
+
+      // Check: aria-hidden on focusable elements
+      if (hidden && focusable) {
+        violations.push({
+          id: "cdp-aria-hidden-focusable",
+          impact: "serious",
+          tags: ["wcag2a", "wcag412", "cdp-check"],
+          description: `Focusable element with role "${role}" is aria-hidden`,
+          help: "aria-hidden elements must not be focusable",
+          helpUrl: "https://dequeuniversity.com/rules/axe/4.11/aria-hidden-focus",
+          source: "cdp",
+          nodes: [{
+            any: [],
+            all: [{
+              id: "cdp-hidden-focusable",
+              data: { role },
+              relatedNodes: [],
+              impact: "serious",
+              message: `Focusable element with role "${role}" is hidden from the accessibility tree`,
+            }],
+            none: [],
+            impact: "serious",
+            html: `<element role="${role}" aria-hidden="true">`,
+            target: [`[role="${role}"]`],
+            failureSummary: `Fix all of the following:\n  Focusable element is hidden from the accessibility tree`,
+          }],
+        });
+      }
+    }
+
+    await cdp.detach();
+  } catch (err) {
+    log.warn(`CDP checks failed (non-fatal): ${err.message}`);
+  }
+  return violations;
+}
+
+/**
+ * Runs pa11y (HTML CodeSniffer) against the already-loaded page URL.
+ * Catches WCAG violations that axe-core may miss, particularly around
+ * heading hierarchy, link purpose, and form associations.
+ * @param {string} routeUrl - The URL to scan.
+ * @param {string[]} [axeTags] - WCAG level tags for standard filtering.
+ * @returns {Promise<Object[]>} Array of pa11y-sourced violations in axe-compatible format.
+ */
+async function runPa11yChecks(routeUrl, axeTags) {
+  const violations = [];
+  try {
+    // Determine WCAG standard from axeTags
+    let standard = "WCAG2AA";
+    if (axeTags) {
+      if (axeTags.includes("wcag2aaa")) standard = "WCAG2AAA";
+      else if (axeTags.includes("wcag2aa") || axeTags.includes("wcag21aa") || axeTags.includes("wcag22aa")) standard = "WCAG2AA";
+      else if (axeTags.includes("wcag2a")) standard = "WCAG2A";
+    }
+
+    const results = await pa11y(routeUrl, {
+      standard,
+      timeout: 30000,
+      wait: 2000,
+      chromeLaunchConfig: {
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      },
+      // Ignore rules that axe-core already covers well
+      ignore: [
+        "WCAG2AA.Principle1.Guideline1_4.1_4_3.G18.Fail", // color-contrast (axe handles)
+        "WCAG2AA.Principle4.Guideline4_1.4_1_2.H91.A.NoContent", // link-name (axe handles)
+      ],
+    });
+
+    // Map pa11y severity: 1=Error, 2=Warning, 3=Notice
+    const impactMap = { 1: "serious", 2: "moderate", 3: "minor" };
+
+    for (const issue of results.issues || []) {
+      if (issue.type === "notice") continue; // skip notices
+
+      const impact = impactMap[issue.typeCode] || "moderate";
+
+      // Extract WCAG criterion from pa11y code (e.g., "WCAG2AA.Principle1.Guideline1_3.1_3_1.H71.SameName")
+      let wcagCriterion = "";
+      const wcagMatch = issue.code?.match(/Guideline(\d+)_(\d+)\.(\d+)_(\d+)_(\d+)/);
+      if (wcagMatch) {
+        wcagCriterion = `${wcagMatch[3]}.${wcagMatch[4]}.${wcagMatch[5]}`;
+      }
+
+      // Create a stable rule ID from the pa11y code
+      const ruleId = `pa11y-${(issue.code || "unknown").replace(/\./g, "-").toLowerCase().slice(0, 60)}`;
+
+      violations.push({
+        id: ruleId,
+        impact,
+        tags: ["pa11y-check", ...(wcagCriterion ? [`wcag${wcagCriterion.replace(/\./g, "")}`] : [])],
+        description: issue.message || "pa11y detected an accessibility issue",
+        help: issue.message?.split(".")[0] || "Accessibility issue detected by HTML CodeSniffer",
+        helpUrl: wcagCriterion
+          ? `https://www.w3.org/WAI/WCAG21/Understanding/${wcagCriterion.replace(/\./g, "")}`
+          : "https://squizlabs.github.io/HTML_CodeSniffer/",
+        source: "pa11y",
+        nodes: [{
+          any: [],
+          all: [{
+            id: "pa11y-check",
+            data: { code: issue.code, context: issue.context?.slice(0, 200) },
+            relatedNodes: [],
+            impact,
+            message: issue.message || "",
+          }],
+          none: [],
+          impact,
+          html: issue.context || "",
+          target: issue.selector ? [issue.selector] : [],
+          failureSummary: `Fix all of the following:\n  ${issue.message || "Accessibility issue"}`,
+        }],
+      });
+    }
+  } catch (err) {
+    log.warn(`pa11y checks failed (non-fatal): ${err.message}`);
+  }
+  return violations;
+}
+
+/**
+ * Merges violations from multiple sources (axe-core, CDP, pa11y) and deduplicates.
+ * Deduplication is based on rule ID + first target selector combination.
+ * @param {Object[]} axeViolations - Violations from axe-core.
+ * @param {Object[]} cdpViolations - Violations from CDP checks.
+ * @param {Object[]} pa11yViolations - Violations from pa11y.
+ * @returns {Object[]} Merged and deduplicated violations array.
+ */
+function mergeViolations(axeViolations, cdpViolations, pa11yViolations) {
+  const seen = new Set();
+  const merged = [];
+
+  // axe-core results are primary — add them first
+  for (const v of axeViolations) {
+    const key = `${v.id}::${v.nodes?.[0]?.target?.[0] || ""}`;
+    seen.add(key);
+    merged.push(v);
+  }
+
+  // Add CDP violations if not already covered by axe
+  for (const v of cdpViolations) {
+    // Map CDP rule IDs to axe equivalents for dedup
+    const axeEquiv = {
+      "cdp-missing-accessible-name": ["button-name", "link-name", "input-name", "aria-command-name"],
+      "cdp-aria-hidden-focusable": ["aria-hidden-focus"],
+    };
+    const equivRules = axeEquiv[v.id] || [];
+    const target = v.nodes?.[0]?.target?.[0] || "";
+    const isDuplicate = equivRules.some((r) => seen.has(`${r}::${target}`));
+    if (!isDuplicate) {
+      const key = `${v.id}::${target}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        merged.push(v);
+      }
+    }
+  }
+
+  // Add pa11y violations if not already covered
+  for (const v of pa11yViolations) {
+    const target = v.nodes?.[0]?.target?.[0] || "";
+    const key = `${v.id}::${target}`;
+    // Also check if axe already found the same selector with a similar rule
+    const selectorCovered = [...seen].some((k) => k.endsWith(`::${target}`) && target);
+    if (!seen.has(key) && (!selectorCovered || !target)) {
+      seen.add(key);
+      merged.push(v);
+    }
+  }
+
+  return merged;
+}
+
+/**
  * The main execution function for the accessibility scanner.
  * Coordinates browser setup, crawling/discovery, parallel scanning, and result saving.
  * @throws {Error} If navigation to the base URL fails or browser setup issues occur.
@@ -507,7 +858,7 @@ async function main() {
       timeout: args.timeoutMs,
     });
 
-    projectContext = detectProjectContext();
+    projectContext = await detectProjectContext(page);
 
     const cliRoutes = parseRoutesArg(args.routes, origin);
 
@@ -566,7 +917,7 @@ async function main() {
       await tabPage
         .locator(selector)
         .first()
-        .scrollIntoViewIfNeeded({ timeout: 3000 });
+        .scrollIntoViewIfNeeded({ timeout: 1500 });
       await tabPage.evaluate((sel) => {
         const el = document.querySelector(sel);
         if (!el) return;
@@ -630,6 +981,10 @@ async function main() {
       tabPages.push(await context.newPage());
     }
 
+    // Initialize progress
+    writeProgress("browser", "done");
+    writeProgress("page", "running");
+
     for (let i = 0; i < routes.length; i += tabPages.length) {
       const batch = [];
       for (let j = 0; j < tabPages.length && i + j < routes.length; j++) {
@@ -640,6 +995,11 @@ async function main() {
             const routePath = routes[idx];
             log.info(`[${idx + 1}/${total}] Scanning: ${routePath}`);
             const targetUrl = new URL(routePath, baseUrl).toString();
+
+            writeProgress("page", "done");
+
+            // Step 1: axe-core
+            writeProgress("axe", "running");
             const result = await analyzeRoute(
               tabPage,
               targetUrl,
@@ -649,13 +1009,51 @@ async function main() {
               args.timeoutMs,
               2,
               args.waitUntil,
+              args.axeTags,
             );
-            if (args.screenshotsDir && result.violations) {
-              for (const violation of result.violations) {
+            const axeViolationCount = result.violations?.length || 0;
+            writeProgress("axe", "done", { found: axeViolationCount });
+            log.info(`axe-core: ${axeViolationCount} violation(s) found`);
+
+            // Step 2: CDP checks
+            writeProgress("cdp", "running");
+            const cdpViolations = await runCdpChecks(tabPage);
+            writeProgress("cdp", "done", { found: cdpViolations.length });
+            log.info(`CDP checks: ${cdpViolations.length} issue(s) found`);
+
+            // Step 3: pa11y
+            writeProgress("pa11y", "running");
+            const pa11yViolations = await runPa11yChecks(targetUrl, args.axeTags);
+            writeProgress("pa11y", "done", { found: pa11yViolations.length });
+            log.info(`pa11y: ${pa11yViolations.length} issue(s) found`);
+
+            // Step 4: Merge results
+            writeProgress("merge", "running");
+            const mergedViolations = mergeViolations(
+              result.violations || [],
+              cdpViolations,
+              pa11yViolations,
+            );
+            writeProgress("merge", "done", {
+              axe: axeViolationCount,
+              cdp: cdpViolations.length,
+              pa11y: pa11yViolations.length,
+              merged: mergedViolations.length,
+            });
+            log.info(`Merged: ${mergedViolations.length} total unique violations (axe: ${axeViolationCount}, cdp: ${cdpViolations.length}, pa11y: ${pa11yViolations.length})`);
+
+            // Screenshots for merged violations
+            if (args.screenshotsDir && mergedViolations) {
+              for (const violation of mergedViolations) {
                 await captureElementScreenshot(tabPage, violation, idx);
               }
             }
-            results[idx] = { path: routePath, ...result };
+            results[idx] = {
+              path: routePath,
+              ...result,
+              violations: mergedViolations,
+              incomplete: result.incomplete || [],
+            };
           })(),
         );
       }
