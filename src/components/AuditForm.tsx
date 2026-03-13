@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useId, useMemo } from "react";
+import * as Slider from "@radix-ui/react-slider";
 import * as Toggle from "@radix-ui/react-toggle";
 import type { ScanStatus, ConformanceLevel } from "@/types/scan";
 import {
@@ -89,13 +90,14 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
           Web Accessibility Scanner
         </h1>
         <p className="text-sm text-slate-500 mt-2 leading-relaxed max-w-lg">
-          Scan any URL to detect accessibility issues with actionable recommendations.
-          Powered by three complementary engines for comprehensive WCAG coverage.
+          Scan any URL to detect accessibility issues with actionable fix recommendations.
+          Runs axe-core and pa11y together for broader WCAG coverage, then enriches
+          each finding with code fixes, MDN references, and framework-specific guidance.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} noValidate>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 gap-6 mb-6">
           {/* Target URL */}
           <div>
             <label
@@ -199,40 +201,25 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
           </legend>
 
           <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-5">
-            {/* Slider track */}
-            <div className="relative px-1 mb-3">
-              <div
-                className="h-2 bg-indigo-200 rounded-full"
-                aria-hidden="true"
-              />
-              {/* Filled track */}
-              <div
-                className="absolute top-0 left-0 h-2 bg-indigo-500 rounded-full transition-all duration-200"
-                style={{ width: `${(sliderIndex / (CONFORMANCE_LEVELS.length - 1)) * 100}%` }}
-                aria-hidden="true"
-              />
-              {/* Thumb */}
-              <input
-                type="range"
-                min={0}
-                max={CONFORMANCE_LEVELS.length - 1}
-                step={1}
-                value={sliderIndex}
-                onChange={(e) => {
-                  const idx = parseInt(e.target.value, 10);
-                  setConformance(CONFORMANCE_LEVELS[idx].id);
-                }}
-                disabled={isRunning}
-                aria-label="WCAG conformance level"
+            {/* Radix Slider */}
+            <Slider.Root
+              min={0}
+              max={CONFORMANCE_LEVELS.length - 1}
+              step={1}
+              value={[sliderIndex]}
+              onValueChange={([val]) => setConformance(CONFORMANCE_LEVELS[val].id)}
+              disabled={isRunning}
+              aria-label="WCAG conformance level"
+              className="relative flex items-center select-none touch-none h-5 mb-3"
+            >
+              <Slider.Track className="relative grow h-2 bg-indigo-200 rounded-full">
+                <Slider.Range className="absolute h-full bg-indigo-500 rounded-full" />
+              </Slider.Track>
+              <Slider.Thumb
                 aria-valuetext={`Level ${conformance}`}
-                className="absolute top-0 left-0 w-full h-2 opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                className="block w-5 h-5 bg-indigo-600 rounded-full shadow-md border-2 border-white transition-colors focus:outline-none focus:ring-4 focus:ring-indigo-500/20 hover:bg-indigo-700 disabled:cursor-not-allowed"
               />
-              <div
-                className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-indigo-600 rounded-full shadow-md border-2 border-white transition-all duration-200 pointer-events-none"
-                style={{ left: `calc(${(sliderIndex / (CONFORMANCE_LEVELS.length - 1)) * 100}% - 10px)` }}
-                aria-hidden="true"
-              />
-            </div>
+            </Slider.Root>
 
             {/* Labels under slider */}
             <div className="flex justify-between px-0.5">
@@ -289,16 +276,16 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
               pressed={bestPractices}
               onPressedChange={(pressed) => setBestPractices(pressed)}
               disabled={isRunning}
-              className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border text-sm font-medium cursor-pointer transition-all select-none bg-white text-slate-600 border-slate-200 hover:border-slate-300 data-[state=on]:bg-slate-900 data-[state=on]:text-white data-[state=on]:border-slate-900 data-[state=on]:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2.5 px-1 py-2 text-sm font-medium cursor-pointer transition-all select-none text-slate-600 hover:text-slate-800 data-[state=on]:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span
                 className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                  bestPractices ? "bg-white border-white" : "border-slate-300"
+                  bestPractices ? "bg-slate-900 border-slate-900" : "border-slate-300 bg-white"
                 }`}
                 aria-hidden="true"
               >
                 {bestPractices && (
-                  <svg className="w-3 h-3 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                   </svg>
                 )}
