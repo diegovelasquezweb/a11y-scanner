@@ -71,7 +71,35 @@ export async function GET(
     return NextResponse.json({ success: false, error: "Invalid scan ID." }, { status: 400 });
   }
 
-  // Check workflow run status
+  // LOCAL MODE — read from filesystem
+  if (process.env.LOCAL_MODE === "true") {
+    const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
+    const statusPath = path.join(SCANS_DIR, `${scanId}.status.json`);
+
+    if (!fs.existsSync(statusPath)) {
+      return NextResponse.json({ success: false, error: "Scan not found." }, { status: 404 });
+    }
+
+    const statusData = JSON.parse(fs.readFileSync(statusPath, "utf-8"));
+
+    if (statusData.status === "scanning") {
+      return NextResponse.json({ success: true, status: "scanning", data: null });
+    }
+
+    if (statusData.status === "error") {
+      return NextResponse.json({ success: false, status: "error", error: statusData.error || "Scan failed." });
+    }
+
+    const findingsPath = path.join(SCANS_DIR, `${scanId}.findings.json`);
+    if (!fs.existsSync(findingsPath)) {
+      return NextResponse.json({ success: false, error: "Scan result not found." }, { status: 404 });
+    }
+
+    const rawFindings = JSON.parse(fs.readFileSync(findingsPath, "utf-8"));
+    return buildResponse(scanId, rawFindings);
+  }
+
+  // PRODUCTION MODE — GitHub Actions
   const runStatus = await getRunStatus(scanId);
 
   if (runStatus.status === "not_found") {
@@ -82,10 +110,7 @@ export async function GET(
     return NextResponse.json({ success: true, status: "scanning", data: null });
   }
 
-  if (
-    runStatus.status === "completed" &&
-    runStatus.conclusion !== "success"
-  ) {
+  if (runStatus.status === "completed" && runStatus.conclusion !== "success") {
     return NextResponse.json({
       success: false,
       status: "error",
@@ -93,7 +118,6 @@ export async function GET(
     });
   }
 
-  // Workflow completed successfully — download artifact
   const resultBuffer = await getArtifactFile(scanId, "result.json");
   if (!resultBuffer) {
     return NextResponse.json(
@@ -112,6 +136,10 @@ export async function GET(
     );
   }
 
+  return buildResponse(scanId, rawFindings);
+}
+
+function buildResponse(_scanId: string, rawFindings: Record<string, unknown>) {
   const meta = rawFindings.metadata as Record<string, unknown> | undefined;
   const firstFindingUrl = String(((rawFindings.findings as Record<string, unknown>[])?.[0]?.url) ?? "");
   const targetUrl = String(meta?.target_url ?? meta?.targetUrl ?? meta?.base_url ?? firstFindingUrl);

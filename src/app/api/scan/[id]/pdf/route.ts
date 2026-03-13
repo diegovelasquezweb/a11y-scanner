@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getArtifactFile } from "@/lib/github";
+import fs from "node:fs";
+import path from "node:path";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,18 @@ export async function GET(
     return new NextResponse("Invalid scan ID.", { status: 400 });
   }
 
-  const pdfBuffer = await getArtifactFile(scanId, "stakeholder.pdf");
+  let pdfBuffer: Buffer | null = null;
+
+  if (process.env.LOCAL_MODE === "true") {
+    const pdfPath = path.join(process.cwd(), "src", "data", "scans", `${scanId}.pdf`);
+    if (fs.existsSync(pdfPath)) {
+      pdfBuffer = fs.readFileSync(pdfPath);
+    }
+  } else {
+    const { getArtifactFile } = await import("@/lib/github");
+    const buf = await getArtifactFile(scanId, "stakeholder.pdf");
+    if (buf && buf.length > 0) pdfBuffer = buf;
+  }
 
   if (!pdfBuffer || pdfBuffer.length === 0) {
     return new NextResponse("PDF not available for this scan.", { status: 404 });

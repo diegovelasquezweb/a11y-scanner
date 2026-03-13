@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getArtifactFile } from "@/lib/github";
+import fs from "node:fs";
+import path from "node:path";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,17 @@ export async function GET(
     return new NextResponse("Invalid scan ID.", { status: 400 });
   }
 
-  const htmlBuffer = await getArtifactFile(scanId, "checklist.html");
+  let htmlBuffer: Buffer | null = null;
+
+  if (process.env.LOCAL_MODE === "true") {
+    const checklistPath = path.join(process.cwd(), "src", "data", "scans", `${scanId}.checklist.html`);
+    if (fs.existsSync(checklistPath)) {
+      htmlBuffer = fs.readFileSync(checklistPath);
+    }
+  } else {
+    const { getArtifactFile } = await import("@/lib/github");
+    htmlBuffer = await getArtifactFile(scanId, "checklist.html");
+  }
 
   if (!htmlBuffer) {
     return new NextResponse("Checklist not available for this scan.", { status: 404 });
