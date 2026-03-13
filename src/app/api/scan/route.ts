@@ -415,6 +415,10 @@ export async function POST(request: NextRequest) {
     // Persist result
     saveScanResult(scanId, resultData);
 
+    // Persist raw findings snapshot (snake_case format) for PDF builder
+    const rawFindingsPath = path.join(SCANS_DIR, `${scanId}.findings.json`);
+    fs.writeFileSync(rawFindingsPath, JSON.stringify(rawFindings, null, 2));
+
     // Persist checklist.html if generated
     const checklistPath = path.join(auditDir, "checklist.html");
     if (fs.existsSync(checklistPath)) {

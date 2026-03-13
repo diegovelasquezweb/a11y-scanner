@@ -182,6 +182,16 @@ export function JiraIntegration({
 
           <button
             type="button"
+            onClick={() =>
+              window.open(`/api/scan/${scanId}/pdf`, "_blank", "noopener,noreferrer")
+            }
+            className="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-colors"
+          >
+            Download PDF Report
+          </button>
+
+          <button
+            type="button"
             onClick={onRunNewTest}
             className="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-colors"
           >
