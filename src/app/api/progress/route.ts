@@ -50,12 +50,21 @@ export async function GET(request: NextRequest) {
 
       let status: StepStatus;
       if (ghStep.status === "completed") {
-        status = ghStep.conclusion === "success" ? "done" : "error";
+        if (ghStep.conclusion === "success") {
+          status = "done";
+        } else if (ghStep.conclusion === "skipped") {
+          continue; // skip silently
+        } else if (ghStep.conclusion === null) {
+          continue; // still resolving, skip
+        } else {
+          status = "error"; // failure, cancelled, timed_out, etc.
+        }
       } else if (ghStep.status === "in_progress") {
         status = "running";
         currentStep = key;
       } else {
-        status = "pending";
+        // queued — don't add it, let it stay absent until it starts
+        continue;
       }
 
       steps[key] = { status, updatedAt: new Date().toISOString() };
@@ -68,26 +77,39 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // If workflow completed successfully and intelligence step is done, mark all done
+    // Workflow is running but none of our mapped steps have started yet
+    // (still in setup/install steps) — show first step as running
+    if (runStatus.status === "in_progress" && Object.keys(steps).length === 0) {
+      steps["page"] = { status: "running", updatedAt: new Date().toISOString() };
+      currentStep = "page";
+    }
+
+    // If workflow completed successfully, mark all steps done
     if (runStatus.status === "completed" && runStatus.conclusion === "success") {
       for (const key of ["page", "axe", "cdp", "pa11y", "merge", "intelligence"]) {
-        if (!steps[key] || steps[key].status !== "error") {
-          steps[key] = { status: "done", updatedAt: new Date().toISOString() };
-        }
+        steps[key] = { status: "done", updatedAt: new Date().toISOString() };
       }
       currentStep = null;
     }
 
-    // If workflow failed, mark current running step as error
+    // If workflow failed, mark the last known running step as error
     if (
       runStatus.status === "completed" &&
       runStatus.conclusion !== "success" &&
       runStatus.conclusion !== null
     ) {
+      // Mark any running step as error; if none, mark the last done step's next as error
+      let markedError = false;
       for (const key of Object.keys(steps)) {
-        if (steps[key].status === "running" || steps[key].status === "pending") {
+        if (steps[key].status === "running") {
           steps[key] = { status: "error", updatedAt: new Date().toISOString() };
+          markedError = true;
         }
+      }
+      // If no running step found, add a generic error on the last unmapped step
+      if (!markedError) {
+        const lastKey = Object.keys(steps).pop() ?? "page";
+        steps[lastKey] = { status: "error", updatedAt: new Date().toISOString() };
       }
     }
 
