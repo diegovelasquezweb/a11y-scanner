@@ -118,7 +118,7 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
           <p className="text-sm text-rose-600 mb-6">{errorMessage}</p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-md text-sm font-bold hover:bg-slate-800 transition-colors"
           >
             Try Again
           </Link>
@@ -136,7 +136,7 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
           <p className="text-sm text-slate-500 mb-6">This scan ID does not exist or has expired.</p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-md text-sm font-bold hover:bg-slate-800 transition-colors"
           >
             Run a New Scan
           </Link>

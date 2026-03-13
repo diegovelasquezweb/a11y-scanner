@@ -33,7 +33,7 @@ interface PersonaImpactProps {
 
 export function PersonaImpact({ personaGroups, totalFindings }: PersonaImpactProps) {
   return (
-    <div className="premium-card rounded-2xl p-6">
+    <div className="premium-card rounded-md p-6">
       <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -48,7 +48,7 @@ export function PersonaImpact({ personaGroups, totalFindings }: PersonaImpactPro
           <div key={key} className="group">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-600 group-hover:bg-primary-light group-hover:text-primary transition-colors">
+                <div className="w-8 h-8 rounded bg-slate-50 flex items-center justify-center text-slate-600 group-hover:bg-primary-light group-hover:text-primary transition-colors">
                   {PERSONA_ICONS[persona.icon] ?? PERSONA_ICONS.sr}
                 </div>
                 <span className="text-sm font-bold text-slate-700">{persona.label}</span>

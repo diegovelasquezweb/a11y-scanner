@@ -167,7 +167,7 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
 
       <div className="space-y-6">
         {filteredFindings.length === 0 ? (
-          <div className="text-center py-12 bg-slate-50 rounded-xl border border-slate-100 border-dashed">
+          <div className="text-center py-12 bg-slate-50 rounded-md border border-slate-100 border-dashed">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 mb-4 text-slate-400">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

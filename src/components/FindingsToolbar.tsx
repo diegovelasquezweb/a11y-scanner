@@ -60,7 +60,7 @@ export function FindingsToolbar({
         <Toggle.Root
           pressed={allExpanded}
           onPressedChange={onToggleAll}
-          className="px-5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold uppercase tracking-widest text-slate-600 hover:border-slate-300 hover:text-slate-800 shadow-sm transition-all data-[state=on]:bg-slate-900 data-[state=on]:text-white data-[state=on]:border-slate-900"
+          className="px-5 py-2 rounded-md border border-slate-200 bg-white text-xs font-bold uppercase tracking-widest text-slate-600 hover:border-slate-300 hover:text-slate-800 shadow-sm transition-all data-[state=on]:bg-slate-900 data-[state=on]:text-white data-[state=on]:border-slate-900"
         >
           {allExpanded ? "Collapse all" : "Expand all"}
         </Toggle.Root>
@@ -78,7 +78,7 @@ export function FindingsToolbar({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search violations..."
-            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm"
+            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-md text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm"
           />
           <svg
             className="absolute left-4 top-3.5 w-5 h-5 text-slate-400"
@@ -102,7 +102,7 @@ export function FindingsToolbar({
           </span>
           <Select.Root value={filterValue} onValueChange={onFilterChange}>
             <Select.Trigger
-              className="inline-flex items-center justify-between gap-2 pl-4 pr-3 py-3 bg-white border border-slate-300 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm transition-all cursor-pointer min-w-[160px]"
+              className="inline-flex items-center justify-between gap-2 pl-4 pr-3 py-3 bg-white border border-slate-300 rounded-md text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm transition-all cursor-pointer min-w-[160px]"
               aria-label="Filter by"
             >
               <Select.Value />
@@ -115,7 +115,7 @@ export function FindingsToolbar({
 
             <Select.Portal>
               <Select.Content
-                className="z-50 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden animate-in fade-in-0 zoom-in-95"
+                className="z-50 bg-white border border-slate-200 rounded-md shadow-xl overflow-hidden animate-in fade-in-0 zoom-in-95"
                 position="popper"
                 sideOffset={4}
               >
@@ -132,7 +132,7 @@ export function FindingsToolbar({
                         <Select.Item
                           key={item.value}
                           value={item.value}
-                          className="relative flex items-center px-3 py-2 text-sm font-medium text-slate-700 rounded-lg cursor-pointer outline-none select-none data-[highlighted]:bg-sky-50 data-[highlighted]:text-sky-700 data-[state=checked]:font-bold data-[state=checked]:text-sky-700"
+                          className="relative flex items-center px-3 py-2 text-sm font-medium text-slate-700 rounded cursor-pointer outline-none select-none data-[highlighted]:bg-sky-50 data-[highlighted]:text-sky-700 data-[state=checked]:font-bold data-[state=checked]:text-sky-700"
                         >
                           <Select.ItemText>{item.label}</Select.ItemText>
                           <Select.ItemIndicator className="absolute right-3">

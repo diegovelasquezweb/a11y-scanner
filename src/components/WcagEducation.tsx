@@ -96,7 +96,7 @@ export function WcagEducationPanel() {
           <Dialog.Close asChild>
             <button
               type="button"
-              className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+              className="rounded p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30"
               aria-label="Close panel"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -151,7 +151,7 @@ function WcagCard({ card }: { card: WcagCardData }) {
 
   return (
     <Collapsible.Root open={open} onOpenChange={setOpen}>
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden transition-shadow hover:shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-md overflow-hidden transition-shadow hover:shadow-sm">
         <Collapsible.Trigger asChild>
           <button
             type="button"

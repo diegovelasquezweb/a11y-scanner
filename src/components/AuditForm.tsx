@@ -95,7 +95,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
 
   return (
     <WcagEducation>
-    <div className="premium-card rounded-2xl p-8 w-full max-w-2xl">
+    <div className="premium-card rounded-md p-8 w-full max-w-2xl">
       <div className="mb-6">
         <div className="flex items-center gap-2">
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -119,7 +119,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
                   side="bottom"
                   align="start"
                   sideOffset={6}
-                  className="z-50 max-w-xs rounded-xl bg-slate-900 px-4 py-3 text-xs leading-relaxed text-slate-200 shadow-xl animate-in fade-in-0 zoom-in-95"
+                  className="z-50 max-w-xs rounded-md bg-slate-900 px-4 py-3 text-xs leading-relaxed text-slate-200 shadow-xl animate-in fade-in-0 zoom-in-95"
                 >
                   Runs axe-core and pa11y together for broader WCAG coverage,
                   then enriches each finding with code fixes, MDN references,
@@ -167,7 +167,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
               }
               aria-invalid={!!validationErrors.targetUrl}
               disabled={isRunning}
-              className={`w-full px-4 py-3 bg-white border rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm ${
+              className={`w-full px-4 py-3 bg-white border rounded-md text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm ${
                 validationErrors.targetUrl
                   ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/10"
                   : "border-slate-200"
@@ -215,7 +215,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
               }
               aria-invalid={!!validationErrors.githubRepoUrl}
               disabled={isRunning}
-              className={`w-full px-4 py-3 bg-white border rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm ${
+              className={`w-full px-4 py-3 bg-white border rounded-md text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm ${
                 validationErrors.githubRepoUrl
                   ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/10"
                   : "border-slate-200"
@@ -239,7 +239,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
             WCAG Conformance Level
           </legend>
 
-          <div className="bg-sky-50/60 border border-sky-100 rounded-2xl p-5">
+          <div className="bg-sky-50/60 border border-sky-100 rounded-md p-5">
             {/* Radix Slider */}
             <Slider.Root
               min={0}
@@ -342,7 +342,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
           <div className="flex items-center gap-4">
             <button
               type="submit"
-              className="px-8 py-3 bg-slate-900 text-white font-bold text-sm rounded-2xl shadow-md hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-900/20 transition-all flex items-center gap-2"
+              className="px-8 py-3 bg-slate-900 text-white font-bold text-sm rounded-md shadow-md hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-900/20 transition-all flex items-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

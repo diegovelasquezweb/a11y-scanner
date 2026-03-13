@@ -78,7 +78,7 @@ export default function Home() {
     <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
       <a
         href="#target-url"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-slate-900 focus:text-white focus:rounded-lg focus:shadow-lg"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-slate-900 focus:text-white focus:rounded focus:shadow-lg"
       >
         Skip to scan form
       </a>

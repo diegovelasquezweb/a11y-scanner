@@ -113,7 +113,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
   return (
     <article
       id={finding.id}
-      className={`issue-card bg-white/90 backdrop-blur-xl rounded-2xl border ${styles.border} shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 mb-8 overflow-hidden group`}
+      className={`issue-card bg-white/90 backdrop-blur-xl rounded-md border ${styles.border} shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 mb-8 overflow-hidden group`}
       data-severity={finding.severity}
       data-rule-id={finding.ruleId}
       data-wcag={finding.wcag}
@@ -208,13 +208,13 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
               <Tabs.Root defaultValue="problem">
                 <Tabs.List
                   aria-label={`Issue detail sections for ${finding.id}`}
-                  className="rounded-xl border border-slate-200 bg-slate-100/70 p-2 mb-4 flex flex-wrap gap-2"
+                  className="rounded-md border border-slate-200 bg-slate-100/70 p-2 mb-4 flex flex-wrap gap-2"
                 >
                   {availableTabs.map((tab) => (
                     <Tabs.Trigger
                       key={tab.key}
                       value={tab.key}
-                      className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors text-slate-600 border border-transparent hover:bg-white/70 data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:border-sky-200 data-[state=active]:shadow-sm"
+                      className="px-3 py-2 rounded text-xs font-bold uppercase tracking-widest transition-colors text-slate-600 border border-transparent hover:bg-white/70 data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:border-sky-200 data-[state=active]:shadow-sm"
                     >
                       {tab.label}
                     </Tabs.Trigger>
@@ -223,7 +223,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
 
                 {/* Problem Panel */}
                 <Tabs.Content value="problem">
-                  <div className="bg-white rounded-xl border border-slate-200/60 shadow-sm p-5 space-y-5">
+                  <div className="bg-white rounded-md border border-slate-200/60 shadow-sm p-5 space-y-5">
                     <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
                       <div className="p-1 bg-slate-100 rounded-md">
                         <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -263,7 +263,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
 
                 {/* Fix Panel */}
                 <Tabs.Content value="fix">
-                  <div className="bg-gradient-to-br from-sky-50 to-white border border-sky-100/80 rounded-xl p-5 relative overflow-hidden shadow-sm">
+                  <div className="bg-gradient-to-br from-sky-50 to-white border border-sky-100/80 rounded-md p-5 relative overflow-hidden shadow-sm">
                     <h4 className="text-[11px] font-black text-sky-700 uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2">
                       <svg className="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -284,7 +284,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                         <div className="relative group/code">
                           <pre
                             tabIndex={0}
-                            className="bg-slate-900 text-emerald-300 p-3 rounded-lg overflow-x-auto text-xs font-mono border border-slate-700 whitespace-pre-wrap"
+                            className="bg-slate-900 text-emerald-300 p-3 rounded overflow-x-auto text-xs font-mono border border-slate-700 whitespace-pre-wrap"
                           >
                             <code>{finding.fixCode}</code>
                           </pre>
@@ -293,7 +293,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                             aria-label="Copy code snippet"
                             title="Copy code snippet"
                             onClick={() => copyToClipboard(finding.fixCode!, `fix-${finding.id}`)}
-                            className={`absolute top-2 right-2 p-1.5 rounded-lg text-white opacity-0 group-hover/code:opacity-100 transition-all ${
+                            className={`absolute top-2 right-2 p-1.5 rounded text-white opacity-0 group-hover/code:opacity-100 transition-all ${
                               copiedId === `fix-${finding.id}`
                                 ? "bg-emerald-500"
                                 : "bg-sky-500/50 hover:bg-sky-500"
@@ -331,7 +331,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                           <h4 className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                             Implementation Notes
                           </h4>
-                          <p className="text-[12px] text-amber-900/80 leading-relaxed bg-amber-50/60 border border-amber-100/60 rounded-lg p-3">
+                          <p className="text-[12px] text-amber-900/80 leading-relaxed bg-amber-50/60 border border-amber-100/60 rounded p-3">
                             {finding.fixDifficultyNotes}
                           </p>
                         </div>
@@ -360,7 +360,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                 {/* Technical Evidence Panel */}
                 {finding.evidence.length > 0 && (
                   <Tabs.Content value="technical">
-                    <div className="bg-slate-900 rounded-xl p-6 border border-slate-700 shadow-2xl relative overflow-hidden">
+                    <div className="bg-slate-900 rounded-md p-6 border border-slate-700 shadow-2xl relative overflow-hidden">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" aria-hidden="true" />
                       <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2">
                         Technical Evidence
@@ -376,7 +376,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                                 <div className="relative group/evidence">
                                   <pre
                                     tabIndex={0}
-                                    className="bg-slate-800 text-slate-50 p-3 rounded-lg overflow-x-auto text-xs font-mono border border-slate-700"
+                                    className="bg-slate-800 text-slate-50 p-3 rounded overflow-x-auto text-xs font-mono border border-slate-700"
                                   >
                                     <code>{escapeHtml(item.html)}</code>
                                   </pre>
@@ -385,7 +385,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                                     aria-label="Copy source HTML"
                                     title="Copy source HTML"
                                     onClick={() => copyToClipboard(item.html!, `ev-${finding.id}-${idx}`)}
-                                    className={`absolute top-2 right-2 p-1.5 rounded-lg text-white opacity-0 group-hover/evidence:opacity-100 transition-all ${
+                                    className={`absolute top-2 right-2 p-1.5 rounded text-white opacity-0 group-hover/evidence:opacity-100 transition-all ${
                                       copiedId === `ev-${finding.id}-${idx}`
                                         ? "bg-emerald-500"
                                         : "bg-slate-600/50 hover:bg-slate-600"
@@ -419,15 +419,15 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                 {/* Visual Evidence Panel */}
                 {finding.screenshotPath && (
                   <Tabs.Content value="visual">
-                    <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm">
+                    <div className="border border-slate-200 rounded-md p-4 bg-white shadow-sm">
                       <h4 className="text-[11px] font-black text-slate-600 uppercase tracking-widest mb-4 flex items-center gap-2">
                         Visual Evidence
                       </h4>
-                      <div className="bg-slate-50/50 p-2 rounded-xl border border-slate-200/60 inline-block shadow-sm">
+                      <div className="bg-slate-50/50 p-2 rounded-md border border-slate-200/60 inline-block shadow-sm">
                         <img
                           src={finding.screenshotPath}
                           alt={`Screenshot of ${finding.title}`}
-                          className="rounded-lg border border-slate-200 shadow-sm max-h-[360px] w-auto object-contain bg-white"
+                          className="rounded border border-slate-200 shadow-sm max-h-[360px] w-auto object-contain bg-white"
                           loading="lazy"
                         />
                       </div>

@@ -20,7 +20,7 @@ export function QuickWins({ quickWins, onScrollToIssue }: QuickWinsProps) {
   return (
     <section
       aria-labelledby="quick-wins-heading"
-      className="rounded-2xl bg-slate-900 p-8 mb-12 relative overflow-hidden border border-slate-800 shadow-2xl"
+      className="rounded-md bg-slate-900 p-8 mb-12 relative overflow-hidden border border-slate-800 shadow-2xl"
     >
       {/* Background decoration */}
       <div className="absolute -right-6 -bottom-6 opacity-[0.07] pointer-events-none" aria-hidden="true">
@@ -51,7 +51,7 @@ export function QuickWins({ quickWins, onScrollToIssue }: QuickWinsProps) {
             return (
               <div
                 key={w.id}
-                className="bg-slate-800/60 border border-slate-700/80 p-5 rounded-xl backdrop-blur-sm hover:bg-slate-800/80 hover:border-slate-600 transition-all group/qw"
+                className="bg-slate-800/60 border border-slate-700/80 p-5 rounded-md backdrop-blur-sm hover:bg-slate-800/80 hover:border-slate-600 transition-all group/qw"
               >
                 <div className="flex items-center justify-between mb-3">
                   <span

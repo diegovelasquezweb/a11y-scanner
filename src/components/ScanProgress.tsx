@@ -199,7 +199,7 @@ export default function ScanProgress({ isScanning, scanId, scanError, onSkipDela
       aria-label="Scan progress"
       className="w-full max-w-2xl outline-none"
     >
-      <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl px-5 py-4 shadow-sm">
+      <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-md px-5 py-4 shadow-sm">
         {/* Header: Step X of 7 + elapsed */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5 min-w-0">

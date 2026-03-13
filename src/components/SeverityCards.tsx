@@ -39,7 +39,7 @@ export function SeverityCards({ totals }: SeverityCardsProps) {
       {SEVERITY_CONFIG.map(({ key, color, textColor, description }) => (
         <div
           key={key}
-          className={`premium-card p-5 rounded-2xl border-l-[6px] ${color}`}
+          className={`premium-card p-5 rounded-md border-l-[6px] ${color}`}
         >
           <div className="flex justify-between items-start mb-2">
             <span
