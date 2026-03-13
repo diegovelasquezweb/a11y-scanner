@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useId } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
+import * as Select from "@radix-ui/react-select";
 import type { Finding, SeverityTotals } from "@/types/scan";
 
 const FIXED_JIRA_BASE_URL = "https://wondersauce.atlassian.net";
@@ -257,23 +258,52 @@ export function JiraIntegration({
               </div>
 
               <div>
-                <label htmlFor={issueTypeFieldId} className="block text-sm font-semibold text-slate-700 mb-1.5">
+                <label id={issueTypeFieldId} className="block text-sm font-semibold text-slate-700 mb-1.5">
                   Issue Type
                 </label>
-                <select
-                  id={issueTypeFieldId}
+                <Select.Root
                   value={settings.issueType || "Task"}
-                  onChange={(e) =>
-                    setSettings((prev) => ({ ...prev, issueType: e.target.value }))
+                  onValueChange={(value) =>
+                    setSettings((prev) => ({ ...prev, issueType: value }))
                   }
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1rem] bg-[right_1rem_center] bg-no-repeat pr-10"
                 >
-                  {ISSUE_TYPE_OPTIONS.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
+                  <Select.Trigger
+                    aria-labelledby={issueTypeFieldId}
+                    className="inline-flex items-center justify-between gap-2 w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors cursor-pointer"
+                  >
+                    <Select.Value />
+                    <Select.Icon>
+                      <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </Select.Icon>
+                  </Select.Trigger>
+
+                  <Select.Portal>
+                    <Select.Content
+                      className="z-[60] bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden animate-in fade-in-0 zoom-in-95"
+                      position="popper"
+                      sideOffset={4}
+                    >
+                      <Select.Viewport className="p-1.5">
+                        {ISSUE_TYPE_OPTIONS.map((type) => (
+                          <Select.Item
+                            key={type}
+                            value={type}
+                            className="relative flex items-center px-3 py-2.5 text-sm font-medium text-slate-700 rounded-lg cursor-pointer outline-none select-none data-[highlighted]:bg-indigo-50 data-[highlighted]:text-indigo-700 data-[state=checked]:font-bold data-[state=checked]:text-indigo-700"
+                          >
+                            <Select.ItemText>{type}</Select.ItemText>
+                            <Select.ItemIndicator className="absolute right-3">
+                              <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </Select.ItemIndicator>
+                          </Select.Item>
+                        ))}
+                      </Select.Viewport>
+                    </Select.Content>
+                  </Select.Portal>
+                </Select.Root>
               </div>
 
               {feedback && (

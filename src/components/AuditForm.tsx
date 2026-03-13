@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useId } from "react";
+import { useState, useRef, useId, useCallback } from "react";
+import * as ToggleGroup from "@radix-ui/react-toggle-group";
 import type { ScanStatus } from "@/types/scan";
 import { WCAG_LEVELS } from "@/types/scan";
 
@@ -68,6 +69,15 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
     const tags = Array.from(selectedLevels);
     onSubmit(targetUrl.trim(), githubRepoUrl.trim(), tags);
   };
+
+  const handleLevelChange = useCallback((values: string[]) => {
+    const next = new Set<string>();
+    for (const id of values) {
+      const level = WCAG_LEVELS.find((l) => l.id === id);
+      if (level) level.tags.forEach((t) => next.add(t));
+    }
+    setSelectedLevels(next);
+  }, []);
 
   const isRunning = status === "running";
 
@@ -185,64 +195,50 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
           </div>
         </div>
 
-        {/* WCAG Level Checkboxes */}
-        <fieldset className="mb-6">
+        {/* WCAG Level Toggle Group */}
+        <fieldset className="mb-6" disabled={isRunning}>
           <legend className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-3">
             WCAG Levels & Rules
           </legend>
-          <div className="flex flex-wrap gap-3">
+          <ToggleGroup.Root
+            type="multiple"
+            value={Array.from(selectedLevels)}
+            onValueChange={handleLevelChange}
+            className="flex flex-wrap gap-3"
+          >
             {WCAG_LEVELS.map((level) => {
-              const isChecked = level.tags.every((t) => selectedLevels.has(t));
+              const isPressed = level.tags.every((t) => selectedLevels.has(t));
               return (
-                <label
+                <ToggleGroup.Item
                   key={level.id}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium cursor-pointer transition-all select-none ${
-                    isChecked
-                      ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-                      : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
-                  } ${isRunning ? "opacity-50 cursor-not-allowed" : ""}`}
+                  value={level.id}
+                  disabled={isRunning}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium cursor-pointer transition-all select-none bg-white text-slate-600 border-slate-200 hover:border-slate-300 data-[state=on]:bg-slate-900 data-[state=on]:text-white data-[state=on]:border-slate-900 data-[state=on]:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    disabled={isRunning}
-                    onChange={() => {
-                      setSelectedLevels((prev) => {
-                        const next = new Set(prev);
-                        if (isChecked) {
-                          level.tags.forEach((t) => next.delete(t));
-                        } else {
-                          level.tags.forEach((t) => next.add(t));
-                        }
-                        return next;
-                      });
-                    }}
-                    className="sr-only"
-                  />
                   <span
                     className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                      isChecked
+                      isPressed
                         ? "bg-white border-white"
                         : "border-slate-300"
                     }`}
                     aria-hidden="true"
                   >
-                    {isChecked && (
-                      <svg className="w-3 h-3 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {isPressed && (
+                      <svg className="w-3 h-3 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     )}
                   </span>
                   <span className="leading-tight">
                     <span className="block">{level.label}</span>
-                    <span className={`block text-[10px] ${isChecked ? "text-slate-300" : "text-slate-400"}`}>
+                    <span className={`block text-[10px] ${isPressed ? "text-slate-300" : "text-slate-400"}`}>
                       {level.description}
                     </span>
                   </span>
-                </label>
+                </ToggleGroup.Item>
               );
             })}
-          </div>
+          </ToggleGroup.Root>
         </fieldset>
 
         <div className="flex items-center gap-4">
