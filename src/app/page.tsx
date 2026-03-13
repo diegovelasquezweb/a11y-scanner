@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { ScanStatus } from "@/types/scan";
 import { AuditForm } from "@/components/AuditForm";
 import ScanProgress from "@/components/ScanProgress";
@@ -10,8 +10,8 @@ export default function Home() {
   const [status, setStatus] = useState<ScanStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [pendingScanId, setPendingScanId] = useState<string | null>(null);
-
   const [scanError, setScanError] = useState<string | null>(null);
+  const scanStartTimeRef = useRef<number | null>(null);
 
   const isScanning = status === "running";
 
@@ -20,6 +20,7 @@ export default function Home() {
     setErrorMessage("");
     setScanError(null);
     setPendingScanId(null);
+    scanStartTimeRef.current = null;
   }, []);
 
   const handleSubmit = useCallback(async (targetUrl: string, githubRepoUrl: string, axeTags: string[]) => {
@@ -27,6 +28,7 @@ export default function Home() {
     setErrorMessage("");
     setScanError(null);
     setPendingScanId(null);
+    scanStartTimeRef.current = Date.now();
 
     try {
       const response = await fetch("/api/scan", {
@@ -86,9 +88,9 @@ export default function Home() {
         }`}
       >
         <ScanProgress
-          key={pendingScanId || "idle"}
           isScanning={isScanning}
           initialScanId={pendingScanId}
+          scanStartTime={scanStartTimeRef.current}
           scanError={scanError}
           onRetry={handleRetry}
         />

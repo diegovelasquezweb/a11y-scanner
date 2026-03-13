@@ -16,15 +16,16 @@ interface StepInfo {
 interface ProgressData {
   steps: Record<string, StepInfo>;
   currentStep: string | null;
+  scanId?: string;
 }
 
 const STEPS = [
-  { key: "page", label: "Loading page" },
-  { key: "axe", label: "Running axe-core" },
-  { key: "cdp", label: "Running CDP checks" },
-  { key: "pa11y", label: "Running pa11y" },
-  { key: "merge", label: "Processing" },
-  { key: "intelligence", label: "Enriching with intelligence" },
+  { key: "page", label: "Loading website" },
+  { key: "axe", label: "Running accessibility scans" },
+  { key: "cdp", label: "Checking dynamic content" },
+  { key: "pa11y", label: "Analyzing rendered HTML" },
+  { key: "merge", label: "Processing results" },
+  { key: "intelligence", label: "Powering up your report" },
 ] as const;
 
 const TOTAL_STEPS = STEPS.length;
@@ -46,13 +47,14 @@ interface CompletedStep {
 interface ScanProgressProps {
   isScanning: boolean;
   initialScanId?: string | null;
+  scanStartTime?: number | null;
   scanError?: string | null;
   onRetry?: () => void;
 }
 
-export default function ScanProgress({ isScanning, initialScanId, scanError, onRetry }: ScanProgressProps) {
+export default function ScanProgress({ isScanning, initialScanId, scanStartTime, scanError, onRetry }: ScanProgressProps) {
   const [elapsed, setElapsed] = useState(0);
-  const [currentStepLabel, setCurrentStepLabel] = useState<string>("Loading page");
+  const [currentStepLabel, setCurrentStepLabel] = useState<string>("Loading website");
   const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
   const [doneCount, setDoneCount] = useState(0);
   const [scanId, setScanId] = useState<string | null>(initialScanId || null);
@@ -61,16 +63,26 @@ export default function ScanProgress({ isScanning, initialScanId, scanError, onR
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const startTimeRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number | null>(scanStartTime || null);
   const seenDoneRef = useRef<Set<string>>(new Set());
   const progressRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
+
+  // Sync startTimeRef if scanStartTime prop changes
+  useEffect(() => {
+    if (scanStartTime) {
+      startTimeRef.current = scanStartTime;
+    }
+  }, [scanStartTime]);
 
   // Timer for elapsed time
   useEffect(() => {
     if (!isScanning) return;
 
-    startTimeRef.current = Date.now();
+    if (!startTimeRef.current) {
+      startTimeRef.current = Date.now();
+    }
+
     timerRef.current = setInterval(() => {
       if (startTimeRef.current) {
         setElapsed((Date.now() - startTimeRef.current) / 1000);
@@ -165,9 +177,12 @@ export default function ScanProgress({ isScanning, initialScanId, scanError, onR
   const allDone = doneCount >= TOTAL_STEPS;
   const hasError = !!(scanError || failedStep);
 
-  // Stop timer when scan completes
+  // Stop timer when scan completes and save final time
   useEffect(() => {
     if (allDone && timerRef.current) {
+      if (startTimeRef.current) {
+        setElapsed((Date.now() - startTimeRef.current) / 1000);
+      }
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
