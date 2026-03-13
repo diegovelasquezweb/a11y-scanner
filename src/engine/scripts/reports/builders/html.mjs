@@ -285,7 +285,7 @@ function buildHtml(args, findings, metadata = {}) {
               </div>
             </div>
             <h3 class="text-xl font-bold text-slate-900 mb-1">${label} Compliance</h3>
-            <p class="text-xs font-medium text-slate-500 max-w-[200px] leading-snug">Automated testing coverage based on ${escapeHtml(args.target)} technical checks.</p>
+            <p class="text-xs font-medium text-slate-500 max-w-50 leading-snug">Automated testing coverage based on ${escapeHtml(args.target)} technical checks.</p>
           </div>
 
           <div class="md:col-span-7 grid grid-cols-2 gap-4">

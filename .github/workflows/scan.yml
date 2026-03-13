@@ -1,0 +1,107 @@
+name: Accessibility Scan
+
+run-name: "scan-${{ inputs.scan_token }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      scan_token:
+        description: "Unique scan token"
+        required: true
+        type: string
+      target_url:
+        description: "Target URL"
+        required: true
+        type: string
+      github_repo_url:
+        description: "Optional source repo URL"
+        required: false
+        type: string
+      axe_tags:
+        description: "Comma-separated axe tags"
+        required: false
+        type: string
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: Loading website
+        run: echo "Preparing scan of ${{ inputs.target_url }}"
+
+      - name: Running accessibility scans
+        run: |
+          AXE_TAGS_ARG=""
+          if [ -n "${{ inputs.axe_tags }}" ]; then
+            AXE_TAGS_ARG="--axe-tags ${{ inputs.axe_tags }}"
+          fi
+
+          PROJECT_DIR_ARG=""
+          if [ -n "${{ inputs.github_repo_url }}" ]; then
+            git clone --depth 1 "${{ inputs.github_repo_url }}" /tmp/a11y-repo || true
+            if [ -d /tmp/a11y-repo/.git ]; then
+              PROJECT_DIR_ARG="--project-dir /tmp/a11y-repo"
+            fi
+          fi
+
+          node src/engine/scripts/audit.mjs \
+            --base-url "${{ inputs.target_url }}" \
+            --max-routes 1 \
+            --skip-patterns \
+            $PROJECT_DIR_ARG \
+            $AXE_TAGS_ARG
+
+      - name: Powering up your report
+        run: echo "Preparing report bundle"
+
+      - name: Prepare artifact bundle
+        run: |
+          mkdir -p out
+          # result.json — inject target_url into metadata so the API can read it
+          if [ -f src/engine/.audit/a11y-findings.json ]; then
+            node -e "
+              const fs = require('fs');
+              const data = JSON.parse(fs.readFileSync('src/engine/.audit/a11y-findings.json','utf8'));
+              data.metadata = data.metadata || {};
+              data.metadata.target_url = '${{ inputs.target_url }}';
+              fs.writeFileSync('out/result.json', JSON.stringify(data));
+            "
+          else
+            echo '{"findings":[],"metadata":{"target_url":"${{ inputs.target_url }}"}}' > out/result.json
+          fi
+          # checklist
+          cp src/engine/.audit/checklist.html out/checklist.html 2>/dev/null || echo "<html><body>No checklist generated</body></html>" > out/checklist.html
+          # PDF
+          if ls src/engine/.audit/*.pdf 1>/dev/null 2>&1; then
+            cp src/engine/.audit/*.pdf out/stakeholder.pdf
+          else
+            touch out/stakeholder.pdf
+          fi
+
+      - name: Upload scan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scan-${{ inputs.scan_token }}
+          path: out/*
+          retention-days: 7

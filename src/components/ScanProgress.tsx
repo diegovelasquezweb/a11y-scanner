@@ -153,7 +153,9 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
 
     const poll = async () => {
       try {
-        const res = await fetch("/api/progress");
+        const id = scanId || initialScanId;
+        const url = id ? `/api/progress?scanId=${encodeURIComponent(id)}` : "/api/progress";
+        const res = await fetch(url);
         if (res.ok) {
           const data: ProgressData = await res.json();
           processSnapshot(data);
@@ -164,7 +166,7 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
     };
 
     poll();
-    intervalRef.current = setInterval(poll, 400);
+    intervalRef.current = setInterval(poll, 3000);
 
     return () => {
       if (intervalRef.current) {
@@ -172,7 +174,7 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
         intervalRef.current = null;
       }
     };
-  }, [isScanning, processSnapshot]);
+  }, [isScanning, processSnapshot, scanId, initialScanId]);
 
   const allDone = doneCount >= TOTAL_STEPS;
   const hasError = !!(scanError || failedStep);
