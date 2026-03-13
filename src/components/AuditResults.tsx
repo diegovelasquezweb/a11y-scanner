@@ -71,8 +71,9 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
 
       <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-extrabold mb-2">Web Accessibility Audit</h2>
-          <p className="text-slate-500">
+          <h2 className="text-3xl font-extrabold mb-1">Web Accessibility Audit</h2>
+          <p className="text-sm font-medium text-sky-600 mb-1 truncate">{result.targetUrl}</p>
+          <p className="text-slate-500 text-sm">
             {new Date(result.scanDate).toLocaleDateString("en-US", {
               year: "numeric",
               month: "long",
@@ -123,20 +124,22 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-12">
-        <div className="xl:col-span-8 grid grid-cols-1 md:grid-cols-12 gap-6">
-          <div className="md:col-span-5">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-12 items-stretch">
+        <div className="xl:col-span-8 grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
+          <div className="md:col-span-5 flex">
             <ScoreGauge
               score={result.score}
               label={result.scoreLabel}
               wcagStatus={result.wcagStatus}
             />
           </div>
-          <div className="md:col-span-7">
-            <SeverityCards totals={result.totals} />
+          <div className="md:col-span-7 flex">
+            <div className="w-full">
+              <SeverityCards totals={result.totals} />
+            </div>
           </div>
         </div>
-        <div className="xl:col-span-4">
+        <div className="xl:col-span-4 flex">
           <PersonaImpact
             personaGroups={result.personaGroups}
             totalFindings={result.totalFindings}

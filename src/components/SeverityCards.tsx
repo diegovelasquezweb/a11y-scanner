@@ -35,11 +35,11 @@ interface SeverityCardsProps {
 
 export function SeverityCards({ totals }: SeverityCardsProps) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-2 gap-4 h-full">
       {SEVERITY_CONFIG.map(({ key, color, textColor, description }) => (
         <div
           key={key}
-          className={`premium-card p-5 rounded-md border-l-[6px] ${color}`}
+          className={`premium-card p-5 rounded-md border-l-[6px] ${color} flex flex-col justify-between`}
         >
           <div className="flex justify-between items-start mb-2">
             <span

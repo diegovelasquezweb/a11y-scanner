@@ -16,7 +16,7 @@ export function ScoreGauge({
   const scoreHue = wcagStatus === "Fail" ? 0 : score >= 75 ? 142 : score >= 55 ? 38 : 0;
 
   return (
-    <div className="premium-card rounded-md p-6 flex flex-col items-center justify-center text-center relative overflow-hidden">
+    <div className="premium-card rounded-md p-6 flex flex-col items-center justify-center text-center relative overflow-hidden w-full">
       <div className="absolute top-0 right-0 p-4 opacity-5">
         <svg
           className="w-32 h-32 text-slate-900"
@@ -48,7 +48,7 @@ export function ScoreGauge({
       </div>
       <h3 className="text-xl font-bold text-slate-900 mb-1">{label} Compliance</h3>
       <p className="text-xs font-medium text-slate-500 max-w-[200px] leading-snug">
-        Automated testing coverage based on {target} technical checks.
+        Based on automated accessibility technical checks.
       </p>
     </div>
   );
