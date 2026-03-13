@@ -160,6 +160,7 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
 
   const doneCount = completedSteps.length;
   const totalSteps = STEPS.length;
+  const allDone = doneCount >= totalSteps;
 
   if (!isScanning) return null;
 
@@ -168,15 +169,21 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
       role="status"
       aria-live="polite"
       aria-label="Scan progress"
-      className="w-full max-w-2xl mt-6"
+      className="w-full max-w-2xl"
     >
       <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl px-5 py-4 shadow-sm">
         {/* Top row: current step + elapsed */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin flex-shrink-0" aria-hidden="true" />
-            <span className="text-sm font-semibold text-indigo-700 truncate">
-              {currentStepLabel}
+            {allDone ? (
+              <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <span className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin flex-shrink-0" aria-hidden="true" />
+            )}
+            <span className={`text-sm font-semibold truncate ${allDone ? "text-emerald-700" : "text-indigo-700"}`}>
+              {allDone ? "Scan complete — loading results..." : currentStepLabel}
             </span>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0 text-xs text-slate-400 tabular-nums">
@@ -188,7 +195,7 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
         {/* Progress bar */}
         <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3">
           <div
-            className="h-full bg-indigo-500 rounded-full transition-all duration-500 ease-out"
+            className={`h-full rounded-full transition-all duration-500 ease-out ${allDone ? "bg-emerald-500" : "bg-indigo-500"}`}
             style={{ width: `${(doneCount / totalSteps) * 100}%` }}
             aria-hidden="true"
           />

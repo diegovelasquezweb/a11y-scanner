@@ -11,6 +11,8 @@ export default function Home() {
   const [status, setStatus] = useState<ScanStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
+  const isScanning = status === "running";
+
   const handleSubmit = useCallback(async (targetUrl: string, githubRepoUrl: string, axeTags: string[]) => {
     setStatus("running");
     setErrorMessage("");
@@ -29,6 +31,8 @@ export default function Home() {
       const data = await response.json();
 
       if (data.scanId) {
+        // Pause 3s so user can read final progress before redirect
+        await new Promise((resolve) => setTimeout(resolve, 3000));
         router.push(`/scan/${data.scanId}`);
         return;
       }
@@ -55,9 +59,27 @@ export default function Home() {
         Skip to scan form
       </a>
 
-      <AuditForm status={status} errorMessage={errorMessage} onSubmit={handleSubmit} />
+      {/* Form — animates out when scanning */}
+      <div
+        className={`transition-all duration-500 ease-out w-full flex justify-center ${
+          isScanning
+            ? "opacity-0 -translate-y-4 max-h-0 overflow-hidden pointer-events-none"
+            : "opacity-100 translate-y-0 max-h-[2000px]"
+        }`}
+      >
+        <AuditForm status={status} errorMessage={errorMessage} onSubmit={handleSubmit} />
+      </div>
 
-      <ScanProgress isScanning={status === "running"} />
+      {/* Progress — animates in when scanning */}
+      <div
+        className={`transition-all duration-500 ease-out w-full flex justify-center ${
+          isScanning
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-4 max-h-0 overflow-hidden pointer-events-none"
+        }`}
+      >
+        <ScanProgress isScanning={isScanning} />
+      </div>
     </main>
   );
 }
