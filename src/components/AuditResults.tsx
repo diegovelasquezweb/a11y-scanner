@@ -59,7 +59,9 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
   const handleScrollToIssue = useCallback((id: string) => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    const offset = 160;
+    const top = el.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top, behavior: "smooth" });
     el.classList.add("ring-4", "ring-sky-300");
     setTimeout(() => {
       el.classList.remove("ring-4", "ring-sky-300");
@@ -258,19 +260,7 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
         onOpenChange={setJiraOpen}
       />
 
-      <footer className="mt-10 py-6 border-t border-slate-200 text-center">
-        <p className="text-slate-600 text-sm font-medium">
-          Powered by{" "}
-          <a
-            href="https://github.com/diegovelasquezweb/a11y"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-slate-700 hover:text-primary font-semibold transition-colors"
-          >
-            a11y
-          </a>
-        </p>
-      </footer>
+
     </div>
   );
 }
