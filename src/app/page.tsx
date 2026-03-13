@@ -41,7 +41,14 @@ export default function Home() {
         }),
       });
 
-      const data = await response.json();
+      let data: { success?: boolean; scanId?: string; error?: string } = {};
+      try {
+        data = await response.json();
+      } catch {
+        setScanError(`Server error (${response.status}). Please try again.`);
+        setStatus("idle");
+        return;
+      }
 
       if (data.scanId) {
         setPendingScanId(data.scanId);
@@ -50,12 +57,14 @@ export default function Home() {
 
       if (!data.success) {
         setScanError(data.error ?? "Unknown error during scan.");
+        setStatus("idle");
         return;
       }
     } catch (err) {
       setScanError(
         err instanceof Error ? err.message : "Network error. Please try again."
       );
+      setStatus("idle");
     }
   }, []);
 

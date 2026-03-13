@@ -1,16 +1,26 @@
 import JSZip from "jszip";
 
-const GH_TOKEN = process.env.GH_TOKEN!;
-const GH_OWNER = process.env.GH_OWNER!;
-const GH_REPO = process.env.GH_REPO!;
-const GH_WORKFLOW_FILE = process.env.GH_WORKFLOW_FILE ?? "scan.yml";
-const GH_WORKFLOW_REF = process.env.GH_WORKFLOW_REF ?? "main";
-
 const API = "https://api.github.com";
 
-function ghHeaders(): HeadersInit {
+function cfg() {
+  const token = process.env.GH_TOKEN;
+  const owner = process.env.GH_OWNER;
+  const repo = process.env.GH_REPO;
+  if (!token || !owner || !repo) {
+    throw new Error("Missing GitHub env vars: GH_TOKEN, GH_OWNER, GH_REPO");
+  }
   return {
-    Authorization: `Bearer ${GH_TOKEN}`,
+    token,
+    owner,
+    repo,
+    workflowFile: process.env.GH_WORKFLOW_FILE ?? "scan.yml",
+    ref: process.env.GH_WORKFLOW_REF ?? "main",
+  };
+}
+
+function ghHeaders(token: string): HeadersInit {
+  return {
+    Authorization: `Bearer ${token}`,
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
   };
@@ -22,6 +32,8 @@ export async function triggerScan(params: {
   githubRepoUrl?: string;
   axeTags?: string[];
 }): Promise<void> {
+  const { token, owner, repo, workflowFile, ref } = cfg();
+
   const inputs: Record<string, string> = {
     scan_token: params.scanToken,
     target_url: params.targetUrl,
@@ -30,11 +42,11 @@ export async function triggerScan(params: {
   if (params.axeTags?.length) inputs.axe_tags = params.axeTags.join(",");
 
   const res = await fetch(
-    `${API}/repos/${GH_OWNER}/${GH_REPO}/actions/workflows/${GH_WORKFLOW_FILE}/dispatches`,
+    `${API}/repos/${owner}/${repo}/actions/workflows/${workflowFile}/dispatches`,
     {
       method: "POST",
-      headers: { ...ghHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({ ref: GH_WORKFLOW_REF, inputs }),
+      headers: { ...ghHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({ ref, inputs }),
     }
   );
 
@@ -59,13 +71,13 @@ export interface WorkflowStepStatus {
 }
 
 export async function getRunStatus(scanToken: string): Promise<WorkflowRunStatus> {
+  const { token, owner, repo, workflowFile } = cfg();
   const runName = `scan-${scanToken}`;
 
-  // List recent runs for this workflow (created in last 10 minutes)
   const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-  const url = `${API}/repos/${GH_OWNER}/${GH_REPO}/actions/workflows/${GH_WORKFLOW_FILE}/runs?per_page=20&created=>=${since}`;
+  const url = `${API}/repos/${owner}/${repo}/actions/workflows/${workflowFile}/runs?per_page=20&created=>=${since}`;
 
-  const res = await fetch(url, { headers: ghHeaders(), cache: "no-store" });
+  const res = await fetch(url, { headers: ghHeaders(token), cache: "no-store" });
   if (!res.ok) {
     return { status: "not_found", conclusion: null, steps: [], runId: null };
   }
@@ -84,10 +96,9 @@ export async function getRunStatus(scanToken: string): Promise<WorkflowRunStatus
     return { status: "not_found", conclusion: null, steps: [], runId: null };
   }
 
-  // Fetch job steps for this run
   const jobsRes = await fetch(
-    `${API}/repos/${GH_OWNER}/${GH_REPO}/actions/runs/${run.id}/jobs`,
-    { headers: ghHeaders(), cache: "no-store" }
+    `${API}/repos/${owner}/${repo}/actions/runs/${run.id}/jobs`,
+    { headers: ghHeaders(token), cache: "no-store" }
   );
 
   let steps: WorkflowStepStatus[] = [];
@@ -125,12 +136,12 @@ export async function getArtifactFile(
   scanToken: string,
   filename: string
 ): Promise<Buffer | null> {
+  const { token, owner, repo } = cfg();
   const artifactName = `scan-${scanToken}`;
 
-  // List artifacts for the repo
   const res = await fetch(
-    `${API}/repos/${GH_OWNER}/${GH_REPO}/actions/artifacts?per_page=100&name=${encodeURIComponent(artifactName)}`,
-    { headers: ghHeaders(), cache: "no-store" }
+    `${API}/repos/${owner}/${repo}/actions/artifacts?per_page=100&name=${encodeURIComponent(artifactName)}`,
+    { headers: ghHeaders(token), cache: "no-store" }
   );
 
   if (!res.ok) return null;
@@ -142,10 +153,9 @@ export async function getArtifactFile(
   const artifact = artifacts.find((a) => a.name === artifactName && !a.expired);
   if (!artifact) return null;
 
-  // Download the ZIP
   const dlRes = await fetch(
-    `${API}/repos/${GH_OWNER}/${GH_REPO}/actions/artifacts/${artifact.id}/zip`,
-    { headers: ghHeaders() }
+    `${API}/repos/${owner}/${repo}/actions/artifacts/${artifact.id}/zip`,
+    { headers: ghHeaders(token) }
   );
 
   if (!dlRes.ok) return null;
