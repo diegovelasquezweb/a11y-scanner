@@ -9,8 +9,7 @@ node_modules/
 !.yarn/releases
 !.yarn/versions
 
-# lockfiles (keep only package-lock.json)
-pnpm-lock.yaml
+# lockfiles
 yarn.lock
 
 # testing
