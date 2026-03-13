@@ -319,7 +319,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
             >
               <span
                 className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                  bestPractices ? "bg-slate-900 border-slate-900" : "border-slate-300 bg-white"
+                  bestPractices ? "bg-sky-600 border-sky-600" : "border-sky-300 bg-white"
                 }`}
                 aria-hidden="true"
               >
@@ -342,7 +342,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
           <div className="flex items-center gap-4">
             <button
               type="submit"
-              className="px-8 py-3 bg-slate-900 text-white font-bold text-sm rounded-md shadow-md hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-900/20 transition-all flex items-center gap-2"
+              className="px-8 py-3 bg-sky-600 text-white font-bold text-sm rounded-md shadow-md hover:bg-sky-700 focus:outline-none focus:ring-4 focus:ring-sky-600/20 transition-all flex items-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
