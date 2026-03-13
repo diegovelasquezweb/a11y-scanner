@@ -123,7 +123,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
         <Collapsible.Trigger asChild>
           <button
             type="button"
-            className="card-header w-full text-left p-5 md:p-6 bg-gradient-to-r from-white to-slate-50/80 cursor-pointer select-none relative focus:outline-none focus:ring-4 focus:ring-indigo-500/20"
+            className="card-header w-full text-left p-5 md:p-6 bg-gradient-to-r from-white to-slate-50/80 cursor-pointer select-none relative focus:outline-none focus:ring-4 focus:ring-sky-500/20"
           >
             <div className="flex items-start gap-4">
               <div className="flex-1 min-w-0">
@@ -140,7 +140,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                     {effort.text}
                   </span>
                   {finding.wcag && (
-                    <span className="wcag-label px-3 py-1 rounded-full text-[11px] font-bold bg-indigo-50/80 text-indigo-700 border border-indigo-100/80 shadow-sm backdrop-blur-sm">
+                    <span className="wcag-label px-3 py-1 rounded-full text-[11px] font-bold bg-sky-50/80 text-sky-700 border border-sky-100/80 shadow-sm backdrop-blur-sm">
                       WCAG {finding.wcag}
                     </span>
                   )}
@@ -154,7 +154,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                   )}
                 </div>
                 {/* Title */}
-                <h3 className="searchable-field text-lg md:text-xl font-extrabold text-slate-900 leading-tight mb-3 group-hover:text-indigo-900 transition-colors">
+                <h3 className="searchable-field text-lg md:text-xl font-extrabold text-slate-900 leading-tight mb-3 group-hover:text-sky-900 transition-colors">
                   {finding.title}
                 </h3>
                 {/* Selector chip */}
@@ -214,7 +214,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                     <Tabs.Trigger
                       key={tab.key}
                       value={tab.key}
-                      className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors text-slate-600 border border-transparent hover:bg-white/70 data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:border-indigo-200 data-[state=active]:shadow-sm"
+                      className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors text-slate-600 border border-transparent hover:bg-white/70 data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:border-sky-200 data-[state=active]:shadow-sm"
                     >
                       {tab.label}
                     </Tabs.Trigger>
@@ -263,20 +263,20 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
 
                 {/* Fix Panel */}
                 <Tabs.Content value="fix">
-                  <div className="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100/80 rounded-xl p-5 relative overflow-hidden shadow-sm">
-                    <h4 className="text-[11px] font-black text-indigo-700 uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2">
-                      <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <div className="bg-gradient-to-br from-sky-50 to-white border border-sky-100/80 rounded-xl p-5 relative overflow-hidden shadow-sm">
+                    <h4 className="text-[11px] font-black text-sky-700 uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2">
+                      <svg className="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
                       The Fix
                     </h4>
                     <div className="relative z-10 space-y-4">
                       {finding.fixDescription ? (
-                        <p className="text-sm text-indigo-800 leading-relaxed">
+                        <p className="text-sm text-sky-800 leading-relaxed">
                           {finding.fixDescription}
                         </p>
                       ) : finding.recommendedFix ? (
-                        <p className="text-sm text-indigo-800/80 leading-relaxed">
+                        <p className="text-sm text-sky-800/80 leading-relaxed">
                           {finding.recommendedFix}
                         </p>
                       ) : null}
@@ -296,7 +296,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                             className={`absolute top-2 right-2 p-1.5 rounded-lg text-white opacity-0 group-hover/code:opacity-100 transition-all ${
                               copiedId === `fix-${finding.id}`
                                 ? "bg-emerald-500"
-                                : "bg-indigo-500/50 hover:bg-indigo-500"
+                                : "bg-sky-500/50 hover:bg-sky-500"
                             }`}
                           >
                             {copiedId === `fix-${finding.id}` ? (
@@ -317,7 +317,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                             href={finding.mdn}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-colors flex items-center gap-1.5 uppercase tracking-wider"
+                            className="text-[11px] font-bold text-slate-500 hover:text-sky-600 transition-colors flex items-center gap-1.5 uppercase tracking-wider"
                           >
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                               <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18 18.246 18.477 16.5 18c-1.746 0-3.332.477-4.5 1.253" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -327,7 +327,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                         </div>
                       )}
                       {finding.fixDifficultyNotes && (
-                        <div className="mt-4 pt-3 border-t border-indigo-100/50">
+                        <div className="mt-4 pt-3 border-t border-sky-100/50">
                           <h4 className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                             Implementation Notes
                           </h4>
@@ -337,7 +337,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                         </div>
                       )}
                       {stackNotes.length > 0 && (
-                        <div className="mt-4 pt-3 border-t border-indigo-100/50">
+                        <div className="mt-4 pt-3 border-t border-sky-100/50">
                           <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                             Stack Notes
                           </h4>
@@ -361,7 +361,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                 {finding.evidence.length > 0 && (
                   <Tabs.Content value="technical">
                     <div className="bg-slate-900 rounded-xl p-6 border border-slate-700 shadow-2xl relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" aria-hidden="true" />
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" aria-hidden="true" />
                       <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2">
                         Technical Evidence
                       </h4>

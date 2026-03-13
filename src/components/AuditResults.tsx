@@ -59,9 +59,9 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
     const el = document.getElementById(id);
     if (!el) return;
     el.scrollIntoView({ behavior: "smooth", block: "start" });
-    el.classList.add("ring-4", "ring-indigo-300");
+    el.classList.add("ring-4", "ring-sky-300");
     setTimeout(() => {
-      el.classList.remove("ring-4", "ring-indigo-300");
+      el.classList.remove("ring-4", "ring-sky-300");
     }, 2000);
   }, []);
 
@@ -90,7 +90,7 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
           {result.detectedStack && (result.detectedStack.framework || result.detectedStack.cms || result.detectedStack.uiLibraries.length > 0) && (
             <div className="flex flex-wrap gap-1.5 mt-2">
               {result.detectedStack.framework && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-200/60">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 text-xs font-bold border border-sky-200/60">
                   {result.detectedStack.framework}
                 </span>
               )}

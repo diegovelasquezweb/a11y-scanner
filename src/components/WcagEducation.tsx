@@ -24,7 +24,7 @@ const WCAG_CARDS: WcagCardData[] = [
   {
     title: "WCAG 2.1",
     tag: "2018",
-    tagColor: "bg-indigo-50 text-indigo-600",
+    tagColor: "bg-sky-50 text-sky-600",
     summary: "Extended 2.0 with 17 new success criteria for mobile, low vision, and cognitive disabilities.",
     details:
       "Added criteria for touch targets (2.5.5), text spacing (1.4.12), content reflow (1.4.10), orientation (1.3.4), and input purpose (1.3.5). Required by the European Accessibility Act (EAA) and referenced in updated ADA guidance. All 2.0 criteria remain — 2.1 is a superset.",
@@ -69,7 +69,7 @@ export function WcagEducationTrigger() {
     <Dialog.Trigger asChild>
       <button
         type="button"
-        className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:ring-offset-2 rounded"
+        className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-800 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:ring-offset-2 rounded"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -96,7 +96,7 @@ export function WcagEducationPanel() {
           <Dialog.Close asChild>
             <button
               type="button"
-              className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+              className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30"
               aria-label="Close panel"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -155,7 +155,7 @@ function WcagCard({ card }: { card: WcagCardData }) {
         <Collapsible.Trigger asChild>
           <button
             type="button"
-            className="w-full text-left px-4 py-3 flex items-start gap-3 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500/30 transition-colors hover:bg-slate-50/80"
+            className="w-full text-left px-4 py-3 flex items-start gap-3 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-sky-500/30 transition-colors hover:bg-slate-50/80"
           >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">

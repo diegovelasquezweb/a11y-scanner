@@ -166,7 +166,7 @@ export function JiraIntegration({
           <button
             type="button"
             onClick={isConfigured ? () => void handleSendToJira() : handleOpenDialog}
-            className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+            className="px-4 py-2 text-xs font-bold text-white bg-sky-600 rounded-lg hover:bg-sky-700 transition-colors"
           >
             Send to Jira
           </button>
@@ -250,7 +250,7 @@ export function JiraIntegration({
                     setSettings((prev) => ({ ...prev, pid: e.target.value.replace(/\D/g, "") }))
                   }
                   placeholder="16368"
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors"
                 />
                 <p className="text-xs text-slate-400 mt-1.5">
                   &#123;JIRA_DOMAIN&#125;/rest/api/2/project/&#123;PROJECT_KEY&#125;
@@ -269,7 +269,7 @@ export function JiraIntegration({
                 >
                   <Select.Trigger
                     aria-labelledby={issueTypeFieldId}
-                    className="inline-flex items-center justify-between gap-2 w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors cursor-pointer"
+                    className="inline-flex items-center justify-between gap-2 w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors cursor-pointer"
                   >
                     <Select.Value />
                     <Select.Icon>
@@ -290,11 +290,11 @@ export function JiraIntegration({
                           <Select.Item
                             key={type}
                             value={type}
-                            className="relative flex items-center px-3 py-2.5 text-sm font-medium text-slate-700 rounded-lg cursor-pointer outline-none select-none data-[highlighted]:bg-indigo-50 data-[highlighted]:text-indigo-700 data-[state=checked]:font-bold data-[state=checked]:text-indigo-700"
+                            className="relative flex items-center px-3 py-2.5 text-sm font-medium text-slate-700 rounded-lg cursor-pointer outline-none select-none data-[highlighted]:bg-sky-50 data-[highlighted]:text-sky-700 data-[state=checked]:font-bold data-[state=checked]:text-sky-700"
                           >
                             <Select.ItemText>{type}</Select.ItemText>
                             <Select.ItemIndicator className="absolute right-3">
-                              <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <svg className="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                               </svg>
                             </Select.ItemIndicator>
@@ -324,7 +324,7 @@ export function JiraIntegration({
                 <button
                   type="submit"
                   disabled={!settings.pid.trim()}
-                  className="px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-5 py-2.5 text-sm font-bold text-white bg-sky-600 rounded-xl hover:bg-sky-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Open Jira
                 </button>

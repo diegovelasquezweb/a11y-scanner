@@ -212,7 +212,7 @@ export default function ScanProgress({ isScanning, scanId, scanError, onSkipDela
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
             ) : (
-              <span className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin motion-reduce:animate-none flex-shrink-0" aria-hidden="true" />
+              <span className="w-4 h-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin motion-reduce:animate-none flex-shrink-0" aria-hidden="true" />
             )}
             <span className={`text-sm font-bold truncate ${hasError ? "text-rose-700" : allDone ? "text-emerald-700" : "text-slate-800"}`}>
               {hasError
@@ -232,7 +232,7 @@ export default function ScanProgress({ isScanning, scanId, scanError, onSkipDela
           <p
             aria-live="polite"
             aria-atomic="true"
-            className="text-sm font-semibold text-indigo-700 mb-3 motion-reduce:transition-none"
+            className="text-sm font-semibold text-sky-700 mb-3 motion-reduce:transition-none"
           >
             {currentStepLabel}
           </p>
@@ -253,7 +253,7 @@ export default function ScanProgress({ isScanning, scanId, scanError, onSkipDela
               <button
                 type="button"
                 onClick={onRetry}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:ring-offset-2 rounded"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-600 hover:text-sky-800 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:ring-offset-2 rounded"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -269,7 +269,7 @@ export default function ScanProgress({ isScanning, scanId, scanError, onSkipDela
           <button
             type="button"
             onClick={onSkipDelay}
-            className="mb-3 text-sm font-semibold text-indigo-600 hover:text-indigo-800 underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:ring-offset-2 rounded"
+            className="mb-3 text-sm font-semibold text-sky-600 hover:text-sky-800 underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:ring-offset-2 rounded"
           >
             View results now
           </button>
@@ -285,7 +285,7 @@ export default function ScanProgress({ isScanning, scanId, scanError, onSkipDela
           className="h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3"
         >
           <div
-            className={`h-full rounded-full transition-all duration-500 ease-out motion-reduce:transition-none ${hasError ? "bg-rose-500" : allDone ? "bg-emerald-500" : "bg-indigo-500"}`}
+            className={`h-full rounded-full transition-all duration-500 ease-out motion-reduce:transition-none ${hasError ? "bg-rose-500" : allDone ? "bg-emerald-500" : "bg-sky-500"}`}
             style={{ width: `${(doneCount / TOTAL_STEPS) * 100}%` }}
           />
         </div>

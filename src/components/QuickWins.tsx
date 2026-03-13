@@ -24,23 +24,23 @@ export function QuickWins({ quickWins, onScrollToIssue }: QuickWinsProps) {
     >
       {/* Background decoration */}
       <div className="absolute -right-6 -bottom-6 opacity-[0.07] pointer-events-none" aria-hidden="true">
-        <svg className="w-40 h-40 text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
+        <svg className="w-40 h-40 text-sky-400" fill="currentColor" viewBox="0 0 24 24">
           <path d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
       </div>
-      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent" aria-hidden="true" />
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-sky-500/40 to-transparent" aria-hidden="true" />
 
       <div className="relative z-10">
         {/* Header */}
         <div className="flex items-center gap-3 mb-2">
-          <span className="px-2.5 py-1 rounded-md bg-indigo-500 text-[10px] font-black text-white uppercase tracking-tight shadow-lg shadow-indigo-500/25">
+          <span className="px-2.5 py-1 rounded-md bg-sky-500 text-[10px] font-black text-white uppercase tracking-tight shadow-lg shadow-sky-500/25">
             AI Analysis
           </span>
           <h3 id="quick-wins-heading" className="text-xl font-bold text-white">
             Recommended Quick Wins
           </h3>
         </div>
-        <p className="text-[13px] text-indigo-300/80 mb-8 leading-relaxed">
+        <p className="text-[13px] text-sky-300/80 mb-8 leading-relaxed">
           High-priority issues with ready-to-use code fixes for immediate remediation.
         </p>
 
@@ -72,7 +72,7 @@ export function QuickWins({ quickWins, onScrollToIssue }: QuickWinsProps) {
                 <button
                   type="button"
                   onClick={() => onScrollToIssue(w.id)}
-                  className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors uppercase tracking-widest flex items-center gap-1.5 group-hover/qw:gap-2"
+                  className="text-[10px] font-bold text-sky-400 hover:text-sky-300 transition-colors uppercase tracking-widest flex items-center gap-1.5 group-hover/qw:gap-2"
                 >
                   View Solution
                   <svg

@@ -106,7 +106,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
               <Tooltip.Trigger asChild>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1 rounded-full px-1 py-0.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                  className="inline-flex items-center gap-1 rounded-full px-1 py-0.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -239,7 +239,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
             WCAG Conformance Level
           </legend>
 
-          <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-5">
+          <div className="bg-sky-50/60 border border-sky-100 rounded-2xl p-5">
             {/* Radix Slider */}
             <Slider.Root
               min={0}
@@ -251,12 +251,12 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
               aria-label="WCAG conformance level"
               className="relative flex items-center select-none touch-none h-5 mb-3"
             >
-              <Slider.Track className="relative grow h-2 bg-indigo-200 rounded-full">
-                <Slider.Range className="absolute h-full bg-indigo-500 rounded-full" />
+              <Slider.Track className="relative grow h-2 bg-sky-200 rounded-full">
+                <Slider.Range className="absolute h-full bg-sky-500 rounded-full" />
               </Slider.Track>
               <Slider.Thumb
                 aria-valuetext={`Level ${conformance}`}
-                className="block w-5 h-5 bg-indigo-600 rounded-full shadow-md border-2 border-white transition-colors focus:outline-none focus:ring-4 focus:ring-indigo-500/20 hover:bg-indigo-700 disabled:cursor-not-allowed"
+                className="block w-5 h-5 bg-sky-600 rounded-full shadow-md border-2 border-white transition-colors focus:outline-none focus:ring-4 focus:ring-sky-500/20 hover:bg-sky-700 disabled:cursor-not-allowed"
               />
             </Slider.Root>
 
@@ -276,14 +276,14 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
                   >
                     <span
                       className={`block text-sm font-bold ${
-                        isActive ? "text-indigo-700" : "text-slate-500"
+                        isActive ? "text-sky-700" : "text-slate-500"
                       }`}
                     >
                       {level.label}
                     </span>
                     <span
                       className={`block text-[11px] ${
-                        isActive ? "text-indigo-500" : "text-slate-400"
+                        isActive ? "text-sky-500" : "text-slate-400"
                       }`}
                     >
                       {level.description}
@@ -294,9 +294,9 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
             </div>
 
             {/* Current selection summary */}
-            <p className="mt-4 pt-3 border-t border-indigo-100 text-sm text-slate-600">
+            <p className="mt-4 pt-3 border-t border-sky-100 text-sm text-slate-600">
               Current:{" "}
-              <span className="font-bold text-indigo-700">WCAG {conformance}</span>
+              <span className="font-bold text-sky-700">WCAG {conformance}</span>
               {conformance === "AA" && (
                 <span className="text-slate-400 ml-1">(Recommended for most websites)</span>
               )}

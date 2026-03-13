@@ -132,11 +132,11 @@ export function FindingsToolbar({
                         <Select.Item
                           key={item.value}
                           value={item.value}
-                          className="relative flex items-center px-3 py-2 text-sm font-medium text-slate-700 rounded-lg cursor-pointer outline-none select-none data-[highlighted]:bg-indigo-50 data-[highlighted]:text-indigo-700 data-[state=checked]:font-bold data-[state=checked]:text-indigo-700"
+                          className="relative flex items-center px-3 py-2 text-sm font-medium text-slate-700 rounded-lg cursor-pointer outline-none select-none data-[highlighted]:bg-sky-50 data-[highlighted]:text-sky-700 data-[state=checked]:font-bold data-[state=checked]:text-sky-700"
                         >
                           <Select.ItemText>{item.label}</Select.ItemText>
                           <Select.ItemIndicator className="absolute right-3">
-                            <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <svg className="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                             </svg>
                           </Select.ItemIndicator>
