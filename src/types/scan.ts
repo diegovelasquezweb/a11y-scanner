@@ -76,6 +76,7 @@ export interface DetectedStack {
 
 export interface ScanResult {
   success: boolean;
+  scanId?: string;
   error?: string;
   data?: {
     targetUrl: string;

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { execSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 
 export const maxDuration = 60;
+
+const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
 
 interface ScanRequestBody {
   targetUrl: string;
@@ -30,9 +33,26 @@ function validateGithubUrl(url: string): boolean {
   }
 }
 
+function generateScanId(): string {
+  return randomBytes(8).toString("hex");
+}
+
+function saveScanResult(scanId: string, data: Record<string, unknown>) {
+  fs.mkdirSync(SCANS_DIR, { recursive: true });
+  const filePath = path.join(SCANS_DIR, `${scanId}.json`);
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+}
+
+function saveScanStatus(scanId: string, status: "scanning" | "completed" | "error", error?: string) {
+  fs.mkdirSync(SCANS_DIR, { recursive: true });
+  const filePath = path.join(SCANS_DIR, `${scanId}.status.json`);
+  fs.writeFileSync(filePath, JSON.stringify({ status, error: error || null, updatedAt: new Date().toISOString() }));
+}
+
 export async function POST(request: NextRequest) {
   let tmpDir = "";
   let cloneDir = "";
+  const scanId = generateScanId();
 
   try {
     const body = (await request.json()) as ScanRequestBody;
@@ -51,6 +71,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Mark scan as in-progress
+    saveScanStatus(scanId, "scanning");
 
     // Create temp working directory for repo clone
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "a11y-scan-"));
@@ -77,6 +100,7 @@ export async function POST(request: NextRequest) {
       steps[step] = { status, updatedAt: new Date().toISOString(), ...extra };
       progress.steps = steps;
       progress.currentStep = step;
+      progress.scanId = scanId;
       fs.writeFileSync(progressPath, JSON.stringify(progress, null, 2));
     }
 
@@ -95,18 +119,15 @@ export async function POST(request: NextRequest) {
         projectDirFlag = `--project-dir ${cloneDir}`;
       } catch (cloneError) {
         console.error("Failed to clone repo:", cloneError);
-        // Continue without project dir (DOM-only scan)
       }
     }
 
     const auditScript = path.join(engineBase, "scripts", "audit.mjs");
 
-    // Build axe-tags flag
     const axeTagsFlag = axeTags && axeTags.length > 0
       ? `--axe-tags ${axeTags.join(",")}`
       : "";
 
-    // Build command
     const cmd = [
       "node",
       auditScript,
@@ -133,14 +154,43 @@ export async function POST(request: NextRequest) {
     // Read findings
     const findingsPath = path.join(auditDir, "a11y-findings.json");
     if (!fs.existsSync(findingsPath)) {
+      saveScanStatus(scanId, "error", "Scan completed but no findings file was generated.");
       return NextResponse.json(
-        { success: false, error: "Scan completed but no findings file was generated." },
+        { success: false, scanId, error: "Scan completed but no findings file was generated." },
         { status: 500 }
       );
     }
 
     const rawFindings = JSON.parse(fs.readFileSync(findingsPath, "utf-8"));
-    writeProgress("intelligence", "done");
+
+    // Count intelligence enrichments
+    const allFindings = rawFindings.findings || [];
+    const enrichments = {
+      fixCodes: 0,
+      frameworkNotes: 0,
+      cmsNotes: 0,
+      guardrails: 0,
+      relatedRules: 0,
+      falsePositiveFlags: 0,
+    };
+    for (const f of allFindings) {
+      if (f.fix_code) enrichments.fixCodes++;
+      if (f.framework_notes && Object.keys(f.framework_notes).length > 0) enrichments.frameworkNotes++;
+      if (f.cms_notes && Object.keys(f.cms_notes).length > 0) enrichments.cmsNotes++;
+      if (f.guardrails && (f.guardrails.must?.length || f.guardrails.verify?.length)) enrichments.guardrails++;
+      if (Array.isArray(f.related_rules) && f.related_rules.length > 0) enrichments.relatedRules++;
+      if (f.false_positive_risk && f.false_positive_risk !== "low") enrichments.falsePositiveFlags++;
+    }
+    const totalEnrichments = enrichments.fixCodes + enrichments.frameworkNotes + enrichments.cmsNotes + enrichments.guardrails + enrichments.relatedRules + enrichments.falsePositiveFlags;
+
+    writeProgress("intelligence", "done", {
+      enriched: allFindings.length,
+      fixCodes: enrichments.fixCodes,
+      frameworkNotes: enrichments.frameworkNotes,
+      guardrails: enrichments.guardrails,
+      relatedRules: enrichments.relatedRules,
+      totalEnrichments,
+    });
 
     // Run source scanner if we have a cloned repo
     let sourcePatternFindings: unknown[] = [];
@@ -160,8 +210,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Normalize findings using the engine's logic
-    // We replicate the normalization inline to avoid ESM import issues
+    // Normalize findings
     const findings = (rawFindings.findings || []).map(
       (item: Record<string, unknown>, index: number) => ({
         id: String(item.id ?? `A11Y-${String(index + 1).padStart(3, "0")}`),
@@ -240,7 +289,7 @@ export async function POST(request: NextRequest) {
       if (sev in totals) totals[sev as keyof typeof totals] += 1;
     }
 
-    // Compute score using official compliance-config.json
+    // Compute score
     const complianceConfigPath = path.join(engineBase, "assets", "reporting", "compliance-config.json");
     const complianceConfig = JSON.parse(fs.readFileSync(complianceConfigPath, "utf-8"));
     const officialPenalties = complianceConfig.complianceScore.penalties as Record<string, number>;
@@ -254,7 +303,6 @@ export async function POST(request: NextRequest) {
       totals.Minor * (officialPenalties.Minor ?? 0.5);
     const score = Math.max(0, Math.min(100, Math.round(rawScore)));
 
-    // Score label from official grade thresholds
     let label = "Critical";
     for (const threshold of gradeThresholds) {
       if (score >= threshold.min) {
@@ -263,12 +311,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // WCAG status
     let wcagStatus: "Pass" | "Conditional Pass" | "Fail" = "Pass";
     if (totals.Critical > 0 || totals.Serious > 0) wcagStatus = "Fail";
     else if (totals.Moderate > 0 || totals.Minor > 0) wcagStatus = "Conditional Pass";
 
-    // Quick wins
     const quickWins = findings
       .filter(
         (f: { severity: string; fixCode: string | null }) =>
@@ -276,7 +322,7 @@ export async function POST(request: NextRequest) {
       )
       .slice(0, 3);
 
-    // Persona groups using official wcag-reference.json mapping
+    // Persona groups
     const wcagRefPath = path.join(engineBase, "assets", "reporting", "wcag-reference.json");
     const wcagRef = JSON.parse(fs.readFileSync(wcagRefPath, "utf-8"));
     const personaConfig = wcagRef.personaConfig as Record<string, { label: string; icon: string }>;
@@ -301,7 +347,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Extract detected stack from metadata
+    // Detected stack
     const projectContext = rawFindings.metadata?.projectContext || {};
     const detectedStack = {
       framework: projectContext.framework || null,
@@ -309,35 +355,40 @@ export async function POST(request: NextRequest) {
       uiLibraries: projectContext.uiLibraries || [],
     };
 
+    const resultData = {
+      targetUrl,
+      scanDate: new Date().toISOString(),
+      score,
+      scoreLabel: label,
+      wcagStatus,
+      totals,
+      personaGroups,
+      findings,
+      quickWins,
+      totalFindings: findings.length,
+      sourcePatternFindings,
+      detectedStack,
+    };
+
+    // Persist result
+    saveScanResult(scanId, resultData);
+    saveScanStatus(scanId, "completed");
+
     return NextResponse.json({
       success: true,
-      data: {
-        targetUrl,
-        scanDate: new Date().toISOString(),
-        score,
-        scoreLabel: label,
-        wcagStatus,
-        totals,
-        personaGroups,
-        findings,
-        quickWins,
-        totalFindings: findings.length,
-        sourcePatternFindings,
-        detectedStack,
-      },
+      scanId,
+      data: resultData,
     });
   } catch (error) {
     console.error("Scan error:", error);
     const message = error instanceof Error ? error.message : "Unknown scan error";
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    saveScanStatus(scanId, "error", message);
+    return NextResponse.json({ success: false, scanId, error: message }, { status: 500 });
   } finally {
-    // Cleanup temp files
     if (tmpDir) {
       try {
         fs.rmSync(tmpDir, { recursive: true, force: true });
-      } catch {
-        // Ignore cleanup errors
-      }
+      } catch { /* ignore */ }
     }
   }
 }

@@ -26,6 +26,9 @@ yarn.lock
 # engine runtime artifacts
 src/engine/.audit/
 
+# stored scan results
+src/data/scans/
+
 # misc
 .DS_Store
 *.pem
