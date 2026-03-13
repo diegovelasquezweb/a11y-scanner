@@ -11,6 +11,9 @@ importers:
       '@axe-core/playwright':
         specifier: ^4.11.1
         version: 4.11.1(playwright-core@1.58.2)
+      '@diegovelasquezweb/a11y-engine':
+        specifier: ^0.1.2
+        version: 0.1.2(playwright-core@1.58.2)(typescript@5.9.3)
       '@radix-ui/react-collapsible':
         specifier: ^1.1.12
         version: 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -159,6 +162,11 @@ packages:
   '@babel/types@7.29.0':
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
+
+  '@diegovelasquezweb/a11y-engine@0.1.2':
+    resolution: {integrity: sha512-k2x0x2zXUpuyXOePI2FS+UVq/NwmLq7N+eDzS4ioXwaJKzWbH3S6OcGdYthhjF7ObQDiFaUMUkkcMM4edik2vg==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   '@emnapi/core@1.9.0':
     resolution: {integrity: sha512-0DQ98G9ZQZOxfUcQn1waV2yS8aWdZ6kJMbYCJB3oUBecjWYO1fqJ+a1DRfPF3O5JEkwqwP1A9QEN/9mYm2Yd0w==}
@@ -2935,6 +2943,22 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
+
+  '@diegovelasquezweb/a11y-engine@0.1.2(playwright-core@1.58.2)(typescript@5.9.3)':
+    dependencies:
+      '@axe-core/playwright': 4.11.1(playwright-core@1.58.2)
+      axe-core: 4.11.1
+      pa11y: 9.1.1(typescript@5.9.3)
+      playwright: 1.58.2
+    transitivePeerDependencies:
+      - bare-abort-controller
+      - bare-buffer
+      - bufferutil
+      - playwright-core
+      - react-native-b4a
+      - supports-color
+      - typescript
+      - utf-8-validate
 
   '@emnapi/core@1.9.0':
     dependencies:

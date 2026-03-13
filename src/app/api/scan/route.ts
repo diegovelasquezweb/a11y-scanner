@@ -86,8 +86,8 @@ async function runLocal(params: {
   const { scanId, targetUrl, githubRepoUrl, axeTags } = params;
 
   const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
-  const engineBase = path.join(process.cwd(), "src", "engine");
-  const auditDir = path.join(engineBase, ".audit");
+  const engineBase = path.join(process.cwd(), "node_modules", "@diegovelasquezweb", "a11y-engine");
+  const auditDir = path.join(process.cwd(), ".audit");
 
   fs.mkdirSync(SCANS_DIR, { recursive: true });
   fs.mkdirSync(auditDir, { recursive: true });
@@ -145,7 +145,7 @@ async function runLocal(params: {
         axeTagsFlag,
       ].filter(Boolean).join(" ");
 
-      await execAsync(cmd, { timeout: 55000, cwd: engineBase });
+      await execAsync(cmd, { timeout: 55000, cwd: process.cwd() });
 
       writeProgress("intelligence", "done");
 
