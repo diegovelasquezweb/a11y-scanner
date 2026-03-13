@@ -3,6 +3,7 @@
 import { useState, useRef, useId, useMemo } from "react";
 import * as Slider from "@radix-ui/react-slider";
 import * as Toggle from "@radix-ui/react-toggle";
+import * as Tooltip from "@radix-ui/react-tooltip";
 import type { ScanStatus, ConformanceLevel } from "@/types/scan";
 import {
   CONFORMANCE_LEVELS,
@@ -85,14 +86,42 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
 
   return (
     <div className="premium-card rounded-2xl p-8 w-full max-w-2xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-          Web Accessibility Scanner
-        </h1>
-        <p className="text-sm text-slate-500 mt-2 leading-relaxed max-w-lg">
-          Scan any URL to detect accessibility issues with actionable fix recommendations.
-          Runs axe-core and pa11y together for broader WCAG coverage, then enriches
-          each finding with code fixes, MDN references, and framework-specific guidance.
+      <div className="mb-6">
+        <div className="flex items-center gap-2">
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+            Web Accessibility Scanner
+          </h1>
+          <Tooltip.Provider delayDuration={200}>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <button
+                  type="button"
+                  className="rounded-full p-0.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                  aria-label="How it works"
+                >
+                  <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content
+                  side="bottom"
+                  align="start"
+                  sideOffset={6}
+                  className="z-50 max-w-xs rounded-xl bg-slate-900 px-4 py-3 text-xs leading-relaxed text-slate-200 shadow-xl animate-in fade-in-0 zoom-in-95"
+                >
+                  Runs axe-core and pa11y together for broader WCAG coverage,
+                  then enriches each finding with code fixes, MDN references,
+                  and framework-specific guidance.
+                  <Tooltip.Arrow className="fill-slate-900" />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          </Tooltip.Provider>
+        </div>
+        <p className="text-sm text-slate-500 mt-1">
+          Scan any URL for actionable accessibility issues.
         </p>
       </div>
 
@@ -298,55 +327,28 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
           </div>
         </fieldset>
 
-        <div className="flex items-center gap-4">
-          <button
-            type="submit"
-            disabled={isRunning}
-            className="px-8 py-3 bg-slate-900 text-white font-bold text-sm rounded-2xl shadow-md hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            {isRunning ? (
-              <>
-                <svg
-                  className="animate-spin h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Scanning...
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                Run Audit
-              </>
-            )}
-          </button>
+        {!isRunning && (
+          <div className="flex items-center gap-4">
+            <button
+              type="submit"
+              className="px-8 py-3 bg-slate-900 text-white font-bold text-sm rounded-2xl shadow-md hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-900/20 transition-all flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Run Audit
+            </button>
 
-          {/* Status indicator */}
-          <div aria-live="polite" aria-atomic="true" id={statusId}>
-            {status === "error" && errorMessage && (
-              <p className="text-sm text-rose-600 font-medium" role="alert">
-                {errorMessage}
-              </p>
-            )}
+            {/* Error indicator */}
+            <div aria-live="polite" aria-atomic="true" id={statusId}>
+              {status === "error" && errorMessage && (
+                <p className="text-sm text-rose-600 font-medium" role="alert">
+                  {errorMessage}
+                </p>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </form>
     </div>
   );

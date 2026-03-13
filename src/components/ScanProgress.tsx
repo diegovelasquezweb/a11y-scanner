@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 interface StepInfo {
   status: "pending" | "running" | "done" | "error";
@@ -29,7 +29,6 @@ const STEPS = [
 ] as const;
 
 function formatStepDetail(key: string, info: StepInfo): string | null {
-  if (info.status !== "done") return null;
   if (key === "axe" && info.found !== undefined) return `${info.found} found`;
   if (key === "cdp" && info.found !== undefined) return `${info.found} found`;
   if (key === "pa11y" && info.found !== undefined) return `${info.found} found`;
@@ -40,23 +39,36 @@ function formatStepDetail(key: string, info: StepInfo): string | null {
   return null;
 }
 
+/** A step that has been completed and is ready to display. */
+interface CompletedStep {
+  key: string;
+  label: string;
+  detail: string | null;
+}
+
 interface ScanProgressProps {
   isScanning: boolean;
 }
 
 export default function ScanProgress({ isScanning }: ScanProgressProps) {
-  const [progress, setProgress] = useState<ProgressData | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  const [currentStepLabel, setCurrentStepLabel] = useState<string>("Preparing...");
+  const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
+
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number | null>(null);
+  /** Tracks which step keys we've already recorded as done — prevents duplicates and ensures we never skip. */
+  const seenDoneRef = useRef<Set<string>>(new Set());
 
-  // Elapsed timer
+  // Reset state when scanning starts/stops
   useEffect(() => {
     if (isScanning) {
       startTimeRef.current = Date.now();
       setElapsed(0);
-      setProgress(null);
+      setCurrentStepLabel("Preparing...");
+      setCompletedSteps([]);
+      seenDoneRef.current = new Set();
 
       timerRef.current = setInterval(() => {
         if (startTimeRef.current) {
@@ -78,7 +90,42 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
     };
   }, [isScanning]);
 
-  // Poll progress
+  /**
+   * Process a poll snapshot: walk STEPS in order, accumulate any newly-done
+   * steps into our persistent list, and update the current running label.
+   */
+  const processSnapshot = useCallback((data: ProgressData) => {
+    const steps = data.steps || {};
+    let runningLabel: string | null = null;
+
+    // Walk steps in defined order so we always accumulate chronologically
+    for (const step of STEPS) {
+      const info = steps[step.key];
+      if (!info) continue;
+
+      if (info.status === "done" && !seenDoneRef.current.has(step.key)) {
+        seenDoneRef.current.add(step.key);
+        setCompletedSteps((prev) => [
+          ...prev,
+          {
+            key: step.key,
+            label: step.label,
+            detail: formatStepDetail(step.key, info),
+          },
+        ]);
+      }
+
+      if (info.status === "running") {
+        runningLabel = step.label;
+      }
+    }
+
+    if (runningLabel) {
+      setCurrentStepLabel(runningLabel);
+    }
+  }, []);
+
+  // Poll progress — 400ms for responsive step-by-step display
   useEffect(() => {
     if (!isScanning) {
       if (intervalRef.current) {
@@ -92,8 +139,8 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
       try {
         const res = await fetch("/api/progress");
         if (res.ok) {
-          const data = await res.json();
-          setProgress(data);
+          const data: ProgressData = await res.json();
+          processSnapshot(data);
         }
       } catch {
         // ignore polling errors
@@ -101,7 +148,7 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
     };
 
     poll();
-    intervalRef.current = setInterval(poll, 800);
+    intervalRef.current = setInterval(poll, 400);
 
     return () => {
       if (intervalRef.current) {
@@ -109,27 +156,8 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
         intervalRef.current = null;
       }
     };
-  }, [isScanning]);
+  }, [isScanning, processSnapshot]);
 
-  const steps = progress?.steps || {};
-
-  // Completed steps with details (most recent first)
-  const completedSteps = useMemo(() => {
-    return STEPS
-      .filter((s) => steps[s.key]?.status === "done")
-      .map((s) => ({
-        ...s,
-        detail: formatStepDetail(s.key, steps[s.key]),
-      }))
-      .reverse();
-  }, [steps]);
-
-  // Current running step
-  const currentStep = useMemo(() => {
-    return STEPS.find((s) => steps[s.key]?.status === "running") ?? null;
-  }, [steps]);
-
-  // Compute step progress
   const doneCount = completedSteps.length;
   const totalSteps = STEPS.length;
 
@@ -148,7 +176,7 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin flex-shrink-0" aria-hidden="true" />
             <span className="text-sm font-semibold text-indigo-700 truncate">
-              {currentStep?.label ?? "Preparing..."}
+              {currentStepLabel}
             </span>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0 text-xs text-slate-400 tabular-nums">
@@ -166,11 +194,11 @@ export default function ScanProgress({ isScanning }: ScanProgressProps) {
           />
         </div>
 
-        {/* Completed steps feed (last 3) */}
+        {/* Completed steps feed — all steps in order */}
         {completedSteps.length > 0 && (
-          <div className="space-y-1">
-            {completedSteps.slice(0, 3).map((step) => (
-              <div key={step.key} className="flex items-center gap-2 text-xs">
+          <div className="space-y-1.5">
+            {completedSteps.map((step) => (
+              <div key={step.key} className="flex items-center gap-2 text-xs animate-in fade-in-0 slide-in-from-top-1 duration-300">
                 <svg className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
