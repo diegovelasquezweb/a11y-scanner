@@ -61,9 +61,9 @@ export default function Home() {
 
       {/* Form — animates out when scanning */}
       <div
-        className={`transition-all duration-500 ease-out w-full flex justify-center ${
+        className={`transition-all duration-500 ease-out motion-reduce:transition-none w-full flex justify-center ${
           isScanning
-            ? "opacity-0 -translate-y-4 max-h-0 overflow-hidden pointer-events-none"
+            ? "opacity-0 -translate-y-4 motion-reduce:translate-y-0 max-h-0 overflow-hidden pointer-events-none"
             : "opacity-100 translate-y-0 max-h-[2000px]"
         }`}
       >
@@ -72,10 +72,10 @@ export default function Home() {
 
       {/* Progress — animates in when scanning */}
       <div
-        className={`transition-all duration-500 ease-out w-full flex justify-center ${
+        className={`transition-all duration-500 ease-out motion-reduce:transition-none w-full flex justify-center ${
           isScanning
             ? "opacity-100 translate-y-0"
-            : "opacity-0 translate-y-4 max-h-0 overflow-hidden pointer-events-none"
+            : "opacity-0 translate-y-4 motion-reduce:translate-y-0 max-h-0 overflow-hidden pointer-events-none"
         }`}
       >
         <ScanProgress isScanning={isScanning} />

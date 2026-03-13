@@ -96,12 +96,12 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
               <Tooltip.Trigger asChild>
                 <button
                   type="button"
-                  className="rounded-full p-0.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                  aria-label="How it works"
+                  className="inline-flex items-center gap-1 rounded-full px-1 py-0.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                 >
-                  <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
+                  <span className="text-[11px] font-medium sm:sr-only">How it works</span>
                 </button>
               </Tooltip.Trigger>
               <Tooltip.Portal>
