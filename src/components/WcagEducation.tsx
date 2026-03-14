@@ -63,7 +63,6 @@ const WCAG_CARDS: WcagCardData[] = [
   },
 ];
 
-/** Trigger link — place this inside the WCAG fieldset in AuditForm */
 export function WcagEducationTrigger() {
   return (
     <Dialog.Trigger asChild>
@@ -80,7 +79,6 @@ export function WcagEducationTrigger() {
   );
 }
 
-/** Side panel wrapper — wrap AuditForm content with this at the form level */
 export function WcagEducationPanel() {
   return (
     <Dialog.Portal>
@@ -111,7 +109,6 @@ export function WcagEducationPanel() {
             WCAG (Web Content Accessibility Guidelines) defines how to make web content more accessible. Each version builds on the previous one, and each conformance level is cumulative.
           </p>
 
-          {/* Versions */}
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
             Versions
           </h3>
@@ -121,7 +118,6 @@ export function WcagEducationPanel() {
             ))}
           </div>
 
-          {/* Levels */}
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
             Conformance Levels
           </h3>
@@ -136,7 +132,6 @@ export function WcagEducationPanel() {
   );
 }
 
-/** Full provider — wrap trigger + panel together */
 export function WcagEducation({ children }: { children?: React.ReactNode }) {
   return (
     <Dialog.Root>

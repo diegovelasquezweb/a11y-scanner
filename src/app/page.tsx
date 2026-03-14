@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import type { ScanStatus } from "@/types/scan";
 import { AuditForm } from "@/components/AuditForm";
 import ScanProgress from "@/components/ScanProgress";
-
 
 export default function Home() {
   const [status, setStatus] = useState<ScanStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [pendingScanId, setPendingScanId] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
-  const scanStartTimeRef = useRef<number | null>(null);
+  const [scanStartTime, setScanStartTime] = useState<number | null>(null);
 
   const isScanning = status === "running";
 
@@ -20,7 +19,7 @@ export default function Home() {
     setErrorMessage("");
     setScanError(null);
     setPendingScanId(null);
-    scanStartTimeRef.current = null;
+    setScanStartTime(null);
   }, []);
 
   const handleSubmit = useCallback(async (targetUrl: string, githubRepoUrl: string, axeTags: string[]) => {
@@ -28,7 +27,7 @@ export default function Home() {
     setErrorMessage("");
     setScanError(null);
     setPendingScanId(null);
-    scanStartTimeRef.current = Date.now();
+    setScanStartTime(Date.now());
 
     try {
       const response = await fetch("/api/scan", {
@@ -77,7 +76,6 @@ export default function Home() {
         Skip to scan form
       </a>
 
-      {/* Form — animates out when scanning */}
       <div
         className={`transition-all duration-500 ease-out motion-reduce:transition-none w-full flex justify-center ${
           isScanning
@@ -88,7 +86,6 @@ export default function Home() {
         <AuditForm status={status} errorMessage={errorMessage} onSubmit={handleSubmit} />
       </div>
 
-      {/* Progress — animates in when scanning */}
       <div
         className={`transition-all duration-500 ease-out motion-reduce:transition-none w-full flex justify-center ${
           isScanning
@@ -99,12 +96,11 @@ export default function Home() {
         <ScanProgress
           isScanning={isScanning}
           initialScanId={pendingScanId}
-          scanStartTime={scanStartTimeRef.current}
+          scanStartTime={scanStartTime}
           scanError={scanError}
           onRetry={handleRetry}
         />
       </div>
-
     </main>
   );
 }

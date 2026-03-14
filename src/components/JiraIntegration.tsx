@@ -25,10 +25,8 @@ export interface JiraIntegrationProps {
   targetUrl: string;
   totals: SeverityTotals;
   findings: Finding[];
-  /** Controlled open state from parent */
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Called when Send to Jira succeeds */
   onSend?: () => void;
 }
 
@@ -109,7 +107,6 @@ export function JiraIntegration({
     try {
       await navigator.clipboard.writeText(`${summary}\n\n${description}`);
     } catch {
-      // non-critical
     }
 
     const jiraUrl = `${FIXED_JIRA_BASE_URL}/secure/CreateIssueDetails!init.jspa?pid=${encodeURIComponent(next.pid)}&issuetype=${encodeURIComponent(issueTypeId)}&summary=${encodeURIComponent(summary)}&description=${encodeURIComponent(description)}`;

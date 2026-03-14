@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import type { Finding } from "@/types/scan";
@@ -40,17 +40,10 @@ interface IssueCardProps {
 }
 
 export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [localExpanded, setLocalExpanded] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const prevForceExpanded = useRef(forceExpanded);
 
-  // Sync with global expand/collapse only when the global toggle actually changes
-  useEffect(() => {
-    if (forceExpanded !== prevForceExpanded.current) {
-      prevForceExpanded.current = forceExpanded;
-      setIsExpanded(!!forceExpanded);
-    }
-  }, [forceExpanded]);
+  const isExpanded = forceExpanded ?? localExpanded;
 
   const styles = SEVERITY_STYLES[finding.severity] ?? SEVERITY_STYLES.Minor;
 
@@ -78,7 +71,6 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2000);
     } catch {
-      // Fallback silently
     }
   }, []);
 
@@ -118,8 +110,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
       data-rule-id={finding.ruleId}
       data-wcag={finding.wcag}
     >
-      <Collapsible.Root open={isExpanded} onOpenChange={setIsExpanded}>
-        {/* Header / Trigger */}
+      <Collapsible.Root open={isExpanded} onOpenChange={setLocalExpanded}>
         <Collapsible.Trigger asChild>
           <button
             type="button"
@@ -127,7 +118,6 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
           >
             <div className="flex items-start gap-4">
               <div className="flex-1 min-w-0">
-                {/* Badges row */}
                 <div className="flex flex-wrap items-center gap-2.5 mb-3.5">
                   <span
                     className={`px-3 py-1 rounded-full text-[11px] font-bold border ${styles.badge} shadow-sm backdrop-blur-sm uppercase tracking-wider`}
@@ -153,11 +143,9 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                     </span>
                   )}
                 </div>
-                {/* Title */}
                 <h3 className="searchable-field text-lg md:text-xl font-extrabold text-slate-900 leading-tight mb-3 group-hover:text-sky-900 transition-colors">
                   {finding.title}
                 </h3>
-                {/* Selector chip */}
                 {finding.selector && (
                   <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px] text-slate-600 font-medium">
                     <div className="flex items-center gap-1.5 min-w-0 bg-slate-50/50 px-2 py-1 rounded-md border border-slate-100">
@@ -182,7 +170,6 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                   </div>
                 )}
               </div>
-              {/* Chevron */}
               <div className="bg-white p-1.5 rounded-full border border-slate-200 shadow-sm group-hover:bg-slate-50 transition-colors mt-1 flex-shrink-0">
                 <svg
                   className={`card-chevron w-5 h-5 text-slate-500 transition-transform duration-300 ${
@@ -200,11 +187,9 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
           </button>
         </Collapsible.Trigger>
 
-        {/* Collapsible Body */}
         <Collapsible.Content className="card-body data-[state=open]:expanded">
           <div>
             <div className="p-6 md:p-8 bg-slate-50/30 border-t border-slate-100/60">
-              {/* Radix Tabs */}
               <Tabs.Root defaultValue="problem">
                 <Tabs.List
                   aria-label={`Issue detail sections for ${finding.id}`}
@@ -221,7 +206,6 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                   ))}
                 </Tabs.List>
 
-                {/* Problem Panel */}
                 <Tabs.Content value="problem">
                   <div className="bg-white rounded-md border border-slate-200/60 shadow-sm p-5 space-y-5">
                     <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
@@ -261,7 +245,6 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                   </div>
                 </Tabs.Content>
 
-                {/* Fix Panel */}
                 <Tabs.Content value="fix">
                   <div className="bg-gradient-to-br from-sky-50 to-white border border-sky-100/80 rounded-md p-5 relative overflow-hidden shadow-sm">
                     <h4 className="text-[11px] font-black text-sky-700 uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2">
@@ -357,7 +340,6 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                   </div>
                 </Tabs.Content>
 
-                {/* Technical Evidence Panel */}
                 {finding.evidence.length > 0 && (
                   <Tabs.Content value="technical">
                     <div className="bg-slate-900 rounded-md p-6 border border-slate-700 shadow-2xl relative overflow-hidden">
@@ -416,7 +398,6 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                   </Tabs.Content>
                 )}
 
-                {/* Visual Evidence Panel */}
                 {finding.screenshotPath && (
                   <Tabs.Content value="visual">
                     <div className="border border-slate-200 rounded-md p-4 bg-white shadow-sm">

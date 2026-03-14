@@ -22,7 +22,6 @@ export function QuickWins({ quickWins, onScrollToIssue }: QuickWinsProps) {
       aria-labelledby="quick-wins-heading"
       className="rounded-md bg-slate-900 p-8 mb-12 relative overflow-hidden border border-slate-800 shadow-2xl"
     >
-      {/* Background decoration */}
       <div className="absolute -right-6 -bottom-6 opacity-[0.07] pointer-events-none" aria-hidden="true">
         <svg className="w-40 h-40 text-sky-400" fill="currentColor" viewBox="0 0 24 24">
           <path d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -31,7 +30,6 @@ export function QuickWins({ quickWins, onScrollToIssue }: QuickWinsProps) {
       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-sky-500/40 to-transparent" aria-hidden="true" />
 
       <div className="relative z-10">
-        {/* Header */}
         <div className="flex items-center gap-3 mb-2">
           <span className="px-2.5 py-1 rounded-md bg-sky-500 text-[10px] font-black text-white uppercase tracking-tight shadow-lg shadow-sky-500/25">
             AI Analysis
@@ -44,7 +42,6 @@ export function QuickWins({ quickWins, onScrollToIssue }: QuickWinsProps) {
           High-priority issues with ready-to-use code fixes for immediate remediation.
         </p>
 
-        {/* Cards grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {quickWins.map((w) => {
             const badgeStyle = SEVERITY_BADGE[w.severity] ?? SEVERITY_BADGE.Minor;

@@ -30,7 +30,6 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
   const repoErrorId = useId();
   const statusId = useId();
 
-  // Move focus to scan error message when status changes to "error"
   useEffect(() => {
     if (status === "error" && errorMessage && scanErrorRef.current) {
       scanErrorRef.current.focus();
@@ -137,7 +136,6 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
 
       <form onSubmit={handleSubmit} noValidate>
         <div className="grid grid-cols-1 gap-6 mb-6">
-          {/* Target URL */}
           <div>
             <label
               htmlFor="target-url"
@@ -184,7 +182,6 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
             )}
           </div>
 
-          {/* GitHub Repo URL */}
           <div>
             <label
               htmlFor="github-repo"
@@ -233,14 +230,12 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
           </div>
         </div>
 
-        {/* WCAG Conformance Level Slider */}
         <fieldset className="mb-6" disabled={isRunning}>
           <legend className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-4">
             WCAG Conformance Level
           </legend>
 
           <div className="bg-sky-50/60 border border-sky-100 rounded-md p-5">
-            {/* Radix Slider */}
             <Slider.Root
               min={0}
               max={CONFORMANCE_LEVELS.length - 1}
@@ -260,7 +255,6 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
               />
             </Slider.Root>
 
-            {/* Labels under slider */}
             <div className="flex justify-between px-0.5">
               {CONFORMANCE_LEVELS.map((level) => {
                 const isActive = conformance === level.id;
@@ -293,7 +287,6 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
               })}
             </div>
 
-            {/* Current selection summary */}
             <p className="mt-4 pt-3 border-t border-sky-100 text-sm text-slate-600">
               Current:{" "}
               <span className="font-bold text-sky-700">WCAG {conformance}</span>
@@ -309,7 +302,6 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
             </p>
           </div>
 
-          {/* Best Practices toggle + Understanding WCAG link */}
           <div className="mt-3 flex items-center justify-between">
             <Toggle.Root
               pressed={bestPractices}
@@ -350,7 +342,6 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
               Run Audit
             </button>
 
-            {/* Error indicator */}
             <div
               ref={scanErrorRef}
               tabIndex={-1}

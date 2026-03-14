@@ -4,15 +4,9 @@ interface ScoreGaugeProps {
   score: number;
   label: string;
   wcagStatus: "Pass" | "Conditional Pass" | "Fail";
-  target?: string;
 }
 
-export function ScoreGauge({
-  score,
-  label,
-  wcagStatus,
-  target = "WCAG 2.2 AA",
-}: ScoreGaugeProps) {
+export function ScoreGauge({ score, label, wcagStatus }: ScoreGaugeProps) {
   const scoreHue = wcagStatus === "Fail" ? 0 : score >= 75 ? 142 : score >= 55 ? 38 : 0;
 
   return (
