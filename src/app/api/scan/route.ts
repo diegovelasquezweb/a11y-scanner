@@ -163,15 +163,15 @@ async function runLocal(params: {
       );
 
       // Generate reports via engine API
-      const { generatePDF, generateChecklist } = await import("@diegovelasquezweb/a11y-engine");
+      const { getPDFReport, getChecklist } = await import("@diegovelasquezweb/a11y-engine");
 
-      const [pdfBuffer, checklistHtml] = await Promise.all([
-        generatePDF(rawFindings, { baseUrl: targetUrl }),
-        generateChecklist({ baseUrl: targetUrl }),
+      const [pdfReport, checklistReport] = await Promise.all([
+        getPDFReport(rawFindings, { baseUrl: targetUrl }),
+        getChecklist({ baseUrl: targetUrl }),
       ]);
 
-      fs.writeFileSync(path.join(SCANS_DIR, `${scanId}.pdf`), pdfBuffer);
-      fs.writeFileSync(path.join(SCANS_DIR, `${scanId}.checklist.html`), checklistHtml, "utf-8");
+      fs.writeFileSync(path.join(SCANS_DIR, `${scanId}.pdf`), pdfReport.buffer);
+      fs.writeFileSync(path.join(SCANS_DIR, `${scanId}.checklist.html`), checklistReport.html, "utf-8");
 
       writeProgress("intelligence", "done");
 

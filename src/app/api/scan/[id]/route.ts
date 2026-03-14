@@ -2,118 +2,68 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 import { getRunStatus, getArtifactFile } from "@/lib/github";
+import type { EnrichedFinding, Finding } from "@diegovelasquezweb/a11y-engine";
 
 export const dynamic = "force-dynamic";
-
-type ScanFinding = {
-  id: string;
-  ruleId: string;
-  source: string;
-  sourceRuleId: string | null;
-  wcagCriterionId: string | null;
-  category: unknown;
-  title: string;
-  severity: string;
-  wcag: string;
-  wcagClassification: unknown;
-  area: string;
-  url: string;
-  selector: string;
-  primarySelector: string;
-  impactedUsers: string;
-  actual: string;
-  primaryFailureMode: unknown;
-  relationshipHint: unknown;
-  failureChecks: unknown[];
-  relatedContext: unknown[];
-  expected: string;
-  mdn: unknown;
-  fixDescription: unknown;
-  fixCode: unknown;
-  recommendedFix: string;
-  evidence: unknown[];
-  totalInstances: number | null;
-  effort: unknown;
-  relatedRules: unknown[];
-  fixCodeLang: unknown;
-  screenshotPath: string | null;
-  falsePositiveRisk: unknown;
-  guardrails: unknown;
-  fixDifficultyNotes: unknown;
-  frameworkNotes: unknown;
-  cmsNotes: unknown;
-  fileSearchPattern: unknown;
-  ownershipStatus: unknown;
-  ownershipReason: unknown;
-  primarySourceScope: unknown[];
-  searchStrategy: unknown;
-  managedByLibrary: unknown;
-  componentHint: unknown;
-  verificationCommand: unknown;
-  verificationCommandFallback: unknown;
-  pagesAffected: number | null;
-  affectedUrls: unknown;
-  checkData: unknown;
-};
 
 async function loadEngine() {
   return await import("@diegovelasquezweb/a11y-engine");
 }
 
-function normalizeFindings(scanId: string, rawFindings: Record<string, unknown>): ScanFinding[] {
+function normalizeFindings(scanId: string, rawFindings: Record<string, unknown>): Finding[] {
   return ((rawFindings.findings as Record<string, unknown>[]) || []).map(
     (item, index) => ({
       id: String(item.id ?? `A11Y-${String(index + 1).padStart(3, "0")}`),
-      ruleId: String(item.rule_id ?? ""),
+      rule_id: String(item.rule_id ?? ""),
       source: item.source ? String(item.source) : "axe",
-      sourceRuleId: item.source_rule_id ? String(item.source_rule_id) : null,
-      wcagCriterionId: item.wcag_criterion_id ? String(item.wcag_criterion_id) : null,
-      category: item.category ?? null,
+      source_rule_id: item.source_rule_id ? String(item.source_rule_id) : null,
+      wcag_criterion_id: item.wcag_criterion_id ? String(item.wcag_criterion_id) : null,
+      category: (item.category as string) ?? null,
       title: String(item.title ?? "Untitled finding"),
       severity: String(item.severity ?? "Unknown"),
       wcag: String(item.wcag ?? ""),
-      wcagClassification: item.wcag_classification ?? null,
+      wcag_classification: item.wcag_classification ? String(item.wcag_classification) : null,
       area: String(item.area ?? ""),
       url: String(item.url ?? ""),
       selector: String(item.selector ?? ""),
-      primarySelector: String(item.primary_selector ?? item.selector ?? ""),
-      impactedUsers: String(item.impacted_users ?? ""),
+      primary_selector: String(item.primary_selector ?? item.selector ?? ""),
+      impacted_users: String(item.impacted_users ?? ""),
       actual: String(item.actual ?? ""),
-      primaryFailureMode: item.primary_failure_mode ?? null,
-      relationshipHint: item.relationship_hint ?? null,
-      failureChecks: Array.isArray(item.failure_checks) ? item.failure_checks : [],
-      relatedContext: Array.isArray(item.related_context) ? item.related_context : [],
+      primary_failure_mode: item.primary_failure_mode ? String(item.primary_failure_mode) : null,
+      relationship_hint: item.relationship_hint ? String(item.relationship_hint) : null,
+      failure_checks: Array.isArray(item.failure_checks) ? item.failure_checks : [],
+      related_context: Array.isArray(item.related_context) ? item.related_context : [],
       expected: String(item.expected ?? ""),
-      mdn: item.mdn ?? null,
-      fixDescription: item.fix_description ?? null,
-      fixCode: item.fix_code ?? null,
-      recommendedFix: String(item.recommended_fix ?? ""),
+      mdn: item.mdn ? String(item.mdn) : null,
+      fix_description: item.fix_description ? String(item.fix_description) : null,
+      fix_code: item.fix_code ? String(item.fix_code) : null,
+      fix_code_lang: item.fix_code_lang ? String(item.fix_code_lang) : "html",
+      recommended_fix: String(item.recommended_fix ?? ""),
       evidence: Array.isArray(item.evidence) ? item.evidence : [],
-      totalInstances: typeof item.total_instances === "number" ? item.total_instances : null,
-      effort: item.effort ?? null,
-      relatedRules: Array.isArray(item.related_rules) ? item.related_rules : [],
-      fixCodeLang: item.fix_code_lang ?? "html",
-      screenshotPath:
+      total_instances: typeof item.total_instances === "number" ? item.total_instances : null,
+      effort: item.effort ? String(item.effort) : null,
+      related_rules: Array.isArray(item.related_rules) ? (item.related_rules as string[]) : [],
+      screenshot_path:
         typeof item.screenshot_path === "string" && item.screenshot_path.length > 0
           ? `/api/scan/${scanId}/screenshot?path=${encodeURIComponent(item.screenshot_path)}`
           : null,
-      falsePositiveRisk: item.false_positive_risk ?? null,
-      guardrails: item.guardrails ?? null,
-      fixDifficultyNotes: item.fix_difficulty_notes ?? null,
-      frameworkNotes: item.framework_notes ?? null,
-      cmsNotes: item.cms_notes ?? null,
-      fileSearchPattern: item.file_search_pattern ?? null,
-      ownershipStatus: item.ownership_status ?? "unknown",
-      ownershipReason: item.ownership_reason ?? null,
-      primarySourceScope: Array.isArray(item.primary_source_scope) ? item.primary_source_scope : [],
-      searchStrategy: item.search_strategy ?? "verify_ownership_before_search",
-      managedByLibrary: item.managed_by_library ?? null,
-      componentHint: item.component_hint ?? null,
-      verificationCommand: item.verification_command ?? null,
-      verificationCommandFallback: item.verification_command_fallback ?? null,
-      pagesAffected: typeof item.pages_affected === "number" ? item.pages_affected : null,
-      affectedUrls: Array.isArray(item.affected_urls) ? item.affected_urls : null,
-      checkData: item.check_data ?? null,
+      false_positive_risk: item.false_positive_risk ? String(item.false_positive_risk) : null,
+      guardrails: (item.guardrails as Record<string, unknown>) ?? null,
+      fix_difficulty_notes: (item.fix_difficulty_notes as string | string[]) ?? null,
+      framework_notes: item.framework_notes ? String(item.framework_notes) : null,
+      cms_notes: item.cms_notes ? String(item.cms_notes) : null,
+      file_search_pattern: item.file_search_pattern ? String(item.file_search_pattern) : null,
+      ownership_status: String(item.ownership_status ?? "unknown"),
+      ownership_reason: item.ownership_reason ? String(item.ownership_reason) : null,
+      primary_source_scope: Array.isArray(item.primary_source_scope) ? (item.primary_source_scope as string[]) : [],
+      search_strategy: String(item.search_strategy ?? "verify_ownership_before_search"),
+      managed_by_library: item.managed_by_library ? String(item.managed_by_library) : null,
+      component_hint: item.component_hint ? String(item.component_hint) : null,
+      verification_command: item.verification_command ? String(item.verification_command) : null,
+      verification_command_fallback: item.verification_command_fallback ? String(item.verification_command_fallback) : null,
+      check_data: (item.check_data as Record<string, unknown>) ?? null,
+      pages_affected: typeof item.pages_affected === "number" ? item.pages_affected : null,
+      affected_urls: Array.isArray(item.affected_urls) ? (item.affected_urls as string[]) : null,
     })
   );
 }
@@ -195,14 +145,14 @@ export async function GET(
 }
 
 async function buildResponse(scanId: string, rawFindings: Record<string, unknown>) {
-  const { enrichFindings, computeScore, computePersonaGroups } = await loadEngine();
+  const { getEnrichedFindings, getComplianceScore, getPersonaGroups } = await loadEngine();
 
   const meta = rawFindings.metadata as Record<string, unknown> | undefined;
   const firstFindingUrl = String(((rawFindings.findings as Record<string, unknown>[])?.[0]?.url) ?? "");
   const targetUrl = String(meta?.target_url ?? meta?.targetUrl ?? meta?.base_url ?? firstFindingUrl);
 
   const normalized = normalizeFindings(scanId, rawFindings);
-  const findings = enrichFindings(normalized) as ScanFinding[];
+  const findings: EnrichedFinding[] = getEnrichedFindings(normalized);
 
   const severityOrder: Record<string, number> = { Critical: 1, Serious: 2, Moderate: 3, Minor: 4 };
   findings.sort((a, b) => {
@@ -217,13 +167,13 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
     if (f.severity in totals) totals[f.severity as keyof typeof totals]++;
   }
 
-  const { score, label: scoreLabel, wcagStatus } = computeScore(totals);
+  const { score, label: scoreLabel, wcagStatus } = getComplianceScore(totals);
 
   const quickWins = findings
     .filter((f) => (f.severity === "Critical" || f.severity === "Serious") && f.fixCode)
     .slice(0, 3);
 
-  const personaGroups = computePersonaGroups(findings);
+  const personaGroups = getPersonaGroups(findings);
 
   const projectContext = (rawFindings.metadata as Record<string, unknown>)?.projectContext ?? {};
   const ctx = projectContext as Record<string, unknown>;
