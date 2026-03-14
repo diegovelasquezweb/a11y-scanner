@@ -82,12 +82,22 @@ jobs:
       - name: Prepare artifact bundle
         run: |
           AUDIT_DIR=".audit"
+          # Resolve the real engine .audit dir (pnpm stores packages in .pnpm/ deep paths)
+          ENGINE_AUDIT=$(node -e "const p=require('path'),fs=require('fs'); const r=fs.realpathSync(p.join('node_modules','@diegovelasquezweb','a11y-engine')); console.log(p.join(r,'.audit'))")
           mkdir -p out
-          # result.json — inject target_url into metadata
-          if [ -f $AUDIT_DIR/a11y-findings.json ]; then
+
+          # result.json — prefer engine's findings, fall back to project .audit
+          FINDINGS_PATH=""
+          if [ -f "$ENGINE_AUDIT/a11y-findings.json" ]; then
+            FINDINGS_PATH="$ENGINE_AUDIT/a11y-findings.json"
+          elif [ -f "$AUDIT_DIR/a11y-findings.json" ]; then
+            FINDINGS_PATH="$AUDIT_DIR/a11y-findings.json"
+          fi
+
+          if [ -n "$FINDINGS_PATH" ]; then
             node -e "
               const fs = require('fs');
-              const data = JSON.parse(fs.readFileSync('$AUDIT_DIR/a11y-findings.json','utf8'));
+              const data = JSON.parse(fs.readFileSync('$FINDINGS_PATH','utf8'));
               data.metadata = data.metadata || {};
               data.metadata.target_url = '${{ inputs.target_url }}';
               fs.writeFileSync('out/result.json', JSON.stringify(data));
