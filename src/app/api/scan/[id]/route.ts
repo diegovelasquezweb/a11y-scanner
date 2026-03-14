@@ -5,7 +5,7 @@ import { getRunStatus, getArtifactFile } from "@/lib/github";
 
 export const dynamic = "force-dynamic";
 
-const ENGINE_BASE = path.join(process.cwd(), "src", "engine");
+const ENGINE_BASE = path.join(process.cwd(), "node_modules", "@diegovelasquezweb", "a11y-engine");
 
 function normalizeFindings(rawFindings: Record<string, unknown>) {
   return ((rawFindings.findings as Record<string, unknown>[]) || []).map(

@@ -45,14 +45,15 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install chromium --with-deps
 
-      - name: Link engine dependencies
-        run: ln -s ${{ github.workspace }}/node_modules ${{ github.workspace }}/src/engine/node_modules
-
       - name: Loading website
         run: echo "Preparing scan of ${{ inputs.target_url }}"
 
       - name: Running accessibility scans
         run: |
+          ENGINE="node_modules/@diegovelasquezweb/a11y-engine/scripts/audit.mjs"
+          AUDIT_DIR=".audit"
+          mkdir -p $AUDIT_DIR
+
           AXE_TAGS_ARG=""
           if [ -n "${{ inputs.axe_tags }}" ]; then
             AXE_TAGS_ARG="--axe-tags ${{ inputs.axe_tags }}"
@@ -66,12 +67,12 @@ jobs:
             fi
           fi
 
-          node src/engine/scripts/audit.mjs \
+          node $ENGINE \
             --base-url "${{ inputs.target_url }}" \
             --max-routes 1 \
             --skip-patterns \
             --with-reports \
-            --output src/engine/.audit/report.html \
+            --output $AUDIT_DIR/report.html \
             $PROJECT_DIR_ARG \
             $AXE_TAGS_ARG
 
@@ -80,12 +81,13 @@ jobs:
 
       - name: Prepare artifact bundle
         run: |
+          AUDIT_DIR=".audit"
           mkdir -p out
-          # result.json — inject target_url into metadata so the API can read it
-          if [ -f src/engine/.audit/a11y-findings.json ]; then
+          # result.json — inject target_url into metadata
+          if [ -f $AUDIT_DIR/a11y-findings.json ]; then
             node -e "
               const fs = require('fs');
-              const data = JSON.parse(fs.readFileSync('src/engine/.audit/a11y-findings.json','utf8'));
+              const data = JSON.parse(fs.readFileSync('$AUDIT_DIR/a11y-findings.json','utf8'));
               data.metadata = data.metadata || {};
               data.metadata.target_url = '${{ inputs.target_url }}';
               fs.writeFileSync('out/result.json', JSON.stringify(data));
@@ -94,9 +96,9 @@ jobs:
             echo '{"findings":[],"metadata":{"target_url":"${{ inputs.target_url }}"}}' > out/result.json
           fi
           # checklist
-          cp src/engine/.audit/checklist.html out/checklist.html 2>/dev/null || echo "<html><body>No checklist generated</body></html>" > out/checklist.html
+          cp $AUDIT_DIR/checklist.html out/checklist.html 2>/dev/null || echo "<html><body>No checklist generated</body></html>" > out/checklist.html
           # PDF
-          cp src/engine/.audit/report.pdf out/stakeholder.pdf 2>/dev/null || touch out/stakeholder.pdf
+          cp $AUDIT_DIR/report.pdf out/stakeholder.pdf 2>/dev/null || touch out/stakeholder.pdf
 
       - name: Upload scan artifact
         uses: actions/upload-artifact@v4

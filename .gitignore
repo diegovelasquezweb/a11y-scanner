@@ -23,7 +23,7 @@ yarn.lock
 /build
 
 # engine runtime artifacts
-src/engine/.audit/
+.audit/
 
 # stored scan results
 src/data/scans/

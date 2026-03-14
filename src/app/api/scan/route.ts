@@ -86,7 +86,10 @@ async function runLocal(params: {
   const { scanId, targetUrl, githubRepoUrl, axeTags } = params;
 
   const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
-  const engineBase = path.join(process.cwd(), "src", "engine");
+  // Use fs.realpathSync to resolve the pnpm symlink to the real package location
+  const symlinkBase = path.join(process.cwd(), "node_modules", "@diegovelasquezweb", "a11y-engine");
+  const engineBase = fs.realpathSync(symlinkBase);
+  const auditScriptPath = path.join(engineBase, "scripts", "audit.mjs");
   const auditDir = path.join(engineBase, ".audit");
 
   fs.mkdirSync(SCANS_DIR, { recursive: true });
@@ -132,10 +135,9 @@ async function runLocal(params: {
       }
 
       const axeTagsFlag = axeTags?.length ? `--axe-tags ${axeTags.join(",")}` : "";
-      const auditScript = path.join(engineBase, "scripts", "audit.mjs");
 
       const cmd = [
-        "node", auditScript,
+        "node", auditScriptPath,
         "--base-url", `"${targetUrl}"`,
         "--max-routes", "1",
         "--skip-patterns",
