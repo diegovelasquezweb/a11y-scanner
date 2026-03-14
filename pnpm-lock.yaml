@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@diegovelasquezweb/a11y-engine': link:../a11y-engine
-
 importers:
 
   .:
