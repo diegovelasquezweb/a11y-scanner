@@ -114,7 +114,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
         <Collapsible.Trigger asChild>
           <button
             type="button"
-            className="card-header w-full text-left p-5 md:p-6 bg-gradient-to-r from-white to-slate-50/80 cursor-pointer select-none relative focus:outline-none focus:ring-4 focus:ring-sky-500/20"
+            className="card-header w-full text-left p-5 md:p-6 bg-linear-to-r from-white to-slate-50/80 cursor-pointer select-none relative focus:outline-none focus:ring-4 focus:ring-sky-500/20"
           >
             <div className="flex items-start gap-4">
               <div className="flex-1 min-w-0">
@@ -150,7 +150,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                   <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px] text-slate-600 font-medium">
                     <div className="flex items-center gap-1.5 min-w-0 bg-slate-50/50 px-2 py-1 rounded-md border border-slate-100">
                       <svg
-                        className="w-3.5 h-3.5 text-slate-500 flex-shrink-0"
+                        className="w-3.5 h-3.5 text-slate-500 shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -170,7 +170,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                   </div>
                 )}
               </div>
-              <div className="bg-white p-1.5 rounded-full border border-slate-200 shadow-sm group-hover:bg-slate-50 transition-colors mt-1 flex-shrink-0">
+              <div className="bg-white p-1.5 rounded-full border border-slate-200 shadow-sm group-hover:bg-slate-50 transition-colors mt-1 shrink-0">
                 <svg
                   className={`card-chevron w-5 h-5 text-slate-500 transition-transform duration-300 ${
                     isExpanded ? "rotate-180" : ""
@@ -246,7 +246,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                 </Tabs.Content>
 
                 <Tabs.Content value="fix">
-                  <div className="bg-gradient-to-br from-sky-50 to-white border border-sky-100/80 rounded-md p-5 relative overflow-hidden shadow-sm">
+                  <div className="bg-linear-to-br from-sky-50 to-white border border-sky-100/80 rounded-md p-5 relative overflow-hidden shadow-sm">
                     <h4 className="text-[11px] font-black text-sky-700 uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2">
                       <svg className="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -327,7 +327,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                           <div className="space-y-2">
                             {stackNotes.map(({ key, note, style }) => (
                               <div key={key} className="flex gap-2 items-start">
-                                <span className={`flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold border ${style} uppercase tracking-wider mt-0.5`}>
+                                <span className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-bold border ${style} uppercase tracking-wider mt-0.5`}>
                                   {key}
                                 </span>
                                 <p className="text-[12px] text-slate-600 leading-relaxed">{note}</p>
@@ -408,7 +408,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                         <img
                           src={finding.screenshotPath}
                           alt={`Screenshot of ${finding.title}`}
-                          className="rounded border border-slate-200 shadow-sm max-h-[360px] w-auto object-contain bg-white"
+                          className="rounded border border-slate-200 shadow-sm max-h-90 w-auto object-contain bg-white"
                           loading="lazy"
                         />
                       </div>

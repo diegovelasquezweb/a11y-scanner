@@ -168,7 +168,7 @@ function WcagCard({ card }: { card: WcagCardData }) {
               </p>
             </div>
             <svg
-              className={`w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5 transition-transform duration-200 motion-reduce:transition-none ${
+              className={`w-4 h-4 text-slate-400 shrink-0 mt-0.5 transition-transform duration-200 motion-reduce:transition-none ${
                 open ? "rotate-180" : ""
               }`}
               fill="none"

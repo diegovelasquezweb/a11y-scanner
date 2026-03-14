@@ -41,7 +41,7 @@ export function ScoreGauge({ score, label, wcagStatus }: ScoreGaugeProps) {
         </div>
       </div>
       <h3 className="text-xl font-bold text-slate-900 mb-1">{label} Compliance</h3>
-      <p className="text-xs font-medium text-slate-500 max-w-[200px] leading-snug">
+      <p className="text-xs font-medium text-slate-500 max-w-50 leading-snug">
         Based on automated accessibility technical checks.
       </p>
     </div>

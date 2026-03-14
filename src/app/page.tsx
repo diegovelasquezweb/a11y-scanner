@@ -80,7 +80,7 @@ export default function Home() {
         className={`transition-all duration-500 ease-out motion-reduce:transition-none w-full flex justify-center ${
           isScanning
             ? "opacity-0 -translate-y-4 motion-reduce:translate-y-0 max-h-0 overflow-hidden pointer-events-none"
-            : "opacity-100 translate-y-0 max-h-[2000px]"
+            : "opacity-100 translate-y-0 max-h-500"
         }`}
       >
         <AuditForm status={status} errorMessage={errorMessage} onSubmit={handleSubmit} />

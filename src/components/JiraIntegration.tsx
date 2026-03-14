@@ -187,7 +187,7 @@ export function JiraIntegration({
                 </Select.Trigger>
                 <Select.Portal>
                   <Select.Content
-                    className="z-[60] bg-white border border-slate-200 rounded-md shadow-xl overflow-hidden animate-in fade-in-0 zoom-in-95"
+                    className="z-60 bg-white border border-slate-200 rounded-md shadow-xl overflow-hidden animate-in fade-in-0 zoom-in-95"
                     position="popper"
                     sideOffset={4}
                   >
@@ -196,7 +196,7 @@ export function JiraIntegration({
                         <Select.Item
                           key={type}
                           value={type}
-                          className="relative flex items-center px-3 py-2.5 text-sm font-medium text-slate-700 rounded cursor-pointer outline-none select-none data-[highlighted]:bg-sky-50 data-[highlighted]:text-sky-700 data-[state=checked]:font-bold data-[state=checked]:text-sky-700"
+                          className="relative flex items-center px-3 py-2.5 text-sm font-medium text-slate-700 rounded cursor-pointer outline-none select-none data-highlighted:bg-sky-50 data-highlighted:text-sky-700 data-[state=checked]:font-bold data-[state=checked]:text-sky-700"
                         >
                           <Select.ItemText>{type}</Select.ItemText>
                           <Select.ItemIndicator className="absolute right-3">
