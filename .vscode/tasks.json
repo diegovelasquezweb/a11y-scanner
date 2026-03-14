@@ -1,0 +1,41 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "app: dev",
+      "type": "npm",
+      "script": "dev",
+      "path": ".",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "app: build",
+      "type": "npm",
+      "script": "build",
+      "path": ".",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "app: start",
+      "type": "npm",
+      "script": "start",
+      "path": ".",
+      "problemMatcher": []
+    },
+    {
+      "label": "app: lint",
+      "type": "npm",
+      "script": "lint",
+      "path": ".",
+      "problemMatcher": [
+        "$eslint-stylish"
+      ]
+    }
+  ]
+}

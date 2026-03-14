@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch: Dev Server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm dev",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Launch: Production Server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm build && pnpm start",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
