@@ -46,7 +46,7 @@ jobs:
         run: pnpm exec playwright install chromium --with-deps
 
       - name: Install Puppeteer Chrome (required by pa11y)
-        run: node node_modules/puppeteer/install.mjs
+        run: node -e "const p=require.resolve('puppeteer/install.mjs');require('child_process').execSync('node '+p,{stdio:'inherit'})"
 
       - name: Loading website
         run: echo "Preparing scan of ${{ inputs.target_url }}"
