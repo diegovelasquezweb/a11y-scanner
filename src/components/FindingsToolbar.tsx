@@ -49,7 +49,6 @@ export function FindingsToolbar({
 }: FindingsToolbarProps) {
   return (
     <div className="sticky top-0 z-40 bg-[#f8fafc]/95 backdrop-blur-md py-5 border-b border-slate-200/80 mb-8 flex flex-col gap-5">
-      {/* Row 1: Title & Expand All */}
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-4">
           <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">
@@ -66,7 +65,6 @@ export function FindingsToolbar({
         </Toggle.Root>
       </div>
 
-      {/* Row 2: Search & Filter */}
       <div className="flex items-center gap-4 w-full flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
           <label htmlFor="search-input" className="sr-only">

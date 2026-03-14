@@ -184,13 +184,11 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
         )}
       </div>
 
-      {/* Fixed action footer */}
       <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none">
         <nav
           aria-label="Scan actions"
           className="pointer-events-auto mb-5 flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200/80 shadow-2xl shadow-slate-900/10"
         >
-          {/* New Scan */}
           <FooterAction
             label="New Scan"
             onClick={onRunNewTest || (() => window.location.assign("/"))}
@@ -203,7 +201,6 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
 
           <div className="w-px h-8 bg-slate-200 mx-1" aria-hidden="true" />
 
-          {/* Configure Jira */}
           <FooterAction
             label="Configure Jira"
             onClick={() => setJiraOpen(true)}
@@ -215,7 +212,6 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
             }
           />
 
-          {/* Send to Jira */}
           <FooterAction
             label="Send to Jira"
             onClick={() => setJiraOpen(true)}
@@ -227,7 +223,6 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
             }
           />
 
-          {/* Stakeholder Report (PDF) */}
           <FooterAction
             label="Stakeholder Report"
             onClick={() => window.open(`/api/scan/${scanId}/pdf`, "_blank", "noopener,noreferrer")}
@@ -238,7 +233,6 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
             }
           />
 
-          {/* Manual Checklist */}
           <FooterAction
             label="Checklist"
             onClick={() => window.open(`/api/scan/${scanId}/checklist`, "_blank", "noopener,noreferrer")}
@@ -251,7 +245,6 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
         </nav>
       </div>
 
-      {/* Jira dialog — controlled from footer */}
       <JiraIntegration
         targetUrl={result.targetUrl}
         totals={result.totals}
@@ -259,8 +252,6 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
         open={jiraOpen}
         onOpenChange={setJiraOpen}
       />
-
-
     </div>
   );
 }

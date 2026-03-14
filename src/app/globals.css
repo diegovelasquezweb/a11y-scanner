@@ -30,14 +30,6 @@ body {
   letter-spacing: -0.011em;
 }
 
-/* Glass header */
-.glass-header {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-}
-
-/* Premium card */
 .premium-card {
   background: white;
   border: 1px solid #e2e8f0;
@@ -55,7 +47,6 @@ body {
     0 4px 6px -2px rgba(0, 0, 0, 0.04);
 }
 
-/* Issue card left border by severity */
 .issue-card {
   position: relative;
   transition: all 0.3s ease;
@@ -85,7 +76,6 @@ body {
   background: #10b981;
 }
 
-/* Score gauge */
 .score-gauge {
   transform: rotate(-90deg);
 }
@@ -101,7 +91,6 @@ body {
   transition: stroke-dasharray 1s ease-out;
 }
 
-/* Card body expand/collapse (Radix Collapsible) */
 .card-body {
   display: grid;
   grid-template-rows: 0fr;
@@ -114,7 +103,6 @@ body {
   overflow: hidden;
 }
 
-/* WCAG education side panel */
 .wcag-panel-overlay {
   position: fixed;
   inset: 0;
@@ -163,7 +151,6 @@ body {
   to { transform: translateX(100%); }
 }
 
-/* Reduced motion: disable non-essential animations */
 @media (prefers-reduced-motion: reduce) {
   .premium-card,
   .premium-card:hover {

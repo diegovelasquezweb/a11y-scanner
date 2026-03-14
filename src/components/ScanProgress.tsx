@@ -68,14 +68,12 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
   const progressRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
 
-  // Sync startTimeRef if scanStartTime prop changes
   useEffect(() => {
     if (scanStartTime) {
       startTimeRef.current = scanStartTime;
     }
   }, [scanStartTime]);
 
-  // Timer for elapsed time
   useEffect(() => {
     if (!isScanning) return;
 
@@ -105,7 +103,6 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
     const steps = data.steps || {};
     let runningLabel: string | null = null;
 
-    // Capture scanId from progress data
     if (data.scanId) {
       setScanId(data.scanId);
     }
@@ -141,7 +138,6 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
     }
   }, []);
 
-  // Poll progress — 400ms
   useEffect(() => {
     if (!isScanning) {
       if (intervalRef.current) {
@@ -179,7 +175,6 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
   const allDone = doneCount >= TOTAL_STEPS;
   const hasError = !!(scanError || failedStep);
 
-  // Stop timer when scan completes and save final time
   useEffect(() => {
     if (allDone && timerRef.current) {
       if (startTimeRef.current) {
@@ -190,7 +185,6 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
     }
   }, [allDone]);
 
-  // Auto-redirect to results after 3 seconds
   useEffect(() => {
     if (allDone && !hasError && scanId) {
       const timeout = setTimeout(() => {
@@ -200,14 +194,12 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
     }
   }, [allDone, hasError, scanId]);
 
-  // Focus error message when error appears
   useEffect(() => {
     if (hasError && errorRef.current) {
       errorRef.current.focus();
     }
   }, [hasError]);
 
-  // Stop polling when error occurs
   useEffect(() => {
     if (hasError && intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -225,7 +217,6 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
       className="w-full max-w-2xl outline-none"
     >
       <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-md px-5 py-4 shadow-sm">
-        {/* Header: Step X of 7 + elapsed */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5 min-w-0">
             {hasError ? (
@@ -252,7 +243,6 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
           </span>
         </div>
 
-        {/* Current step label — isolated aria-live so only this text is announced */}
         {!allDone && !hasError && (
           <p
             aria-live="polite"
@@ -263,7 +253,6 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
           </p>
         )}
 
-        {/* Error message + retry */}
         {hasError && (
           <div
             ref={errorRef}
@@ -289,7 +278,6 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
           </div>
         )}
 
-        {/* Progressbar — semantic */}
         <div
           role="progressbar"
           aria-valuenow={doneCount}
@@ -304,7 +292,6 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
           />
         </div>
 
-        {/* Completed steps feed */}
         {completedSteps.length > 0 && (
           <div className="space-y-1.5">
             {completedSteps.map((step) => (

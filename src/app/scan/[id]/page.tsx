@@ -64,10 +64,8 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
       }
     };
 
-    // Initial fetch
     fetchResult();
 
-    // Poll while scanning
     pollRef.current = setInterval(fetchResult, 2000);
 
     return () => {
