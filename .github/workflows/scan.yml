@@ -45,6 +45,9 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install chromium --with-deps
 
+      - name: Install Puppeteer Chrome (required by pa11y)
+        run: npx puppeteer browsers install chrome
+
       - name: Loading website
         run: echo "Preparing scan of ${{ inputs.target_url }}"
 
