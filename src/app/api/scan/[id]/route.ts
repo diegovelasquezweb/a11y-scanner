@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 import { getRunStatus, getArtifactFile } from "@/lib/github";
-import type { EnrichedFinding, Finding } from "@diegovelasquezweb/a11y-engine";
+import type { EnrichedFinding, Finding, AuditSummary } from "@diegovelasquezweb/a11y-engine";
 
 export const dynamic = "force-dynamic";
 
@@ -145,7 +145,7 @@ export async function GET(
 }
 
 async function buildResponse(scanId: string, rawFindings: Record<string, unknown>) {
-  const { getEnrichedFindings, getComplianceScore, getPersonaGroups } = await loadEngine();
+  const { getEnrichedFindings, getAuditSummary } = await loadEngine();
 
   const meta = rawFindings.metadata as Record<string, unknown> | undefined;
   const firstFindingUrl = String(((rawFindings.findings as Record<string, unknown>[])?.[0]?.url) ?? "");
@@ -162,18 +162,12 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
     return a.id.localeCompare(b.id);
   });
 
-  const totals = { Critical: 0, Serious: 0, Moderate: 0, Minor: 0 };
-  for (const f of findings) {
-    if (f.severity in totals) totals[f.severity as keyof typeof totals]++;
-  }
-
-  const { score, label: scoreLabel, wcagStatus } = getComplianceScore(totals);
+  const { totals, score, label: scoreLabel, wcagStatus, personaGroups } =
+    getAuditSummary(findings) as AuditSummary;
 
   const quickWins = findings
     .filter((f) => (f.severity === "Critical" || f.severity === "Serious") && f.fixCode)
     .slice(0, 3);
-
-  const personaGroups = getPersonaGroups(findings);
 
   const projectContext = (rawFindings.metadata as Record<string, unknown>)?.projectContext ?? {};
   const ctx = projectContext as Record<string, unknown>;
