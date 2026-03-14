@@ -38,12 +38,28 @@ async function getLocalProgress(scanId: string) {
   const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
   const statusPath = path.join(SCANS_DIR, `${scanId}.status.json`);
 
+  // Resolve real engine path (handles pnpm symlinks)
+  const symlinkBase = path.join(process.cwd(), "node_modules", "@diegovelasquezweb", "a11y-engine");
+  const engineBase = fs.realpathSync(symlinkBase);
+  const progressPath = path.join(engineBase, ".audit", "progress.json");
+
   const now = new Date().toISOString();
   const ALL_KEYS = ["page", "axe", "cdp", "pa11y", "merge", "intelligence"] as const;
 
   try {
+    // First: try reading real progress.json from the engine
+    if (fs.existsSync(progressPath)) {
+      const data = JSON.parse(fs.readFileSync(progressPath, "utf-8")) as {
+        steps?: Record<string, { status: string; updatedAt: string }>;
+        currentStep?: string | null;
+      };
+      if (data.steps && Object.keys(data.steps).length > 0) {
+        return NextResponse.json({ ...data, scanId });
+      }
+    }
+
+    // Fallback: use status.json if progress.json not available yet
     if (!fs.existsSync(statusPath)) {
-      // Scan just started, not written yet
       return NextResponse.json({
         steps: { page: { status: "running", updatedAt: now } },
         currentStep: "page",

@@ -93,6 +93,10 @@ async function runLocal(params: {
   const auditDir = path.join(engineBase, ".audit");
 
   fs.mkdirSync(SCANS_DIR, { recursive: true });
+  // Clean previous audit data so stale progress doesn't leak
+  if (fs.existsSync(auditDir)) {
+    fs.rmSync(auditDir, { recursive: true, force: true });
+  }
   fs.mkdirSync(auditDir, { recursive: true });
 
   // Write initial progress
