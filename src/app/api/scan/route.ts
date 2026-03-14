@@ -86,22 +86,19 @@ async function runLocal(params: {
   const { scanId, targetUrl, githubRepoUrl, axeTags } = params;
 
   const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
-  // Use fs.realpathSync to resolve the pnpm symlink to the real package location
   const symlinkBase = path.join(process.cwd(), "node_modules", "@diegovelasquezweb", "a11y-engine");
   const engineBase = fs.realpathSync(symlinkBase);
   const auditScriptPath = path.join(engineBase, "scripts", "audit.mjs");
   const auditDir = path.join(engineBase, ".audit");
 
   fs.mkdirSync(SCANS_DIR, { recursive: true });
-  // Clean previous audit data so stale progress doesn't leak
   if (fs.existsSync(auditDir)) {
     fs.rmSync(auditDir, { recursive: true, force: true });
   }
   fs.mkdirSync(auditDir, { recursive: true });
 
-  // Write initial progress
   const progressPath = path.join(auditDir, "progress.json");
-  function writeProgress(step: string, status: string, extra: Record<string, unknown> = {}) {
+  function writeProgress(step: string, status: string) {
     let progress: Record<string, unknown> = {};
     try {
       if (fs.existsSync(progressPath)) {
@@ -109,7 +106,7 @@ async function runLocal(params: {
       }
     } catch { /* ignore */ }
     const steps = (progress.steps || {}) as Record<string, unknown>;
-    steps[step] = { status, updatedAt: new Date().toISOString(), ...extra };
+    steps[step] = { status, updatedAt: new Date().toISOString() };
     progress.steps = steps;
     progress.currentStep = step;
     progress.scanId = scanId;
@@ -118,7 +115,6 @@ async function runLocal(params: {
 
   writeProgress("page", "running");
 
-  // Run async so we don't block — write status file for polling
   fs.writeFileSync(
     path.join(SCANS_DIR, `${scanId}.status.json`),
     JSON.stringify({ status: "scanning", updatedAt: new Date().toISOString() })
@@ -140,13 +136,12 @@ async function runLocal(params: {
 
       const axeTagsFlag = axeTags?.length ? `--axe-tags ${axeTags.join(",")}` : "";
 
+      // Run scan only (no --with-reports) — reports are generated via engine API
       const cmd = [
         "node", auditScriptPath,
         "--base-url", `"${targetUrl}"`,
         "--max-routes", "1",
         "--skip-patterns",
-        "--with-reports",
-        "--output", path.join(auditDir, "report.html"),
         projectDirFlag,
         axeTagsFlag,
       ].filter(Boolean).join(" ");
@@ -154,35 +149,31 @@ async function runLocal(params: {
       await execAsync(cmd, { timeout: 55000, cwd: engineBase });
       writeProgress("intelligence", "running");
 
-      // Read and normalize findings
       const findingsPath = path.join(auditDir, "a11y-findings.json");
       if (!fs.existsSync(findingsPath)) throw new Error("No findings file generated.");
 
       const rawFindings = JSON.parse(fs.readFileSync(findingsPath, "utf-8"));
-      const findings = Array.isArray(rawFindings.findings) ? rawFindings.findings : [];
-      writeProgress("intelligence", "done", { enriched: findings.length });
-
-      // Inject target_url into metadata
       rawFindings.metadata = rawFindings.metadata || {};
       rawFindings.metadata.target_url = targetUrl;
 
-      // Save raw findings for GET /api/scan/[id] to pick up
+      // Save findings
       fs.writeFileSync(
         path.join(SCANS_DIR, `${scanId}.findings.json`),
         JSON.stringify(rawFindings, null, 2)
       );
 
-      // Copy checklist
-      const checklistSrc = path.join(auditDir, "checklist.html");
-      if (fs.existsSync(checklistSrc)) {
-        fs.copyFileSync(checklistSrc, path.join(SCANS_DIR, `${scanId}.checklist.html`));
-      }
+      // Generate reports via engine API
+      const { generatePDF, generateChecklist } = await import("@diegovelasquezweb/a11y-engine");
 
-      // Copy PDF
-      const pdfSrc = path.join(auditDir, "report.pdf");
-      if (fs.existsSync(pdfSrc)) {
-        fs.copyFileSync(pdfSrc, path.join(SCANS_DIR, `${scanId}.pdf`));
-      }
+      const [pdfBuffer, checklistHtml] = await Promise.all([
+        generatePDF(rawFindings, { baseUrl: targetUrl }),
+        generateChecklist({ baseUrl: targetUrl }),
+      ]);
+
+      fs.writeFileSync(path.join(SCANS_DIR, `${scanId}.pdf`), pdfBuffer);
+      fs.writeFileSync(path.join(SCANS_DIR, `${scanId}.checklist.html`), checklistHtml, "utf-8");
+
+      writeProgress("intelligence", "done");
 
       fs.writeFileSync(
         path.join(SCANS_DIR, `${scanId}.status.json`),
