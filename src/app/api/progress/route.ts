@@ -9,12 +9,40 @@ const STEP_NAME_TO_KEY: Record<string, string> = {
 };
 
 const SCAN_STEP_IMPLIES: string[] = ["cdp", "pa11y", "merge"];
+const ALL_KEYS = ["page", "axe", "cdp", "pa11y", "merge", "intelligence"] as const;
 
 type StepStatus = "pending" | "running" | "done" | "error";
 
 interface StepInfo {
   status: StepStatus;
   updatedAt: string;
+}
+
+function buildDefaultSteps(now: string): Record<string, StepInfo> {
+  const steps: Record<string, StepInfo> = {};
+  for (const key of ALL_KEYS) {
+    steps[key] = { status: "pending", updatedAt: now };
+  }
+  return steps;
+}
+
+function sanitizeStatus(value: string): StepStatus {
+  if (value === "running" || value === "done" || value === "error" || value === "pending") return value;
+  return "pending";
+}
+
+function normalizeSteps(input: unknown, now: string): Record<string, StepInfo> {
+  const steps = buildDefaultSteps(now);
+  if (!input || typeof input !== "object") return steps;
+
+  for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+    if (!value || typeof value !== "object") continue;
+    const raw = value as { status?: string; updatedAt?: string };
+    const status = sanitizeStatus(raw.status ?? "pending");
+    const updatedAt = typeof raw.updatedAt === "string" ? raw.updatedAt : now;
+    steps[key] = { status, updatedAt };
+  }
+  return steps;
 }
 
 export async function GET(request: NextRequest) {
@@ -38,64 +66,56 @@ async function getLocalProgress(scanId: string) {
   const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
   const statusPath = path.join(SCANS_DIR, `${scanId}.status.json`);
 
-  // Resolve real engine path (handles pnpm symlinks)
   const symlinkBase = path.join(process.cwd(), "node_modules", "@diegovelasquezweb", "a11y-engine");
   const engineBase = fs.realpathSync(symlinkBase);
   const progressPath = path.join(engineBase, ".audit", "progress.json");
 
   const now = new Date().toISOString();
-  const ALL_KEYS = ["page", "axe", "cdp", "pa11y", "merge", "intelligence"] as const;
 
   try {
-    // First: try reading real progress.json from the engine
     if (fs.existsSync(progressPath)) {
       const data = JSON.parse(fs.readFileSync(progressPath, "utf-8")) as {
-        steps?: Record<string, { status: string; updatedAt: string }>;
+        steps?: unknown;
         currentStep?: string | null;
       };
-      if (data.steps && Object.keys(data.steps).length > 0) {
-        return NextResponse.json({ ...data, scanId });
+      if (data.steps && Object.keys(data.steps as Record<string, unknown>).length > 0) {
+        return NextResponse.json({
+          steps: normalizeSteps(data.steps, now),
+          currentStep: data.currentStep ?? null,
+          scanId,
+        });
       }
     }
 
-    // Fallback: use status.json if progress.json not available yet
     if (!fs.existsSync(statusPath)) {
-      return NextResponse.json({
-        steps: { page: { status: "running", updatedAt: now } },
-        currentStep: "page",
-        scanId,
-      });
+      const steps = buildDefaultSteps(now);
+      steps.page = { status: "running", updatedAt: now };
+      return NextResponse.json({ steps, currentStep: "page", scanId });
     }
 
     const statusData = JSON.parse(fs.readFileSync(statusPath, "utf-8")) as {
       status: string;
-      error?: string;
     };
 
     if (statusData.status === "scanning") {
-      return NextResponse.json({
-        steps: { page: { status: "running", updatedAt: now } },
-        currentStep: "page",
-        scanId,
-      });
+      const steps = buildDefaultSteps(now);
+      steps.page = { status: "running", updatedAt: now };
+      return NextResponse.json({ steps, currentStep: "page", scanId });
     }
 
     if (statusData.status === "error") {
-      return NextResponse.json({
-        steps: { page: { status: "error", updatedAt: now } },
-        currentStep: "page",
-        scanId,
-      });
+      const steps = buildDefaultSteps(now);
+      steps.page = { status: "error", updatedAt: now };
+      return NextResponse.json({ steps, currentStep: "page", scanId });
     }
 
-    // completed — mark all steps done so the frontend redirects
-    const steps: Record<string, { status: string; updatedAt: string }> = {};
+    const steps = buildDefaultSteps(now);
     for (const key of ALL_KEYS) {
       steps[key] = { status: "done", updatedAt: now };
     }
     return NextResponse.json({ steps, currentStep: null, scanId });
   } catch {
-    return NextResponse.json({ steps: {}, currentStep: null, scanId });
+    return NextResponse.json({ steps: buildDefaultSteps(now), currentStep: null, scanId });
   }
 }
 
@@ -104,16 +124,14 @@ async function getGitHubProgress(scanId: string) {
 
   try {
     const runStatus = await getRunStatus(scanId);
+    const now = new Date().toISOString();
 
     if (runStatus.status === "not_found") {
-      return NextResponse.json({
-        steps: { page: { status: "pending", updatedAt: new Date().toISOString() } },
-        currentStep: "page",
-        scanId,
-      });
+      const steps = buildDefaultSteps(now);
+      return NextResponse.json({ steps, currentStep: "page", scanId });
     }
 
-    const steps: Record<string, StepInfo> = {};
+    const steps = buildDefaultSteps(now);
     let currentStep: string | null = null;
 
     for (const ghStep of runStatus.steps) {
@@ -136,39 +154,31 @@ async function getGitHubProgress(scanId: string) {
         continue;
       }
 
-      steps[key] = { status, updatedAt: new Date().toISOString() };
+      steps[key] = { status, updatedAt: now };
 
       if (key === "axe" && status === "done") {
         for (const virtualKey of SCAN_STEP_IMPLIES) {
-          steps[virtualKey] = { status: "done", updatedAt: new Date().toISOString() };
+          steps[virtualKey] = { status: "done", updatedAt: now };
         }
       }
     }
 
-    if (runStatus.status === "in_progress" && Object.keys(steps).length === 0) {
-      steps["page"] = { status: "running", updatedAt: new Date().toISOString() };
+    if (runStatus.status === "in_progress" && Object.values(steps).every((step) => step.status === "pending")) {
+      steps.page = { status: "running", updatedAt: now };
       currentStep = "page";
     }
 
     if (runStatus.status === "completed" && runStatus.conclusion === "success") {
-      for (const key of ["page", "axe", "cdp", "pa11y", "merge", "intelligence"]) {
-        steps[key] = { status: "done", updatedAt: new Date().toISOString() };
+      for (const key of ALL_KEYS) {
+        steps[key] = { status: "done", updatedAt: now };
       }
       currentStep = null;
     }
 
     if (runStatus.status === "completed" && runStatus.conclusion !== "success" && runStatus.conclusion !== null) {
-      let markedError = false;
-      for (const key of Object.keys(steps)) {
-        if (steps[key].status === "running") {
-          steps[key] = { status: "error", updatedAt: new Date().toISOString() };
-          markedError = true;
-        }
-      }
-      if (!markedError) {
-        const lastKey = Object.keys(steps).pop() ?? "page";
-        steps[lastKey] = { status: "error", updatedAt: new Date().toISOString() };
-      }
+      const activeKeys = Object.keys(steps).filter((key) => steps[key].status !== "pending");
+      const errorKey = activeKeys.at(-1) ?? "page";
+      steps[errorKey] = { status: "error", updatedAt: now };
     }
 
     return NextResponse.json({ steps, currentStep, scanId });

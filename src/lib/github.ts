@@ -150,7 +150,9 @@ export async function getArtifactFile(
     artifacts: Array<{ id: number; name: string; expired: boolean }>;
   };
 
-  const artifact = artifacts.find((a) => a.name === artifactName && !a.expired);
+  const artifact = artifacts
+    .filter((a) => a.name === artifactName && !a.expired)
+    .sort((a, b) => b.id - a.id)[0];
   if (!artifact) return null;
 
   const dlRes = await fetch(
@@ -163,7 +165,22 @@ export async function getArtifactFile(
   const zipBuffer = Buffer.from(await dlRes.arrayBuffer());
   const zip = await JSZip.loadAsync(zipBuffer);
 
-  const file = zip.file(filename);
+  const normalize = (value: string) => value.replace(/^\.\//, "").replace(/^\//, "");
+  const normalizedFilename = normalize(filename);
+
+  let file = zip.file(normalizedFilename);
+  if (!file) {
+    file = zip.file(filename);
+  }
+  if (!file) {
+    const allFiles = Object.keys(zip.files).filter((name) => !zip.files[name].dir);
+    const bySuffix = allFiles.filter(
+      (name) => normalize(name) === normalizedFilename || normalize(name).endsWith(`/${normalizedFilename}`)
+    );
+    if (bySuffix.length === 1) {
+      file = zip.file(bySuffix[0]) ?? null;
+    }
+  }
   if (!file) return null;
 
   return Buffer.from(await file.async("arraybuffer"));

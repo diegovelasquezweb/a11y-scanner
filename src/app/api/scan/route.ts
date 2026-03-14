@@ -152,14 +152,15 @@ async function runLocal(params: {
       ].filter(Boolean).join(" ");
 
       await execAsync(cmd, { timeout: 55000, cwd: engineBase });
-
-      writeProgress("intelligence", "done");
+      writeProgress("intelligence", "running");
 
       // Read and normalize findings
       const findingsPath = path.join(auditDir, "a11y-findings.json");
       if (!fs.existsSync(findingsPath)) throw new Error("No findings file generated.");
 
       const rawFindings = JSON.parse(fs.readFileSync(findingsPath, "utf-8"));
+      const findings = Array.isArray(rawFindings.findings) ? rawFindings.findings : [];
+      writeProgress("intelligence", "done", { enriched: findings.length });
 
       // Inject target_url into metadata
       rawFindings.metadata = rawFindings.metadata || {};

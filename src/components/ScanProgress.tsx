@@ -5,12 +5,6 @@ import { useEffect, useState, useRef, useCallback } from "react";
 interface StepInfo {
   status: "pending" | "running" | "done" | "error";
   updatedAt?: string;
-  found?: number;
-  axe?: number;
-  cdp?: number;
-  pa11y?: number;
-  merged?: number;
-  enriched?: number;
 }
 
 interface ProgressData {
@@ -30,18 +24,9 @@ const STEPS = [
 
 const TOTAL_STEPS = STEPS.length;
 
-function formatStepDetail(key: string, info: StepInfo): string | null {
-  if (key === "axe" && info.found !== undefined) return `${info.found} found`;
-  if (key === "cdp" && info.found !== undefined) return `${info.found} found`;
-  if (key === "pa11y" && info.found !== undefined) return `${info.found} found`;
-  if (key === "intelligence" && info.enriched !== undefined) return `${info.enriched} enriched`;
-  return null;
-}
-
 interface CompletedStep {
   key: string;
   label: string;
-  detail: string | null;
 }
 
 interface ScanProgressProps {
@@ -119,7 +104,6 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
           {
             key: step.key,
             label: step.label,
-            detail: formatStepDetail(step.key, info),
           },
         ]);
       }
@@ -300,9 +284,6 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 <span className="text-slate-600">{step.label}</span>
-                {step.detail && (
-                  <span className="text-slate-500 tabular-nums">{step.detail}</span>
-                )}
               </div>
             ))}
           </div>

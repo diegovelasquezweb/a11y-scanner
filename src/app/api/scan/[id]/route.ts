@@ -14,6 +14,13 @@ const INTELLIGENCE_PATH = path.join(
   "intelligence.json"
 );
 
+const PA11Y_CONFIG_PATH = path.join(
+  ENGINE_BASE,
+  "assets",
+  "engine",
+  "pa11y-config.json"
+);
+
 type ScanFinding = {
   id: string;
   ruleId: string;
@@ -65,12 +72,66 @@ type ScanFinding = {
   checkData: unknown;
 };
 
-function mapPa11yRuleToCanonical(ruleId: string): string {
-  const id = ruleId.toLowerCase();
-  if (id.includes("guideline1_4") && (id.includes("g145") || id.includes("g18"))) return "color-contrast";
-  if (id.includes("guideline1_1") && id.includes("h30")) return "link-name";
-  if (id.includes("guideline4_1") && id.includes("f77")) return "duplicate-id";
-  if (id.includes("guideline2_4") && id.includes("h64")) return "frame-title";
+let pa11yEquivalenceMapCache: Record<string, string> | null = null;
+
+const PA11Y_EQUIVALENCE_FALLBACK: Record<string, string> = {
+  "Principle1.Guideline1_4.1_4_3.G145": "color-contrast",
+  "Principle1.Guideline1_4.1_4_3.G18": "color-contrast",
+  "Principle1.Guideline1_4.1_4_3.G145.Fail": "color-contrast",
+  "Principle1.Guideline1_4.1_4_3.G18.Fail": "color-contrast",
+  "Principle1.Guideline1_1.1_1_1.H30": "link-name",
+  "Principle4.Guideline4_1.4_1_1.F77": "duplicate-id",
+  "Principle2.Guideline2_4.2_4_1.H64": "frame-title",
+};
+
+function normalizePa11yToken(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/^wcag2a{1,3}\./, "")
+    .replace(/^pa11y-/, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function getCheckDataCode(checkData: unknown): string | null {
+  if (!checkData || typeof checkData !== "object") return null;
+  const code = (checkData as { code?: unknown }).code;
+  return typeof code === "string" && code.length > 0 ? code : null;
+}
+
+function getPa11yEquivalenceMap(): Record<string, string> {
+  if (pa11yEquivalenceMapCache) return pa11yEquivalenceMapCache;
+
+  try {
+    const config = JSON.parse(fs.readFileSync(PA11Y_CONFIG_PATH, "utf-8")) as {
+      equivalenceMap?: Record<string, string>;
+    };
+    pa11yEquivalenceMapCache = config.equivalenceMap || PA11Y_EQUIVALENCE_FALLBACK;
+  } catch {
+    pa11yEquivalenceMapCache = PA11Y_EQUIVALENCE_FALLBACK;
+  }
+
+  return pa11yEquivalenceMapCache;
+}
+
+function mapPa11yRuleToCanonical(ruleId: string, sourceRuleId: string | null, checkData: unknown): string {
+  const equivalenceMap = getPa11yEquivalenceMap();
+  const codeCandidates = [sourceRuleId, getCheckDataCode(checkData), ruleId]
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .map(normalizePa11yToken);
+
+  const patterns = Object.entries(equivalenceMap).map(([pattern, canonical]) => ({
+    pattern: normalizePa11yToken(pattern),
+    canonical,
+  }));
+
+  for (const code of codeCandidates) {
+    for (const entry of patterns) {
+      if (code.startsWith(entry.pattern)) {
+        return entry.canonical;
+      }
+    }
+  }
+
   return ruleId;
 }
 
@@ -82,21 +143,25 @@ function enrichFromIntelligence(findings: ScanFinding[]): ScanFinding[] {
     const rules = intelligence.rules || {};
 
     return findings.map((finding) => {
-      if (finding.fixDescription || finding.fixCode) return finding;
-
-      const canonical = mapPa11yRuleToCanonical(finding.ruleId);
-      const info = rules[canonical];
-      if (!info) return finding;
-
-      return {
+      const canonical = mapPa11yRuleToCanonical(finding.ruleId, finding.sourceRuleId, finding.checkData);
+      const normalizedFinding = {
         ...finding,
         ruleId: canonical,
         sourceRuleId: finding.sourceRuleId ?? finding.ruleId,
-        category: finding.category ?? info.category ?? null,
-        fixDescription: info.fix?.description ?? finding.fixDescription,
-        fixCode: info.fix?.code ?? finding.fixCode,
-        falsePositiveRisk: finding.falsePositiveRisk ?? info.false_positive_risk ?? null,
-        fixDifficultyNotes: finding.fixDifficultyNotes ?? info.fix_difficulty_notes ?? null,
+      };
+
+      if (normalizedFinding.fixDescription || normalizedFinding.fixCode) return normalizedFinding;
+
+      const info = rules[canonical];
+      if (!info) return normalizedFinding;
+
+      return {
+        ...normalizedFinding,
+        category: normalizedFinding.category ?? info.category ?? null,
+        fixDescription: info.fix?.description ?? normalizedFinding.fixDescription,
+        fixCode: info.fix?.code ?? normalizedFinding.fixCode,
+        falsePositiveRisk: normalizedFinding.falsePositiveRisk ?? info.false_positive_risk ?? null,
+        fixDifficultyNotes: normalizedFinding.fixDifficultyNotes ?? info.fix_difficulty_notes ?? null,
       };
     });
   } catch {
