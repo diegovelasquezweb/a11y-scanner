@@ -5,22 +5,6 @@ import { getRunStatus, getArtifactFile } from "@/lib/github";
 
 export const dynamic = "force-dynamic";
 
-const ENGINE_BASE = path.join(process.cwd(), "node_modules", "@diegovelasquezweb", "a11y-engine");
-
-const INTELLIGENCE_PATH = path.join(
-  ENGINE_BASE,
-  "assets",
-  "remediation",
-  "intelligence.json"
-);
-
-const PA11Y_CONFIG_PATH = path.join(
-  ENGINE_BASE,
-  "assets",
-  "engine",
-  "pa11y-config.json"
-);
-
 type ScanFinding = {
   id: string;
   ruleId: string;
@@ -72,101 +56,8 @@ type ScanFinding = {
   checkData: unknown;
 };
 
-let pa11yEquivalenceMapCache: Record<string, string> | null = null;
-
-const PA11Y_EQUIVALENCE_FALLBACK: Record<string, string> = {
-  "Principle1.Guideline1_4.1_4_3.G145": "color-contrast",
-  "Principle1.Guideline1_4.1_4_3.G18": "color-contrast",
-  "Principle1.Guideline1_4.1_4_3.G145.Fail": "color-contrast",
-  "Principle1.Guideline1_4.1_4_3.G18.Fail": "color-contrast",
-  "Principle1.Guideline1_1.1_1_1.H30": "link-name",
-  "Principle4.Guideline4_1.4_1_1.F77": "duplicate-id",
-  "Principle2.Guideline2_4.2_4_1.H64": "frame-title",
-};
-
-function normalizePa11yToken(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/^wcag2a{1,3}\./, "")
-    .replace(/^pa11y-/, "")
-    .replace(/[^a-z0-9]/g, "");
-}
-
-function getCheckDataCode(checkData: unknown): string | null {
-  if (!checkData || typeof checkData !== "object") return null;
-  const code = (checkData as { code?: unknown }).code;
-  return typeof code === "string" && code.length > 0 ? code : null;
-}
-
-function getPa11yEquivalenceMap(): Record<string, string> {
-  if (pa11yEquivalenceMapCache) return pa11yEquivalenceMapCache;
-
-  try {
-    const config = JSON.parse(fs.readFileSync(PA11Y_CONFIG_PATH, "utf-8")) as {
-      equivalenceMap?: Record<string, string>;
-    };
-    pa11yEquivalenceMapCache = config.equivalenceMap || PA11Y_EQUIVALENCE_FALLBACK;
-  } catch {
-    pa11yEquivalenceMapCache = PA11Y_EQUIVALENCE_FALLBACK;
-  }
-
-  return pa11yEquivalenceMapCache;
-}
-
-function mapPa11yRuleToCanonical(ruleId: string, sourceRuleId: string | null, checkData: unknown): string {
-  const equivalenceMap = getPa11yEquivalenceMap();
-  const codeCandidates = [sourceRuleId, getCheckDataCode(checkData), ruleId]
-    .filter((value): value is string => typeof value === "string" && value.length > 0)
-    .map(normalizePa11yToken);
-
-  const patterns = Object.entries(equivalenceMap).map(([pattern, canonical]) => ({
-    pattern: normalizePa11yToken(pattern),
-    canonical,
-  }));
-
-  for (const code of codeCandidates) {
-    for (const entry of patterns) {
-      if (code.startsWith(entry.pattern)) {
-        return entry.canonical;
-      }
-    }
-  }
-
-  return ruleId;
-}
-
-function enrichFromIntelligence(findings: ScanFinding[]): ScanFinding[] {
-  try {
-    const intelligence = JSON.parse(fs.readFileSync(INTELLIGENCE_PATH, "utf-8")) as {
-      rules?: Record<string, { category?: string; fix?: { description?: string; code?: string }; false_positive_risk?: string; fix_difficulty_notes?: string }>;
-    };
-    const rules = intelligence.rules || {};
-
-    return findings.map((finding) => {
-      const canonical = mapPa11yRuleToCanonical(finding.ruleId, finding.sourceRuleId, finding.checkData);
-      const normalizedFinding = {
-        ...finding,
-        ruleId: canonical,
-        sourceRuleId: finding.sourceRuleId ?? finding.ruleId,
-      };
-
-      if (normalizedFinding.fixDescription || normalizedFinding.fixCode) return normalizedFinding;
-
-      const info = rules[canonical];
-      if (!info) return normalizedFinding;
-
-      return {
-        ...normalizedFinding,
-        category: normalizedFinding.category ?? info.category ?? null,
-        fixDescription: info.fix?.description ?? normalizedFinding.fixDescription,
-        fixCode: info.fix?.code ?? normalizedFinding.fixCode,
-        falsePositiveRisk: normalizedFinding.falsePositiveRisk ?? info.false_positive_risk ?? null,
-        fixDifficultyNotes: normalizedFinding.fixDifficultyNotes ?? info.fix_difficulty_notes ?? null,
-      };
-    });
-  } catch {
-    return findings;
-  }
+async function loadEngine() {
+  return await import("@diegovelasquezweb/a11y-engine");
 }
 
 function normalizeFindings(scanId: string, rawFindings: Record<string, unknown>): ScanFinding[] {
@@ -237,7 +128,6 @@ export async function GET(
     return NextResponse.json({ success: false, error: "Invalid scan ID." }, { status: 400 });
   }
 
-  // LOCAL MODE — read from filesystem
   if (process.env.LOCAL_MODE === "true") {
     const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
     const statusPath = path.join(SCANS_DIR, `${scanId}.status.json`);
@@ -265,7 +155,6 @@ export async function GET(
     return buildResponse(scanId, rawFindings);
   }
 
-  // PRODUCTION MODE — GitHub Actions
   const runStatus = await getRunStatus(scanId);
 
   if (runStatus.status === "not_found") {
@@ -305,14 +194,16 @@ export async function GET(
   return buildResponse(scanId, rawFindings);
 }
 
-function buildResponse(_scanId: string, rawFindings: Record<string, unknown>) {
+async function buildResponse(scanId: string, rawFindings: Record<string, unknown>) {
+  const { enrichFindings, computeScore, computePersonaGroups } = await loadEngine();
+
   const meta = rawFindings.metadata as Record<string, unknown> | undefined;
   const firstFindingUrl = String(((rawFindings.findings as Record<string, unknown>[])?.[0]?.url) ?? "");
   const targetUrl = String(meta?.target_url ?? meta?.targetUrl ?? meta?.base_url ?? firstFindingUrl);
 
-  const findings = enrichFromIntelligence(normalizeFindings(_scanId, rawFindings));
+  const normalized = normalizeFindings(scanId, rawFindings);
+  const findings = enrichFindings(normalized) as ScanFinding[];
 
-  // Sort by severity
   const severityOrder: Record<string, number> = { Critical: 1, Serious: 2, Moderate: 3, Minor: 4 };
   findings.sort((a, b) => {
     const sa = severityOrder[a.severity] ?? 99;
@@ -321,85 +212,18 @@ function buildResponse(_scanId: string, rawFindings: Record<string, unknown>) {
     return a.id.localeCompare(b.id);
   });
 
-  // Totals
   const totals = { Critical: 0, Serious: 0, Moderate: 0, Minor: 0 };
   for (const f of findings) {
     if (f.severity in totals) totals[f.severity as keyof typeof totals]++;
   }
 
-  // Score
-  const complianceConfigPath = path.join(ENGINE_BASE, "assets", "reporting", "compliance-config.json");
-  const complianceConfig = JSON.parse(fs.readFileSync(complianceConfigPath, "utf-8"));
-  const officialPenalties = complianceConfig.complianceScore.penalties as Record<string, number>;
-  const gradeThresholds = complianceConfig.gradeThresholds as { min: number; label: string }[];
-
-  const rawScore =
-    complianceConfig.complianceScore.baseScore -
-    totals.Critical * (officialPenalties.Critical ?? 15) -
-    totals.Serious * (officialPenalties.Serious ?? 5) -
-    totals.Moderate * (officialPenalties.Moderate ?? 2) -
-    totals.Minor * (officialPenalties.Minor ?? 0.5);
-  const score = Math.max(0, Math.min(100, Math.round(rawScore)));
-
-  let label = "Critical";
-  for (const threshold of gradeThresholds) {
-    if (score >= threshold.min) { label = threshold.label; break; }
-  }
-
-  let wcagStatus: "Pass" | "Conditional Pass" | "Fail" = "Pass";
-  if (totals.Critical > 0 || totals.Serious > 0) wcagStatus = "Fail";
-  else if (totals.Moderate > 0 || totals.Minor > 0) wcagStatus = "Conditional Pass";
+  const { score, label: scoreLabel, wcagStatus } = computeScore(totals);
 
   const quickWins = findings
     .filter((f) => (f.severity === "Critical" || f.severity === "Serious") && f.fixCode)
     .slice(0, 3);
 
-  // Persona groups
-  const wcagRefPath = path.join(ENGINE_BASE, "assets", "reporting", "wcag-reference.json");
-  const wcagRef = JSON.parse(fs.readFileSync(wcagRefPath, "utf-8"));
-  const personaConfig = wcagRef.personaConfig as Record<string, { label: string; icon: string }>;
-  const personaMapping = wcagRef.personaMapping as Record<string, { rules: string[]; keywords: string[] }>;
-
-  const personaGroups: Record<string, { label: string; count: number; icon: string }> = {};
-  for (const [key, config] of Object.entries(personaConfig)) {
-    personaGroups[key] = { label: config.label, count: 0, icon: key };
-  }
-
-  const wcagCriterionMap = wcagRef.wcagCriterionMap as Record<string, string>;
-  const criterionToPersonas: Record<string, Set<string>> = {};
-  for (const [personaKey, mapping] of Object.entries(personaMapping)) {
-    for (const rule of mapping.rules) {
-      const criterion = wcagCriterionMap[rule];
-      if (criterion) {
-        if (!criterionToPersonas[criterion]) criterionToPersonas[criterion] = new Set();
-        criterionToPersonas[criterion].add(personaKey);
-      }
-    }
-  }
-
-  for (const f of findings) {
-    const ruleId = (f.ruleId || "").toLowerCase();
-    const wcagCriterionId = f.wcagCriterionId || "";
-    const users = (f.impactedUsers || "").toLowerCase();
-    const matchedPersonas = new Set<string>();
-
-    for (const [personaKey, mapping] of Object.entries(personaMapping)) {
-      if (!personaGroups[personaKey]) continue;
-      const matchesRule = mapping.rules.some((r: string) => ruleId === r.toLowerCase());
-      if (matchesRule) { matchedPersonas.add(personaKey); personaGroups[personaKey].count++; continue; }
-      if (wcagCriterionId && criterionToPersonas[wcagCriterionId]?.has(personaKey)) {
-        matchedPersonas.add(personaKey); personaGroups[personaKey].count++; continue;
-      }
-    }
-
-    if (matchedPersonas.size === 0 && users) {
-      for (const [personaKey, mapping] of Object.entries(personaMapping)) {
-        if (!personaGroups[personaKey] || matchedPersonas.has(personaKey)) continue;
-        const matchesKeyword = mapping.keywords.some((kw: string) => users.includes(kw.toLowerCase()));
-        if (matchesKeyword) personaGroups[personaKey].count++;
-      }
-    }
-  }
+  const personaGroups = computePersonaGroups(findings);
 
   const projectContext = (rawFindings.metadata as Record<string, unknown>)?.projectContext ?? {};
   const ctx = projectContext as Record<string, unknown>;
@@ -416,7 +240,7 @@ function buildResponse(_scanId: string, rawFindings: Record<string, unknown>) {
       targetUrl,
       scanDate: new Date().toISOString(),
       score,
-      scoreLabel: label,
+      scoreLabel,
       wcagStatus,
       totals,
       personaGroups,

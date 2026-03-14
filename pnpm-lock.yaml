@@ -12,8 +12,8 @@ importers:
         specifier: ^4.11.1
         version: 4.11.1(playwright-core@1.58.2)
       '@diegovelasquezweb/a11y-engine':
-        specifier: 0.1.3
-        version: 0.1.3(playwright-core@1.58.2)(typescript@5.9.3)
+        specifier: 0.1.4
+        version: 0.1.4(playwright-core@1.58.2)(typescript@5.9.3)
       '@radix-ui/react-collapsible':
         specifier: ^1.1.12
         version: 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -163,8 +163,8 @@ packages:
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
 
-  '@diegovelasquezweb/a11y-engine@0.1.3':
-    resolution: {integrity: sha512-loW/In4Rk044cfoiujnKZBd4+oN5a3vmzQ7kXyVrghLXWo6pVkKcRQTYpmiCLCfUy22oB6Is9S46oLSD5r/d3w==}
+  '@diegovelasquezweb/a11y-engine@0.1.4':
+    resolution: {integrity: sha512-YyyLheLyUpQ9/+DmtKCdg68pX4k62d1zMHUnGjDLh/YfKUc77LENMrTIYYp+XTDMUxHiD5xKds8KZrl6URYe8A==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -1250,8 +1250,8 @@ packages:
       bare-buffer:
         optional: true
 
-  bare-os@3.7.1:
-    resolution: {integrity: sha512-ebvMaS5BgZKmJlvuWh14dg9rbUI84QeV3WlWn6Ph6lFI8jJoh7ADtVTyD2c93euwbe+zgi0DVrl4YmqXeM9aIA==}
+  bare-os@3.8.0:
+    resolution: {integrity: sha512-Dc9/SlwfxkXIGYhvMQNUtKaXCaGkZYGcd1vuNUUADVqzu4/vQfvnMkYYOUnt2VwQ2AqKr/8qAVFRtwETljgeFg==}
     engines: {bare: '>=1.14.0'}
 
   bare-path@3.0.0:
@@ -1271,8 +1271,8 @@ packages:
   bare-url@2.3.2:
     resolution: {integrity: sha512-ZMq4gd9ngV5aTMa5p9+UfY0b3skwhHELaDkhEHetMdX0LRkW9kzaym4oo/Eh+Ghm0CCDuMTsRIGM/ytUc1ZYmw==}
 
-  baseline-browser-mapping@2.10.7:
-    resolution: {integrity: sha512-1ghYO3HnxGec0TCGBXiDLVns4eCSx4zJpxnHrlqFQajmhfKMQBzUGDdkMK7fUW7PTHTeLf+j87aTuKuuwWzMGw==}
+  baseline-browser-mapping@2.10.8:
+    resolution: {integrity: sha512-PCLz/LXGBsNTErbtB6i5u4eLpHeMfi93aUv5duMmj6caNu6IphS4q6UevDnL36sZQv9lrP11dbPKGMaXPwMKfQ==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -2379,12 +2379,12 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
-  puppeteer-core@24.39.0:
-    resolution: {integrity: sha512-SzIxz76Kgu17HUIi57HOejPiN0JKa9VCd2GcPY1sAh6RA4BzGZarFQdOYIYrBdUVbtyH7CrDb9uhGEwVXK/YNA==}
+  puppeteer-core@24.39.1:
+    resolution: {integrity: sha512-AMqQIKoEhPS6CilDzw0Gd1brLri3emkC+1N2J6ZCCuY1Cglo56M63S0jOeBZDQlemOiRd686MYVMl9ELJBzN3A==}
     engines: {node: '>=18'}
 
-  puppeteer@24.39.0:
-    resolution: {integrity: sha512-uMpGyuPqz94YInmdHSbD9ssgwsddrwe8qXr08UaEwjzrEvOa8gGl8za0h+MWoEG+/6sIBsJwzRfwuGCYRbbcpg==}
+  puppeteer@24.39.1:
+    resolution: {integrity: sha512-68Zc9QpcVvfxp2C+3UL88TyUogEAn5tSylXidbEuEXvhiqK1+v65zeBU5ubinAgEHMGr3dcSYqvYrGtdzsPI3w==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -2944,7 +2944,7 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
-  '@diegovelasquezweb/a11y-engine@0.1.3(playwright-core@1.58.2)(typescript@5.9.3)':
+  '@diegovelasquezweb/a11y-engine@0.1.4(playwright-core@1.58.2)(typescript@5.9.3)':
     dependencies:
       '@axe-core/playwright': 4.11.1(playwright-core@1.58.2)
       axe-core: 4.11.1
@@ -3984,11 +3984,11 @@ snapshots:
       - bare-abort-controller
       - react-native-b4a
 
-  bare-os@3.7.1: {}
+  bare-os@3.8.0: {}
 
   bare-path@3.0.0:
     dependencies:
-      bare-os: 3.7.1
+      bare-os: 3.8.0
 
   bare-stream@2.8.1(bare-events@2.8.2):
     dependencies:
@@ -4004,7 +4004,7 @@ snapshots:
     dependencies:
       bare-path: 3.0.0
 
-  baseline-browser-mapping@2.10.7: {}
+  baseline-browser-mapping@2.10.8: {}
 
   basic-ftp@5.2.0: {}
 
@@ -4029,7 +4029,7 @@ snapshots:
 
   browserslist@4.28.1:
     dependencies:
-      baseline-browser-mapping: 2.10.7
+      baseline-browser-mapping: 2.10.8
       caniuse-lite: 1.0.30001778
       electron-to-chromium: 1.5.313
       node-releases: 2.0.36
@@ -5040,7 +5040,7 @@ snapshots:
     dependencies:
       '@next/env': 16.1.6
       '@swc/helpers': 0.5.15
-      baseline-browser-mapping: 2.10.7
+      baseline-browser-mapping: 2.10.8
       caniuse-lite: 1.0.30001778
       postcss: 8.4.31
       react: 19.2.3
@@ -5153,7 +5153,7 @@ snapshots:
       kleur: 4.1.5
       mustache: 4.2.0
       node.extend: 2.0.3
-      puppeteer: 24.39.0(typescript@5.9.3)
+      puppeteer: 24.39.1(typescript@5.9.3)
       semver: 7.7.4
     transitivePeerDependencies:
       - bare-abort-controller
@@ -5265,7 +5265,7 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  puppeteer-core@24.39.0:
+  puppeteer-core@24.39.1:
     dependencies:
       '@puppeteer/browsers': 2.13.0
       chromium-bidi: 14.0.0(devtools-protocol@0.0.1581282)
@@ -5282,13 +5282,13 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  puppeteer@24.39.0(typescript@5.9.3):
+  puppeteer@24.39.1(typescript@5.9.3):
     dependencies:
       '@puppeteer/browsers': 2.13.0
       chromium-bidi: 14.0.0(devtools-protocol@0.0.1581282)
       cosmiconfig: 9.0.1(typescript@5.9.3)
       devtools-protocol: 0.0.1581282
-      puppeteer-core: 24.39.0
+      puppeteer-core: 24.39.1
       typed-query-selector: 2.12.1
     transitivePeerDependencies:
       - bare-abort-controller

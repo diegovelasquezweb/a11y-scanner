@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
       "./node_modules/@diegovelasquezweb/a11y-engine/assets/**/*",
     ],
   },
+  serverExternalPackages: ["@diegovelasquezweb/a11y-engine"],
 };
 
 export default nextConfig;
