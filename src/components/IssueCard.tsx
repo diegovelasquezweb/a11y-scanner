@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Image from "next/image";
 import * as Tabs from "@radix-ui/react-tabs";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import type { Finding } from "@/types/scan";
@@ -405,11 +406,13 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                         Visual Evidence
                       </h4>
                       <div className="bg-slate-50/50 p-2 rounded-md border border-slate-200/60 inline-block shadow-sm">
-                        <img
+                        <Image
                           src={finding.screenshotPath}
                           alt={`Screenshot of ${finding.title}`}
+                          width={800}
+                          height={600}
                           className="rounded border border-slate-200 shadow-sm max-h-90 w-auto object-contain bg-white"
-                          loading="lazy"
+                          unoptimized
                         />
                       </div>
                     </div>

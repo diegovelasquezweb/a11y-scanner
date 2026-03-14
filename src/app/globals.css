@@ -6,8 +6,8 @@
   --color-primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
   --color-primary-light: hsl(var(--primary-h), var(--primary-s), 95%);
   --color-primary-dark: hsl(var(--primary-h), var(--primary-s), 30%);
-  --font-sans: "Inter", "Outfit", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: var(--font-inter), "Inter", "Outfit", system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", ui-monospace, monospace;
 }
 
 :root {
