@@ -7,11 +7,109 @@ export const dynamic = "force-dynamic";
 
 const ENGINE_BASE = path.join(process.cwd(), "node_modules", "@diegovelasquezweb", "a11y-engine");
 
-function normalizeFindings(rawFindings: Record<string, unknown>) {
+const INTELLIGENCE_PATH = path.join(
+  ENGINE_BASE,
+  "assets",
+  "remediation",
+  "intelligence.json"
+);
+
+type ScanFinding = {
+  id: string;
+  ruleId: string;
+  source: string;
+  sourceRuleId: string | null;
+  wcagCriterionId: string | null;
+  category: unknown;
+  title: string;
+  severity: string;
+  wcag: string;
+  wcagClassification: unknown;
+  area: string;
+  url: string;
+  selector: string;
+  primarySelector: string;
+  impactedUsers: string;
+  actual: string;
+  primaryFailureMode: unknown;
+  relationshipHint: unknown;
+  failureChecks: unknown[];
+  relatedContext: unknown[];
+  expected: string;
+  mdn: unknown;
+  fixDescription: unknown;
+  fixCode: unknown;
+  recommendedFix: string;
+  evidence: unknown[];
+  totalInstances: number | null;
+  effort: unknown;
+  relatedRules: unknown[];
+  fixCodeLang: unknown;
+  screenshotPath: string | null;
+  falsePositiveRisk: unknown;
+  guardrails: unknown;
+  fixDifficultyNotes: unknown;
+  frameworkNotes: unknown;
+  cmsNotes: unknown;
+  fileSearchPattern: unknown;
+  ownershipStatus: unknown;
+  ownershipReason: unknown;
+  primarySourceScope: unknown[];
+  searchStrategy: unknown;
+  managedByLibrary: unknown;
+  componentHint: unknown;
+  verificationCommand: unknown;
+  verificationCommandFallback: unknown;
+  pagesAffected: number | null;
+  affectedUrls: unknown;
+  checkData: unknown;
+};
+
+function mapPa11yRuleToCanonical(ruleId: string): string {
+  const id = ruleId.toLowerCase();
+  if (id.includes("guideline1_4") && (id.includes("g145") || id.includes("g18"))) return "color-contrast";
+  if (id.includes("guideline1_1") && id.includes("h30")) return "link-name";
+  if (id.includes("guideline4_1") && id.includes("f77")) return "duplicate-id";
+  if (id.includes("guideline2_4") && id.includes("h64")) return "frame-title";
+  return ruleId;
+}
+
+function enrichFromIntelligence(findings: ScanFinding[]): ScanFinding[] {
+  try {
+    const intelligence = JSON.parse(fs.readFileSync(INTELLIGENCE_PATH, "utf-8")) as {
+      rules?: Record<string, { category?: string; fix?: { description?: string; code?: string }; false_positive_risk?: string; fix_difficulty_notes?: string }>;
+    };
+    const rules = intelligence.rules || {};
+
+    return findings.map((finding) => {
+      if (finding.fixDescription || finding.fixCode) return finding;
+
+      const canonical = mapPa11yRuleToCanonical(finding.ruleId);
+      const info = rules[canonical];
+      if (!info) return finding;
+
+      return {
+        ...finding,
+        ruleId: canonical,
+        sourceRuleId: finding.sourceRuleId ?? finding.ruleId,
+        category: finding.category ?? info.category ?? null,
+        fixDescription: info.fix?.description ?? finding.fixDescription,
+        fixCode: info.fix?.code ?? finding.fixCode,
+        falsePositiveRisk: finding.falsePositiveRisk ?? info.false_positive_risk ?? null,
+        fixDifficultyNotes: finding.fixDifficultyNotes ?? info.fix_difficulty_notes ?? null,
+      };
+    });
+  } catch {
+    return findings;
+  }
+}
+
+function normalizeFindings(scanId: string, rawFindings: Record<string, unknown>): ScanFinding[] {
   return ((rawFindings.findings as Record<string, unknown>[]) || []).map(
     (item, index) => ({
       id: String(item.id ?? `A11Y-${String(index + 1).padStart(3, "0")}`),
       ruleId: String(item.rule_id ?? ""),
+      source: item.source ? String(item.source) : "axe",
       sourceRuleId: item.source_rule_id ? String(item.source_rule_id) : null,
       wcagCriterionId: item.wcag_criterion_id ? String(item.wcag_criterion_id) : null,
       category: item.category ?? null,
@@ -39,7 +137,10 @@ function normalizeFindings(rawFindings: Record<string, unknown>) {
       effort: item.effort ?? null,
       relatedRules: Array.isArray(item.related_rules) ? item.related_rules : [],
       fixCodeLang: item.fix_code_lang ?? "html",
-      screenshotPath: null,
+      screenshotPath:
+        typeof item.screenshot_path === "string" && item.screenshot_path.length > 0
+          ? `/api/scan/${scanId}/screenshot?path=${encodeURIComponent(item.screenshot_path)}`
+          : null,
       falsePositiveRisk: item.false_positive_risk ?? null,
       guardrails: item.guardrails ?? null,
       fixDifficultyNotes: item.fix_difficulty_notes ?? null,
@@ -144,7 +245,7 @@ function buildResponse(_scanId: string, rawFindings: Record<string, unknown>) {
   const firstFindingUrl = String(((rawFindings.findings as Record<string, unknown>[])?.[0]?.url) ?? "");
   const targetUrl = String(meta?.target_url ?? meta?.targetUrl ?? meta?.base_url ?? firstFindingUrl);
 
-  const findings = normalizeFindings(rawFindings);
+  const findings = enrichFromIntelligence(normalizeFindings(_scanId, rawFindings));
 
   // Sort by severity
   const severityOrder: Record<string, number> = { Critical: 1, Serious: 2, Moderate: 3, Minor: 4 };

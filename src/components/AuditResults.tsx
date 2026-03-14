@@ -179,7 +179,11 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
           </div>
         ) : (
           filteredFindings.map((finding) => (
-            <IssueCard key={finding.id} finding={finding} forceExpanded={allExpanded} />
+            <IssueCard
+              key={finding.id}
+              finding={finding}
+              forceExpanded={allExpanded ? true : undefined}
+            />
           ))
         )}
       </div>

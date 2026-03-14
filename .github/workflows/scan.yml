@@ -113,9 +113,17 @@ jobs:
           # PDF
           cp $AUDIT_DIR/report.pdf out/stakeholder.pdf 2>/dev/null || touch out/stakeholder.pdf
 
+          # screenshots (used by Visual Evidence tab)
+          mkdir -p out/screenshots
+          if [ -d "$ENGINE_AUDIT/screenshots" ]; then
+            cp -R "$ENGINE_AUDIT/screenshots/." out/screenshots/
+          elif [ -d "$AUDIT_DIR/screenshots" ]; then
+            cp -R "$AUDIT_DIR/screenshots/." out/screenshots/
+          fi
+
       - name: Upload scan artifact
         uses: actions/upload-artifact@v4
         with:
           name: scan-${{ inputs.scan_token }}
-          path: out/*
+          path: out/**
           retention-days: 7
