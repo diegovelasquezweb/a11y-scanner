@@ -115,13 +115,12 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
   const processSnapshot = useCallback((data: ProgressData) => {
     const steps = data.steps || {};
     let runningLabel: string | null = null;
-    let runningStepIdx: number = -1;
 
     if (data.scanId) {
       setScanId(data.scanId);
     }
 
-    for (const [i, step] of STEPS.entries()) {
+    for (const [, step] of STEPS.entries()) {
       if (!activeStepKeys.has(step.key)) continue;
 
       const info = steps[step.key];
@@ -144,7 +143,6 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
 
       if (info.status === "running") {
         runningLabel = step.label;
-        runningStepIdx = i;
       }
 
       if (info.status === "error") {
@@ -153,12 +151,7 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
     }
 
     if (runningLabel) {
-      const currentDoneCount = [...seenDoneRef.current].filter((k) => activeStepKeys.has(k)).length;
-      if (runningStepIdx !== -1 && runningStepIdx < currentDoneCount) {
-        setCurrentStepLabel("Finalizing...");
-      } else {
-        setCurrentStepLabel(runningLabel);
-      }
+      setCurrentStepLabel(runningLabel);
     }
   }, [STEPS, activeStepKeys]);
 
