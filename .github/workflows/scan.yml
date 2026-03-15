@@ -71,7 +71,7 @@ jobs:
 
           pnpm exec a11y-audit \
             --base-url "${{ inputs.target_url }}" \
-            --max-routes 5 \
+            --max-routes 1 \
             --skip-patterns \
             --with-reports \
             --output $AUDIT_DIR/report.html \
