@@ -1,5 +1,7 @@
 "use client";
 
+import * as Tooltip from "@radix-ui/react-tooltip";
+import { Info } from "lucide-react";
 import type { SeverityTotals } from "@/types/scan";
 
 const SEVERITY_CONFIG = [
@@ -31,10 +33,13 @@ const SEVERITY_CONFIG = [
 
 interface SeverityCardsProps {
   totals: SeverityTotals;
+  tooltipTitle?: string;
+  tooltipBody?: string;
 }
 
-export function SeverityCards({ totals }: SeverityCardsProps) {
+export function SeverityCards({ totals, tooltipTitle, tooltipBody }: SeverityCardsProps) {
   return (
+    <Tooltip.Provider delayDuration={200}>
     <div className="grid grid-cols-2 gap-4 h-full">
       {SEVERITY_CONFIG.map(({ key, color, textColor, description }) => (
         <div
@@ -47,6 +52,31 @@ export function SeverityCards({ totals }: SeverityCardsProps) {
             >
               {key}
             </span>
+            {key === "Critical" && tooltipBody && (
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <button
+                    type="button"
+                    aria-label={tooltipTitle ?? "About severity breakdown"}
+                    className="rounded-full p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                  >
+                    <Info className="w-3.5 h-3.5" aria-hidden="true" />
+                  </button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content
+                    side="bottom"
+                    align="end"
+                    sideOffset={6}
+                    className="z-50 max-w-[320px] rounded-md bg-slate-900 px-4 py-3.5 text-xs leading-relaxed text-slate-300 shadow-xl animate-in fade-in-0 zoom-in-95"
+                  >
+                    {tooltipTitle && <p className="font-bold text-white text-[13px] mb-2">{tooltipTitle}</p>}
+                    <p>{tooltipBody}</p>
+                    <Tooltip.Arrow className="fill-slate-900" />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+            )}
           </div>
           <div className="text-4xl font-black text-slate-900">{totals[key]}</div>
           <p className="text-[10px] text-slate-600 font-medium mt-1 leading-tight">
@@ -55,5 +85,6 @@ export function SeverityCards({ totals }: SeverityCardsProps) {
         </div>
       ))}
     </div>
+    </Tooltip.Provider>
   );
 }

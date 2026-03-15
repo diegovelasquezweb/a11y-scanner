@@ -5,6 +5,7 @@ import { Info, Check, Search, Settings } from "lucide-react";
 import * as Slider from "@radix-ui/react-slider";
 import * as Toggle from "@radix-ui/react-toggle";
 import type { ScanStatus, ConformanceLevel, EngineSelection, AdvancedScanOptions } from "@/types/scan";
+import type { EngineKnowledge } from "@diegovelasquezweb/a11y-engine";
 import {
   CONFORMANCE_LEVELS,
   CONFORMANCE_TAG_MAP,
@@ -18,10 +19,11 @@ import { AdvancedSettings } from "@/components/AdvancedSettings";
 interface AuditFormProps {
   status: ScanStatus;
   errorMessage: string;
+  knowledge?: EngineKnowledge | null;
   onSubmit: (targetUrl: string, githubRepoUrl: string, axeTags: string[], engines: EngineSelection, advanced: AdvancedScanOptions) => void;
 }
 
-export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
+export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFormProps) {
   const [targetUrl, setTargetUrl] = useState("");
   const [githubRepoUrl, setGithubRepoUrl] = useState("");
   const [conformance, setConformance] = useState<ConformanceLevel>(DEFAULT_CONFORMANCE);
@@ -384,6 +386,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
       onEnginesChange={setEngines}
       advanced={advanced}
       onAdvancedChange={setAdvanced}
+      knowledge={knowledge}
       disabled={isRunning}
     />
     </>

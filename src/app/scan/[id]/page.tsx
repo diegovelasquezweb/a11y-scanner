@@ -3,9 +3,21 @@
 import { useEffect, useState, useRef, use } from "react";
 import { AlertTriangle, Frown } from "lucide-react";
 import type { ScanResult } from "@/types/scan";
+import type { EngineKnowledge } from "@diegovelasquezweb/a11y-engine";
 import ScanProgress from "@/components/ScanProgress";
 import { AuditResults } from "@/components/AuditResults";
 import Link from "next/link";
+
+async function fetchKnowledgePack(signal?: AbortSignal): Promise<EngineKnowledge | null> {
+  try {
+    const res = await fetch("/api/knowledge", { signal });
+    if (!res.ok) return null;
+    const payload = (await res.json()) as { success: boolean; data?: EngineKnowledge };
+    return payload.success && payload.data ? payload.data : null;
+  } catch {
+    return null;
+  }
+}
 
 type ScanPageStatus = "loading" | "scanning" | "completed" | "error" | "not_found";
 
@@ -13,6 +25,7 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
   const { id: scanId } = use(params);
   const [status, setStatus] = useState<ScanPageStatus>("loading");
   const [result, setResult] = useState<ScanResult["data"] | null>(null);
+  const [knowledge, setKnowledge] = useState<EngineKnowledge | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -75,6 +88,12 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
     };
   }, [scanId]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchKnowledgePack(controller.signal).then(setKnowledge);
+    return () => controller.abort();
+  }, []);
+
   return (
     <main className="max-w-7xl mx-auto px-4 py-12">
       {status === "loading" && (
@@ -92,6 +111,7 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
         <AuditResults
           result={result}
           scanId={scanId}
+          knowledge={knowledge}
           onRunNewTest={() => window.location.assign("/")}
         />
       )}

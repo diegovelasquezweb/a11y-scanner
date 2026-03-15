@@ -1,6 +1,7 @@
 "use client";
 
-import { Zap, ArrowRight } from "lucide-react";
+import * as Tooltip from "@radix-ui/react-tooltip";
+import { Zap, ArrowRight, Info } from "lucide-react";
 import type { Finding } from "@/types/scan";
 
 const SEVERITY_BADGE: Record<string, string> = {
@@ -13,12 +14,16 @@ const SEVERITY_BADGE: Record<string, string> = {
 interface QuickWinsProps {
   quickWins: Finding[];
   onScrollToIssue: (id: string) => void;
+  subtitle?: string;
+  tooltipTitle?: string;
+  tooltipBody?: string;
 }
 
-export function QuickWins({ quickWins, onScrollToIssue }: QuickWinsProps) {
+export function QuickWins({ quickWins, onScrollToIssue, subtitle, tooltipTitle, tooltipBody }: QuickWinsProps) {
   if (quickWins.length === 0) return null;
 
   return (
+    <Tooltip.Provider delayDuration={200}>
     <section
       aria-labelledby="quick-wins-heading"
       className="rounded-md bg-slate-900 p-8 mb-12 relative overflow-hidden border border-slate-800 shadow-2xl"
@@ -36,9 +41,34 @@ export function QuickWins({ quickWins, onScrollToIssue }: QuickWinsProps) {
           <h3 id="quick-wins-heading" className="text-xl font-bold text-white">
             Recommended Quick Wins
           </h3>
+          {tooltipBody && (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <button
+                  type="button"
+                  aria-label={tooltipTitle ?? "About quick wins"}
+                  className="rounded-full p-1 text-sky-200 hover:text-white hover:bg-sky-400/20 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-300/30"
+                >
+                  <Info className="w-3.5 h-3.5" aria-hidden="true" />
+                </button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content
+                  side="bottom"
+                  align="start"
+                  sideOffset={6}
+                  className="z-50 max-w-[320px] rounded-md bg-slate-950 px-4 py-3.5 text-xs leading-relaxed text-slate-300 shadow-xl animate-in fade-in-0 zoom-in-95"
+                >
+                  {tooltipTitle && <p className="font-bold text-white text-[13px] mb-2">{tooltipTitle}</p>}
+                  <p>{tooltipBody}</p>
+                  <Tooltip.Arrow className="fill-slate-950" />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          )}
         </div>
         <p className="text-[13px] text-sky-300/80 mb-8 leading-relaxed">
-          High-priority issues with ready-to-use code fixes for immediate remediation.
+          {subtitle ?? "High-priority issues with ready-to-use code fixes for immediate remediation."}
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -82,5 +112,6 @@ export function QuickWins({ quickWins, onScrollToIssue }: QuickWinsProps) {
         </div>
       </div>
     </section>
+    </Tooltip.Provider>
   );
 }

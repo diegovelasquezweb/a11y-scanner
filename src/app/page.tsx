@@ -1,9 +1,21 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { ScanStatus, EngineSelection, AdvancedScanOptions } from "@/types/scan";
+import type { EngineKnowledge } from "@diegovelasquezweb/a11y-engine";
 import { AuditForm } from "@/components/AuditForm";
 import ScanProgress from "@/components/ScanProgress";
+
+async function fetchKnowledgePack(signal?: AbortSignal): Promise<EngineKnowledge | null> {
+  try {
+    const res = await fetch("/api/knowledge", { signal });
+    if (!res.ok) return null;
+    const payload = (await res.json()) as { success: boolean; data?: EngineKnowledge };
+    return payload.success && payload.data ? payload.data : null;
+  } catch {
+    return null;
+  }
+}
 
 export default function Home() {
   const [status, setStatus] = useState<ScanStatus>("idle");
@@ -12,6 +24,7 @@ export default function Home() {
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanStartTime, setScanStartTime] = useState<number | null>(null);
   const [activeEngines, setActiveEngines] = useState<EngineSelection>({ axe: true, cdp: true, pa11y: true });
+  const [knowledge, setKnowledge] = useState<EngineKnowledge | null>(null);
 
   const isScanning = status === "running";
 
@@ -72,6 +85,12 @@ export default function Home() {
     }
   }, []);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchKnowledgePack(controller.signal).then(setKnowledge);
+    return () => controller.abort();
+  }, []);
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
       <a
@@ -88,7 +107,7 @@ export default function Home() {
             : "opacity-100 translate-y-0 max-h-500"
         }`}
       >
-        <AuditForm status={status} errorMessage={errorMessage} onSubmit={handleSubmit} />
+        <AuditForm status={status} errorMessage={errorMessage} onSubmit={handleSubmit} knowledge={knowledge} />
       </div>
 
       <div

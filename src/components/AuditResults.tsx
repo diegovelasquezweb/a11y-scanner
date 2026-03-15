@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { AlertTriangle, CheckCircle, Check, Plus, Settings, CloudUpload, FileText, ClipboardCheck } from "lucide-react";
 import type { ScanResult, Finding } from "@/types/scan";
+import type { EngineKnowledge } from "@diegovelasquezweb/a11y-engine";
 import { ScoreGauge } from "@/components/ScoreGauge";
 import { SeverityCards } from "@/components/SeverityCards";
 import { PersonaImpact } from "@/components/PersonaImpact";
@@ -21,14 +22,20 @@ const WCAG_PRINCIPLES: Record<string, string> = {
 interface AuditResultsProps {
   result: NonNullable<ScanResult["data"]>;
   scanId: string;
+  knowledge?: EngineKnowledge | null;
   onRunNewTest?: () => void;
 }
 
-export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps) {
+export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditResultsProps) {
   const [filterValue, setFilterValue] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [allExpanded, setAllExpanded] = useState(false);
   const [jiraOpen, setJiraOpen] = useState(false);
+  const tooltips = knowledge?.tooltips;
+  const personaDescriptions = useMemo(() => {
+    const entries = knowledge?.personas ?? [];
+    return Object.fromEntries(entries.map((persona) => [persona.id, persona.description]));
+  }, [knowledge]);
 
   const filteredFindings = useMemo((): Finding[] => {
     let findings = result.findings;
@@ -130,11 +137,17 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
               score={result.score}
               label={result.scoreLabel}
               wcagStatus={result.wcagStatus}
+              tooltipTitle={tooltips?.scoreGauge?.title}
+              tooltipBody={tooltips?.scoreGauge?.body}
             />
           </div>
           <div className="md:col-span-7 flex">
             <div className="w-full">
-              <SeverityCards totals={result.totals} />
+              <SeverityCards
+                totals={result.totals}
+                tooltipTitle={tooltips?.severityCards?.title}
+                tooltipBody={tooltips?.severityCards?.body}
+              />
             </div>
           </div>
         </div>
@@ -142,6 +155,9 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
           <PersonaImpact
             personaGroups={result.personaGroups}
             totalFindings={result.totalFindings}
+            tooltipTitle={tooltips?.personaImpact?.title}
+            tooltipBody={tooltips?.personaImpact?.body}
+            personaDescriptions={personaDescriptions}
           />
         </div>
       </div>
@@ -149,6 +165,8 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
       <QuickWins
         quickWins={result.quickWins}
         onScrollToIssue={handleScrollToIssue}
+        tooltipTitle={tooltips?.quickWins?.title}
+        tooltipBody={tooltips?.quickWins?.body}
       />
 
       <FindingsToolbar

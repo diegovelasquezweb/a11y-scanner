@@ -3,6 +3,7 @@
 import { useId } from "react";
 import { Check } from "lucide-react";
 import { SidePanel } from "@/components/SidePanel";
+import type { EngineKnowledge, ScannerOptionHelp } from "@diegovelasquezweb/a11y-engine";
 import type {
   EngineSelection,
   AdvancedScanOptions,
@@ -48,6 +49,10 @@ const ENGINE_DETAILS: Record<string, { coverage: string; speed: string }> = {
   },
 };
 
+function getOptionHelp(options: ScannerOptionHelp[] | undefined, id: string): ScannerOptionHelp | undefined {
+  return options?.find((entry) => entry.id === id);
+}
+
 interface AdvancedSettingsProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -55,6 +60,7 @@ interface AdvancedSettingsProps {
   onEnginesChange: (engines: EngineSelection) => void;
   advanced: AdvancedScanOptions;
   onAdvancedChange: (advanced: AdvancedScanOptions) => void;
+  knowledge?: EngineKnowledge | null;
   disabled?: boolean;
 }
 
@@ -65,6 +71,7 @@ export function AdvancedSettings({
   onEnginesChange,
   advanced,
   onAdvancedChange,
+  knowledge,
   disabled = false,
 }: AdvancedSettingsProps) {
   const maxRoutesId = useId();
@@ -73,6 +80,8 @@ export function AdvancedSettings({
   const viewportWId = useId();
   const viewportHId = useId();
   const enabledCount = Object.values(engines).filter(Boolean).length;
+  const scannerHelp = knowledge?.scanner;
+  const helpOptions = scannerHelp?.options;
 
   const isCustomViewport = !VIEWPORT_PRESETS.some(
     (p) => p.width === advanced.viewport.width && p.height === advanced.viewport.height
@@ -107,6 +116,7 @@ export function AdvancedSettings({
             {ENGINE_OPTIONS.map((engine) => {
               const checked = engines[engine.id];
               const details = ENGINE_DETAILS[engine.id];
+              const engineHelp = scannerHelp?.engines.find((entry) => entry.id === engine.id);
               return (
                 <label
                   key={engine.id}
@@ -137,7 +147,7 @@ export function AdvancedSettings({
                         </span>
                         <span className="text-[10px] text-slate-400 font-medium">{engine.description}</span>
                       </div>
-                      <p className="text-xs text-slate-500 leading-relaxed mb-1.5">{details.coverage}</p>
+                      <p className="text-xs text-slate-500 leading-relaxed mb-1.5">{engineHelp?.description ?? details.coverage}</p>
                       <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
                         details.speed === "Fast" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
                       }`}>
@@ -180,7 +190,7 @@ export function AdvancedSettings({
                 <span className="text-[10px] text-slate-400">50</span>
               </div>
               <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                Maximum unique pages to discover and scan. Higher values increase coverage and scan time.
+                {getOptionHelp(helpOptions, "maxRoutes")?.description ?? "Maximum unique pages to discover and scan. Higher values increase coverage and scan time."}
               </p>
             </div>
 
@@ -209,7 +219,7 @@ export function AdvancedSettings({
                 <span className="text-[10px] text-slate-400">3 — deep crawl</span>
               </div>
               <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                How many link levels to follow from the starting URL. Ignored when scanning a single page.
+                {getOptionHelp(helpOptions, "crawlDepth")?.description ?? "How many link levels to follow from the starting URL. Ignored when scanning a single page."}
               </p>
             </div>
           </div>
@@ -293,7 +303,7 @@ export function AdvancedSettings({
                 <span className="text-xs text-slate-400">({(advanced.timeoutMs / 1000).toFixed(0)}s)</span>
               </div>
               <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                Network timeout per page load. Range: 5 000 – 120 000 ms.
+                {getOptionHelp(helpOptions, "timeoutMs")?.description ?? "Network timeout per page load. Range: 5 000 – 120 000 ms."}
               </p>
             </div>
           </div>
@@ -407,7 +417,7 @@ export function AdvancedSettings({
                 ))}
               </div>
               <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                Emulates <code className="text-[10px] bg-slate-100 px-1 rounded">prefers-color-scheme</code>. Use Dark to catch contrast issues in dark mode.
+                {getOptionHelp(helpOptions, "colorScheme")?.description ?? "Emulates prefers-color-scheme. Use Dark to catch contrast issues in dark mode."}
               </p>
             </div>
 

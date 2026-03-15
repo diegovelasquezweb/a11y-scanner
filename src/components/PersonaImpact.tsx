@@ -14,9 +14,12 @@ const PERSONA_ICONS: Record<string, React.ReactNode> = {
 interface PersonaImpactProps {
   personaGroups: Record<string, PersonaGroup>;
   totalFindings: number;
+  tooltipTitle?: string;
+  tooltipBody?: string;
+  personaDescriptions?: Record<string, string>;
 }
 
-export function PersonaImpact({ personaGroups, totalFindings }: PersonaImpactProps) {
+export function PersonaImpact({ personaGroups, totalFindings, tooltipTitle, tooltipBody, personaDescriptions }: PersonaImpactProps) {
   return (
     <Tooltip.Provider delayDuration={200}>
     <div className="premium-card rounded-md p-5 w-full flex flex-col">
@@ -42,12 +45,8 @@ export function PersonaImpact({ personaGroups, totalFindings }: PersonaImpactPro
               sideOffset={6}
               className="z-50 max-w-[320px] rounded-md bg-slate-900 px-4 py-3.5 text-xs leading-relaxed text-slate-300 shadow-xl animate-in fade-in-0 zoom-in-95"
             >
-              <p className="font-bold text-white text-[13px] mb-2">What is Persona Impact?</p>
-              <p className="mb-2">
-                Each issue is mapped to the disability groups it affects,
-                showing which users face the most barriers on your site.
-                The bar shows relative severity per group compared to total findings.
-              </p>
+              <p className="font-bold text-white text-[13px] mb-2">{tooltipTitle ?? "What is Persona Impact?"}</p>
+              <p className="mb-2">{tooltipBody ?? "Each issue is mapped to the disability groups it affects, showing which users face the most barriers on your site. The bar shows relative severity per group compared to total findings."}</p>
               <Tooltip.Arrow className="fill-slate-900" />
             </Tooltip.Content>
           </Tooltip.Portal>
@@ -64,7 +63,7 @@ export function PersonaImpact({ personaGroups, totalFindings }: PersonaImpactPro
                 <div className="w-6 h-6 rounded bg-slate-50 flex items-center justify-center text-slate-600 group-hover:bg-primary-light group-hover:text-primary transition-colors">
                   {PERSONA_ICONS[persona.icon] ?? PERSONA_ICONS.screenReader}
                 </div>
-                <span className="text-xs font-bold text-slate-700">{persona.label}</span>
+                <span className="text-xs font-bold text-slate-700" title={personaDescriptions?.[key] ?? undefined}>{persona.label}</span>
               </div>
               <span className="text-xs font-black text-slate-900">{persona.count}</span>
             </div>
