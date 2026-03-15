@@ -162,16 +162,25 @@ jobs:
             FINDINGS_PATH="$AUDIT_DIR/a11y-findings.json"
           fi
 
+          # Include pattern findings if they exist
+          PATTERN_FINDINGS="null"
+          if [ -f "$ENGINE_AUDIT/a11y-pattern-findings.json" ]; then
+            PATTERN_FINDINGS=$(cat "$ENGINE_AUDIT/a11y-pattern-findings.json")
+          elif [ -f "$AUDIT_DIR/a11y-pattern-findings.json" ]; then
+            PATTERN_FINDINGS=$(cat "$AUDIT_DIR/a11y-pattern-findings.json")
+          fi
+
           if [ -n "$FINDINGS_PATH" ]; then
             node -e "
               const fs = require('fs');
               const data = JSON.parse(fs.readFileSync('$FINDINGS_PATH','utf8'));
               data.metadata = data.metadata || {};
               data.metadata.target_url = '${{ inputs.target_url }}';
+              data.patternFindings = $PATTERN_FINDINGS;
               fs.writeFileSync('out/result.json', JSON.stringify(data));
             "
           else
-            echo '{"findings":[],"metadata":{"target_url":"${{ inputs.target_url }}"}}' > out/result.json
+            echo "{\"findings\":[],\"metadata\":{\"target_url\":\"${{ inputs.target_url }}\"},\"patternFindings\":$PATTERN_FINDINGS}" > out/result.json
           fi
           # checklist
           cp $AUDIT_DIR/checklist.html out/checklist.html 2>/dev/null || echo "<html><body>No checklist generated</body></html>" > out/checklist.html
