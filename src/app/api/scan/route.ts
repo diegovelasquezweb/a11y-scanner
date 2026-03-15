@@ -11,11 +11,21 @@ interface EngineSelection {
   pa11y?: boolean;
 }
 
+interface AdvancedOptions {
+  maxRoutes?: number;
+  crawlDepth?: number;
+  waitUntil?: string;
+  timeoutMs?: number;
+  viewport?: { width: number; height: number };
+  colorScheme?: string;
+}
+
 interface ScanRequestBody {
   targetUrl: string;
   githubRepoUrl?: string;
   axeTags?: string[];
   engines?: EngineSelection;
+  advanced?: AdvancedOptions;
 }
 
 function validateUrl(url: string): boolean {
@@ -39,9 +49,25 @@ function validateGithubUrl(url: string): boolean {
   }
 }
 
+function normalizeAdvanced(raw?: AdvancedOptions): Required<AdvancedOptions> {
+  return {
+    maxRoutes: Math.min(Math.max(Math.round(raw?.maxRoutes ?? 1), 1), 50),
+    crawlDepth: Math.min(Math.max(Math.round(raw?.crawlDepth ?? 2), 1), 3),
+    waitUntil: ["domcontentloaded", "load", "networkidle"].includes(raw?.waitUntil ?? "")
+      ? (raw!.waitUntil as string)
+      : "domcontentloaded",
+    timeoutMs: Math.min(Math.max(Math.round(raw?.timeoutMs ?? 30000), 5000), 120000),
+    viewport: {
+      width: Math.min(Math.max(Math.round(raw?.viewport?.width ?? 1280), 320), 2560),
+      height: Math.min(Math.max(Math.round(raw?.viewport?.height ?? 800), 320), 2560),
+    },
+    colorScheme: raw?.colorScheme === "dark" ? "dark" : "light",
+  };
+}
+
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as ScanRequestBody;
-  const { targetUrl, githubRepoUrl, axeTags, engines } = body;
+  const { targetUrl, githubRepoUrl, axeTags, engines, advanced } = body;
 
   if (!targetUrl || !validateUrl(targetUrl)) {
     return NextResponse.json(
@@ -57,10 +83,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const normalizedAdvanced = normalizeAdvanced(advanced);
   const scanId = randomUUID();
 
   if (process.env.LOCAL_MODE === "true") {
-    return runLocal({ scanId, targetUrl, githubRepoUrl, axeTags, engines });
+    return runLocal({ scanId, targetUrl, githubRepoUrl, axeTags, engines, advanced: normalizedAdvanced });
   }
 
   try {
@@ -70,6 +97,7 @@ export async function POST(request: NextRequest) {
       githubRepoUrl: githubRepoUrl || undefined,
       axeTags: axeTags?.length ? axeTags : undefined,
       engines,
+      advanced: normalizedAdvanced,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to start scan.";
@@ -79,8 +107,8 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ success: true, scanId });
 }
 
-const SCAN_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
-const SCAN_STUCK_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+const SCAN_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const SCAN_STUCK_TIMEOUT_MS = 5 * 60 * 1000;
 
 async function cleanupScans() {
   const fs = await import("node:fs");
@@ -137,6 +165,7 @@ async function runLocal(params: {
   githubRepoUrl?: string;
   axeTags?: string[];
   engines?: EngineSelection;
+  advanced: Required<AdvancedOptions>;
 }) {
   const fs = await import("node:fs");
   const path = await import("node:path");
@@ -145,7 +174,7 @@ async function runLocal(params: {
   const { promisify } = await import("node:util");
   const execAsync = promisify(exec);
 
-  const { scanId, targetUrl, githubRepoUrl, axeTags, engines } = params;
+  const { scanId, targetUrl, githubRepoUrl, axeTags, engines, advanced } = params;
 
   fs.mkdirSync(SCANS_DIR, { recursive: true });
   await cleanupScans().catch(() => { /* non-fatal */ });
@@ -172,8 +201,13 @@ async function runLocal(params: {
 
       const payload = await runAudit({
         baseUrl: targetUrl,
-        maxRoutes: 1,
-        skipPatterns: true,
+        maxRoutes: advanced.maxRoutes,
+        crawlDepth: advanced.crawlDepth,
+        waitUntil: advanced.waitUntil,
+        timeoutMs: advanced.timeoutMs,
+        viewport: advanced.viewport,
+        colorScheme: advanced.colorScheme,
+        skipPatterns: !projectDir,
         axeTags: axeTags?.length ? axeTags : undefined,
         engines: engines ?? undefined,
         projectDir,

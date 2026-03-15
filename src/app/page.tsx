@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { ScanStatus, EngineSelection } from "@/types/scan";
+import type { ScanStatus, EngineSelection, AdvancedScanOptions } from "@/types/scan";
 import { AuditForm } from "@/components/AuditForm";
 import ScanProgress from "@/components/ScanProgress";
 
@@ -24,7 +24,7 @@ export default function Home() {
     setActiveEngines({ axe: true, cdp: true, pa11y: true });
   }, []);
 
-  const handleSubmit = useCallback(async (targetUrl: string, githubRepoUrl: string, axeTags: string[], engines: EngineSelection) => {
+  const handleSubmit = useCallback(async (targetUrl: string, githubRepoUrl: string, axeTags: string[], engines: EngineSelection, advanced: AdvancedScanOptions) => {
     setStatus("running");
     setErrorMessage("");
     setScanError(null);
@@ -41,6 +41,7 @@ export default function Home() {
           githubRepoUrl: githubRepoUrl || undefined,
           axeTags: axeTags.length > 0 ? axeTags : undefined,
           engines,
+          advanced,
         }),
       });
 

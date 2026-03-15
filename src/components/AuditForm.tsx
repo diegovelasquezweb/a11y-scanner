@@ -4,12 +4,13 @@ import { useState, useRef, useId, useMemo, useEffect } from "react";
 import { Info, Check, Search, Settings } from "lucide-react";
 import * as Slider from "@radix-ui/react-slider";
 import * as Toggle from "@radix-ui/react-toggle";
-import type { ScanStatus, ConformanceLevel, EngineSelection } from "@/types/scan";
+import type { ScanStatus, ConformanceLevel, EngineSelection, AdvancedScanOptions } from "@/types/scan";
 import {
   CONFORMANCE_LEVELS,
   CONFORMANCE_TAG_MAP,
   DEFAULT_CONFORMANCE,
   DEFAULT_ENGINES,
+  DEFAULT_ADVANCED,
 } from "@/types/scan";
 import { HowItWorks } from "@/components/HowItWorks";
 import { AdvancedSettings } from "@/components/AdvancedSettings";
@@ -17,7 +18,7 @@ import { AdvancedSettings } from "@/components/AdvancedSettings";
 interface AuditFormProps {
   status: ScanStatus;
   errorMessage: string;
-  onSubmit: (targetUrl: string, githubRepoUrl: string, axeTags: string[], engines: EngineSelection) => void;
+  onSubmit: (targetUrl: string, githubRepoUrl: string, axeTags: string[], engines: EngineSelection, advanced: AdvancedScanOptions) => void;
 }
 
 export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
@@ -26,6 +27,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
   const [conformance, setConformance] = useState<ConformanceLevel>(DEFAULT_CONFORMANCE);
   const [bestPractices, setBestPractices] = useState(false);
   const [engines, setEngines] = useState<EngineSelection>({ ...DEFAULT_ENGINES });
+  const [advanced, setAdvanced] = useState<AdvancedScanOptions>({ ...DEFAULT_ADVANCED });
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -100,7 +102,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
     e.preventDefault();
     if (status === "running") return;
     if (!validate()) return;
-    onSubmit(targetUrl.trim(), githubRepoUrl.trim(), axeTags, engines);
+    onSubmit(targetUrl.trim(), githubRepoUrl.trim(), axeTags, engines, advanced);
   };
 
   const isRunning = status === "running";
@@ -380,6 +382,8 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
       onOpenChange={setAdvancedOpen}
       engines={engines}
       onEnginesChange={setEngines}
+      advanced={advanced}
+      onAdvancedChange={setAdvanced}
       disabled={isRunning}
     />
     </>

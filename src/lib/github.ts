@@ -32,12 +32,22 @@ interface EngineSelection {
   pa11y?: boolean;
 }
 
+interface AdvancedOptions {
+  maxRoutes?: number;
+  crawlDepth?: number;
+  waitUntil?: string;
+  timeoutMs?: number;
+  viewport?: { width: number; height: number };
+  colorScheme?: string;
+}
+
 export async function triggerScan(params: {
   scanToken: string;
   targetUrl: string;
   githubRepoUrl?: string;
   axeTags?: string[];
   engines?: EngineSelection;
+  advanced?: AdvancedOptions;
 }): Promise<void> {
   const { token, owner, repo, workflowFile, ref } = cfg();
 
@@ -52,6 +62,15 @@ export async function triggerScan(params: {
       .filter(([, v]) => v !== false)
       .map(([k]) => k);
     if (active.length < 3) inputs.engines = active.join(",");
+  }
+  if (params.advanced) {
+    const a = params.advanced;
+    if (a.maxRoutes != null) inputs.max_routes = String(a.maxRoutes);
+    if (a.crawlDepth != null) inputs.crawl_depth = String(a.crawlDepth);
+    if (a.waitUntil) inputs.wait_until = a.waitUntil;
+    if (a.timeoutMs != null) inputs.timeout_ms = String(a.timeoutMs);
+    if (a.viewport) inputs.viewport = `${a.viewport.width}x${a.viewport.height}`;
+    if (a.colorScheme) inputs.color_scheme = a.colorScheme;
   }
 
   const res = await fetch(
