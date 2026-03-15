@@ -91,7 +91,7 @@ export function JiraIntegration({
     }
 
     if (!/^[A-Z][A-Z0-9_]+$/.test(key)) {
-      setFeedback("Project key must be letters and numbers only (e.g. FRID, ACC2).");
+      setFeedback("Project key must start with a letter and contain only letters, numbers, or underscores.");
       return;
     }
 
@@ -150,11 +150,11 @@ export function JiraIntegration({
                 required
                 value={settings.projectKey}
                 onChange={(e) => setSettings((prev) => ({ ...prev, projectKey: e.target.value.toUpperCase() }))}
-                placeholder="e.g. FRID"
+                placeholder=""
                 className="w-full px-4 py-3 border border-slate-200 rounded-md text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors font-mono uppercase tracking-widest"
               />
               <p className="text-xs text-slate-400 mt-1.5">
-                The short key from your Jira project URL (e.g. FRID, ACC, WEB).
+                The short key from your Jira project URL.
               </p>
             </div>
 
