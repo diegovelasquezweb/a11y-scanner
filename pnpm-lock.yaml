@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@diegovelasquezweb/a11y-engine':
-        specifier: 0.7.6
-        version: 0.7.6(playwright-core@1.58.2)(typescript@5.9.3)
+        specifier: 0.7.8
+        version: 0.7.8(playwright-core@1.58.2)(typescript@5.9.3)
       '@radix-ui/react-collapsible':
         specifier: ^1.1.12
         version: 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -154,8 +154,8 @@ packages:
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
 
-  '@diegovelasquezweb/a11y-engine@0.7.6':
-    resolution: {integrity: sha512-TmiIv7QvOA3YKkveyHP0rqpGXLv2NUb4jUcywZxeGQ+r9KuFcfzpyhI6Mz4Ly3J9PFu68+kkIk3odq7x4TdZkA==}
+  '@diegovelasquezweb/a11y-engine@0.7.8':
+    resolution: {integrity: sha512-DLthOsdc+Vfq3kYkSIOZfG+2RVI3rGPeQUdTT0gy1Jw0rfYj+T7s8Hsk+vwfcs8la3RAC5Hs5Ln0oY6u4eRtLg==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -2927,7 +2927,7 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
-  '@diegovelasquezweb/a11y-engine@0.7.6(playwright-core@1.58.2)(typescript@5.9.3)':
+  '@diegovelasquezweb/a11y-engine@0.7.8(playwright-core@1.58.2)(typescript@5.9.3)':
     dependencies:
       '@axe-core/playwright': 4.11.1(playwright-core@1.58.2)
       axe-core: 4.11.1
