@@ -195,7 +195,7 @@ async function runLocal(params: {
         githubToken: process.env.GH_TOKEN || undefined,
         skipPatterns: false,
         ai: {
-          enabled: process.env.AI_ENABLED !== "false" && !!process.env.ANTHROPIC_API_KEY,
+          enabled: !!process.env.ANTHROPIC_API_KEY,
           apiKey: process.env.ANTHROPIC_API_KEY || undefined,
           githubToken: process.env.GH_TOKEN || undefined,
         },
@@ -247,6 +247,6 @@ async function runLocal(params: {
     }
   })();
 
-  const hasAI = process.env.AI_ENABLED !== "false" && !!process.env.ANTHROPIC_API_KEY;
+  const hasAI = !!process.env.ANTHROPIC_API_KEY;
   return NextResponse.json({ success: true, scanId, hasAI });
 }
