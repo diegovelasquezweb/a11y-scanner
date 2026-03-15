@@ -1,5 +1,6 @@
 "use client";
 
+import * as Tooltip from "@radix-ui/react-tooltip";
 import type { PersonaGroup } from "@/types/scan";
 
 const PERSONA_ICONS: Record<string, React.ReactNode> = {
@@ -33,13 +34,45 @@ interface PersonaImpactProps {
 
 export function PersonaImpact({ personaGroups, totalFindings }: PersonaImpactProps) {
   return (
+    <Tooltip.Provider delayDuration={200}>
     <div className="premium-card rounded-md p-5 w-full flex flex-col">
-      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        Persona Impact
-      </h3>
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Persona Impact
+        </h3>
+        <Tooltip.Root>
+          <Tooltip.Trigger asChild>
+            <button
+              type="button"
+              aria-label="About Persona Impact"
+              className="rounded-full p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Content
+              side="bottom"
+              align="end"
+              sideOffset={6}
+              className="z-50 max-w-[320px] rounded-md bg-slate-900 px-4 py-3.5 text-xs leading-relaxed text-slate-300 shadow-xl animate-in fade-in-0 zoom-in-95"
+            >
+              <p className="font-bold text-white text-[13px] mb-2">What is Persona Impact?</p>
+              <p className="mb-2">
+                Each issue is mapped to the disability groups it affects,
+                showing which users face the most barriers on your site.
+                The bar shows relative severity per group compared to total findings.
+              </p>
+              <Tooltip.Arrow className="fill-slate-900" />
+            </Tooltip.Content>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </div>
       <p className="text-xs text-slate-500 mb-4 leading-relaxed italic">
         Accessibility barriers per user profile.
       </p>
@@ -67,5 +100,6 @@ export function PersonaImpact({ personaGroups, totalFindings }: PersonaImpactPro
         ))}
       </div>
     </div>
+    </Tooltip.Provider>
   );
 }
