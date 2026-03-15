@@ -70,6 +70,64 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ success: true, scanId });
 }
 
+const SCAN_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+const SCAN_STUCK_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+
+async function cleanupScans(scansDir: string) {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+
+  if (!fs.existsSync(scansDir)) return;
+
+  const now = Date.now();
+  const files = fs.readdirSync(scansDir);
+
+  // Group files by scan ID
+  const scanIds = new Set<string>();
+  for (const file of files) {
+    const match = file.match(/^([a-f0-9-]+)\./);
+    if (match) scanIds.add(match[1]);
+  }
+
+  for (const scanId of scanIds) {
+    const statusPath = path.join(scansDir, `${scanId}.status.json`);
+    if (!fs.existsSync(statusPath)) continue;
+
+    const stat = fs.statSync(statusPath);
+    const ageMs = now - stat.mtimeMs;
+
+    // Mark stuck scans as error
+    if (ageMs > SCAN_STUCK_TIMEOUT_MS) {
+      try {
+        const status = JSON.parse(fs.readFileSync(statusPath, "utf-8"));
+        if (status.status === "scanning") {
+          fs.writeFileSync(
+            statusPath,
+            JSON.stringify({ status: "error", error: "Scan timed out.", updatedAt: new Date().toISOString() })
+          );
+        }
+      } catch { /* ignore */ }
+    }
+
+    // Delete expired scans (all files for that scan ID)
+    if (ageMs > SCAN_MAX_AGE_MS) {
+      for (const file of files) {
+        if (file.startsWith(`${scanId}.`) || file.startsWith(`${scanId}/`)) {
+          const filePath = path.join(scansDir, file);
+          try {
+            fs.rmSync(filePath, { recursive: true, force: true });
+          } catch { /* ignore */ }
+        }
+      }
+      // Also remove screenshots directory
+      const screenshotsDir = path.join(scansDir, `${scanId}.screenshots`);
+      if (fs.existsSync(screenshotsDir)) {
+        try { fs.rmSync(screenshotsDir, { recursive: true, force: true }); } catch { /* ignore */ }
+      }
+    }
+  }
+}
+
 async function runLocal(params: {
   scanId: string;
   targetUrl: string;
@@ -87,6 +145,9 @@ async function runLocal(params: {
   const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
 
   fs.mkdirSync(SCANS_DIR, { recursive: true });
+
+  // Cleanup expired and stuck scans
+  await cleanupScans(SCANS_DIR).catch(() => { /* non-fatal */ });
 
   fs.writeFileSync(
     path.join(SCANS_DIR, `${scanId}.status.json`),
