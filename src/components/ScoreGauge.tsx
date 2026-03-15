@@ -19,7 +19,7 @@ export function ScoreGauge({ score, label, wcagStatus, tooltipTitle, tooltipBody
     <Tooltip.Provider delayDuration={200}>
     <div className="premium-card rounded-md p-6 flex flex-col items-center justify-center text-center relative overflow-hidden w-full">
       {tooltipBody && (
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 right-3 z-10">
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <button
@@ -45,7 +45,7 @@ export function ScoreGauge({ score, label, wcagStatus, tooltipTitle, tooltipBody
           </Tooltip.Root>
         </div>
       )}
-      <div className="absolute top-0 right-0 p-4 opacity-5">
+      <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
         <svg
           className="w-32 h-32 text-slate-900"
           fill="currentColor"

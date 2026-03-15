@@ -184,12 +184,9 @@ export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFo
               htmlFor="github-repo"
               className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2"
             >
-              GitHub Repo URL{" "}
+              Project Repository{" "}
               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-100 text-violet-700 border border-violet-200 normal-case tracking-normal align-middle ml-1">
                 Beta
-              </span>{" "}
-              <span className="text-slate-400 font-normal normal-case tracking-normal">
-                (optional, enables source pattern scan)
               </span>
             </label>
             <input
@@ -218,6 +215,9 @@ export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFo
                   : "border-slate-200"
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             />
+            <p className="mt-1.5 text-xs text-slate-400">
+              Optional — enables source pattern scan
+            </p>
             {validationErrors.githubRepoUrl && (
               <p
                 id={repoErrorId}

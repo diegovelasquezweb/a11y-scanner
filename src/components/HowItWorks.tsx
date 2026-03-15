@@ -17,7 +17,15 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   brain: <Brain className="w-3.5 h-3.5" aria-hidden="true" />,
 };
 
-const BADGE_STYLE = "bg-slate-100 text-slate-600";
+const TAG_COLORS: Record<string, string> = {
+  "2008": "bg-slate-100 text-slate-600",
+  "2018": "bg-sky-50 text-sky-700 border border-sky-200",
+  "2023": "bg-violet-50 text-violet-700 border border-violet-200",
+  "Minimum": "bg-amber-50 text-amber-700 border border-amber-200",
+  "Standard": "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  "Enhanced": "bg-violet-50 text-violet-700 border border-violet-200",
+};
+const DEFAULT_BADGE = "bg-slate-100 text-slate-600";
 
 function ArticleCard({ article }: { article: DocArticle }) {
   const [open, setOpen] = useState(false);
@@ -37,7 +45,7 @@ function ArticleCard({ article }: { article: DocArticle }) {
                 )}
                 <span className="text-sm font-bold text-slate-900">{article.title}</span>
                 {article.tag && (
-                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${BADGE_STYLE}`}>
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${TAG_COLORS[article.tag] ?? DEFAULT_BADGE}`}>
                     {article.tag}
                   </span>
                 )}
