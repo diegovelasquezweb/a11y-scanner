@@ -269,7 +269,7 @@ export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFo
                       {level.label}
                     </span>
                     <span className={`block text-[11px] ${isActive ? "text-sky-500" : "text-slate-400"}`}>
-                      {level.badge}
+                      {level.tag}
                     </span>
                   </button>
                 );

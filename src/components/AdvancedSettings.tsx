@@ -9,7 +9,12 @@ import type {
   AdvancedScanOptions,
   ColorScheme,
 } from "@/types/scan";
-import type { EnumOptionValue } from "@diegovelasquezweb/a11y-engine";
+
+interface EnumOptionValue {
+  value: string;
+  label: string;
+  description?: string;
+}
 import {
   VIEWPORT_PRESETS,
   DEFAULT_ADVANCED,

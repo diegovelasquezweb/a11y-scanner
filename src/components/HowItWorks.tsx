@@ -36,9 +36,9 @@ function ArticleCard({ article }: { article: DocArticle }) {
                   <span className="text-slate-500">{ICON_MAP[article.icon]}</span>
                 )}
                 <span className="text-sm font-bold text-slate-900">{article.title}</span>
-                {article.badge && (
+                {article.tag && (
                   <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${BADGE_STYLE}`}>
-                    {article.badge}
+                    {article.tag}
                   </span>
                 )}
               </div>
