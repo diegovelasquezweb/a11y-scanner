@@ -106,25 +106,6 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
               minute: "2-digit",
             })}
           </p>
-          {result.detectedStack && (result.detectedStack.framework || result.detectedStack.cms || result.detectedStack.uiLibraries.length > 0) && (
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {result.detectedStack.framework && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 text-xs font-bold border border-sky-200/60">
-                  {result.detectedStack.framework}
-                </span>
-              )}
-              {result.detectedStack.cms && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-50 text-violet-700 text-xs font-bold border border-violet-200/60">
-                  {result.detectedStack.cms}
-                </span>
-              )}
-              {result.detectedStack.uiLibraries.map((lib: string) => (
-                <span key={lib} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-xs font-bold border border-slate-200/60">
-                  {lib}
-                </span>
-              ))}
-            </div>
-          )}
           {(result.conformanceLevel || result.bestPractices) && (
             <div className="flex flex-wrap gap-1.5 mt-2">
               {result.conformanceLevel && (

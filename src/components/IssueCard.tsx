@@ -258,6 +258,11 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                           </button>
                         </div>
                       )}
+                      {(finding.frameworkNotes || finding.cmsNotes) && (
+                        <p className="text-xs text-sky-800/70 leading-relaxed bg-sky-50 border border-sky-200/50 rounded p-2.5">
+                          {finding.frameworkNotes || finding.cmsNotes}
+                        </p>
+                      )}
                       {finding.mdn && (
                         <div className="pt-1">
                           <a
