@@ -112,9 +112,6 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                       WCAG {finding.wcag}
                     </span>
                   )}
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
-                    {normalizeBadgeText(finding.ruleId)}
-                  </span>
                   {finding.category && (
                     <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-violet-50 text-violet-700 border border-violet-200">
                       {normalizeBadgeText(finding.category, true)}
