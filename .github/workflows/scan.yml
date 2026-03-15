@@ -80,6 +80,8 @@ jobs:
         run: echo "Preparing scan of ${{ inputs.target_url }}"
 
       - name: Running accessibility scans
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           AUDIT_DIR=".audit"
           mkdir -p $AUDIT_DIR
