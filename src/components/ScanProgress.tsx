@@ -44,13 +44,13 @@ interface ScanProgressProps {
 }
 
 export default function ScanProgress({ isScanning, initialScanId, scanStartTime, scanError, onRetry, activeEngines }: ScanProgressProps) {
-  const engines = activeEngines ?? { axe: true, cdp: true, pa11y: true };
-
-  const STEPS = useMemo(() =>
-    ALL_STEPS.filter((step) => {
+  const STEPS = useMemo(() => {
+    const engines = activeEngines ?? { axe: true, cdp: true, pa11y: true };
+    return ALL_STEPS.filter((step) => {
       if (!step.engine) return true;
       return engines[step.engine];
-    }), [engines]);
+    });
+  }, [activeEngines]);
 
   const TOTAL_STEPS = STEPS.length;
 
