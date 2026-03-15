@@ -9,6 +9,7 @@ import { SeverityCards } from "@/components/SeverityCards";
 import { PersonaImpact } from "@/components/PersonaImpact";
 import { QuickWins } from "@/components/QuickWins";
 import { FindingsToolbar } from "@/components/FindingsToolbar";
+import type { PageOption } from "@/components/FindingsToolbar";
 import { IssueCard } from "@/components/IssueCard";
 import { JiraIntegration } from "@/components/JiraIntegration";
 
@@ -29,6 +30,7 @@ interface AuditResultsProps {
 export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditResultsProps) {
   const [filterValue, setFilterValue] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [pageFilter, setPageFilter] = useState("all");
   const [allExpanded, setAllExpanded] = useState(false);
   const [jiraOpen, setJiraOpen] = useState(false);
   const tooltips = knowledge?.tooltips;
@@ -37,8 +39,22 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
     return Object.fromEntries(entries.map((persona) => [persona.id, persona.description]));
   }, [knowledge]);
 
+  const pages = useMemo((): PageOption[] => {
+    const counts: Record<string, number> = {};
+    for (const f of result.findings) {
+      if (f.area) counts[f.area] = (counts[f.area] ?? 0) + 1;
+    }
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([path, count]) => ({ path, count }));
+  }, [result.findings]);
+
   const filteredFindings = useMemo((): Finding[] => {
     let findings = result.findings;
+
+    if (pageFilter !== "all") {
+      findings = findings.filter((f) => f.area === pageFilter);
+    }
 
     if (filterValue !== "all") {
       const principleMatch = WCAG_PRINCIPLES[filterValue];
@@ -62,7 +78,7 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
     }
 
     return findings;
-  }, [result, filterValue, searchQuery]);
+  }, [result, filterValue, pageFilter, searchQuery]);
 
   const handleScrollToIssue = useCallback((id: string) => {
     const el = document.getElementById(id);
@@ -174,9 +190,12 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
         filterValue={filterValue}
         searchQuery={searchQuery}
         allExpanded={allExpanded}
+        pageFilter={pageFilter}
+        pages={pages}
         onFilterChange={setFilterValue}
         onSearchChange={setSearchQuery}
         onToggleAll={() => setAllExpanded(!allExpanded)}
+        onPageFilterChange={setPageFilter}
       />
 
       <div className="space-y-6">

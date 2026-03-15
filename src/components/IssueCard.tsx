@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import Image from "next/image";
 import * as Tabs from "@radix-ui/react-tabs";
 import * as Collapsible from "@radix-ui/react-collapsible";
-import { Code, ChevronDown, Info, Zap, Check, Copy, BookOpen } from "lucide-react";
+import { Code, ChevronDown, Info, Zap, Check, Copy, BookOpen, Globe } from "lucide-react";
 import type { Finding } from "@/types/scan";
 
 function escapeHtml(str: string): string {
@@ -125,6 +125,17 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                   {finding.category && (
                     <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-violet-50 text-violet-700 border border-violet-200">
                       {normalizeBadgeText(finding.category, true)}
+                    </span>
+                  )}
+                  {finding.area && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200">
+                      <Globe className="w-3 h-3 shrink-0" aria-hidden="true" />
+                      {finding.area}
+                    </span>
+                  )}
+                  {finding.pagesAffected != null && finding.pagesAffected > 1 && (
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                      {finding.pagesAffected} pages
                     </span>
                   )}
                 </div>

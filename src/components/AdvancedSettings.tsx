@@ -183,9 +183,16 @@ export function AdvancedSettings({
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-0.5">
-                <label htmlFor={maxRoutesId} className="text-xs font-bold text-slate-700 uppercase tracking-widest">
-                  Max Pages
-                </label>
+                <div className="flex items-center gap-2">
+                  <label htmlFor={maxRoutesId} className="text-xs font-bold text-slate-700 uppercase tracking-widest">
+                    Max Pages
+                  </label>
+                  <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                    advanced.maxRoutes <= 3 ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                  }`}>
+                    {advanced.maxRoutes <= 3 ? "Fast" : "Medium"}
+                  </span>
+                </div>
                 <span className="text-sm font-bold text-sky-700 tabular-nums">
                   {advanced.maxRoutes === 1 ? "1 page" : `${advanced.maxRoutes} pages`}
                 </span>
@@ -195,7 +202,7 @@ export function AdvancedSettings({
                 id={maxRoutesId}
                 type="range"
                 min={1}
-                max={50}
+                max={10}
                 step={1}
                 value={advanced.maxRoutes}
                 onChange={(e) => setField("maxRoutes", Number(e.target.value))}
@@ -204,7 +211,7 @@ export function AdvancedSettings({
               />
               <div className="flex justify-between mt-1">
                 <span className="text-[10px] text-slate-400">1</span>
-                <span className="text-[10px] text-slate-400">50</span>
+                <span className="text-[10px] text-slate-400">10</span>
               </div>
               <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                 {getOptionHelp(helpOptions, "maxRoutes")?.description}
@@ -213,9 +220,16 @@ export function AdvancedSettings({
 
             <div>
               <div className="flex items-center justify-between mb-0.5">
-                <label htmlFor={crawlDepthId} className="text-xs font-bold text-slate-700 uppercase tracking-widest">
-                  Crawl Depth
-                </label>
+                <div className="flex items-center gap-2">
+                  <label htmlFor={crawlDepthId} className="text-xs font-bold text-slate-700 uppercase tracking-widest">
+                    Crawl Depth
+                  </label>
+                  <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                    advanced.crawlDepth === 1 ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                  }`}>
+                    {advanced.crawlDepth === 1 ? "Fast" : "Medium"}
+                  </span>
+                </div>
                 <span className="text-sm font-bold text-sky-700 tabular-nums">
                   {advanced.crawlDepth === 1 ? "1 level" : `${advanced.crawlDepth} levels`}
                 </span>
