@@ -13,7 +13,8 @@ pnpm dev
 
 Copy `.env.example` and fill in the required values:
 
-- `GH_TOKEN`, `GH_OWNER`, `GH_REPO` — GitHub Actions integration (required)
+- `GH_TOKEN` — [Fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) with **Actions (Read and write)** permission on the workflow repo (required)
+- `GH_OWNER`, `GH_REPO` — GitHub username and repo name where the scan workflow lives (required)
 - `ANTHROPIC_API_KEY` — enables AI-powered fix suggestions (optional)
 
 ## How the engine is used
