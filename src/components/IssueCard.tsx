@@ -276,21 +276,6 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                           </a>
                         </div>
                       )}
-                      {finding.fixDifficultyNotes && (
-                        <div className="mt-4 pt-3 border-t border-sky-100/50">
-                          <h4 className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                            Implementation Notes
-                          </h4>
-                          <div className="text-[12px] text-amber-900/80 leading-relaxed bg-amber-50/60 border border-amber-100/60 rounded p-3">
-                            {Array.isArray(finding.fixDifficultyNotes)
-                              ? finding.fixDifficultyNotes.map((note, i) => (
-                                  <p key={i} className={i > 0 ? "mt-1" : ""}>{note}</p>
-                                ))
-                              : <p>{finding.fixDifficultyNotes}</p>
-                            }
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </Tabs.Content>
