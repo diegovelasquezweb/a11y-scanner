@@ -10,8 +10,9 @@ interface EngineSelection {
 }
 
 interface StepInfo {
-  status: "pending" | "running" | "done" | "error";
+  status: "pending" | "running" | "done" | "skipped" | "error";
   updatedAt?: string;
+  extra?: Record<string, unknown>;
 }
 
 interface ProgressData {
@@ -21,17 +22,22 @@ interface ProgressData {
 }
 
 const ALL_STEPS = [
-  { key: "page", label: "Loading website", engine: null },
-  { key: "axe", label: "Running accessibility scans", engine: "axe" as const },
-  { key: "cdp", label: "Checking dynamic content", engine: "cdp" as const },
-  { key: "pa11y", label: "Analyzing rendered HTML", engine: "pa11y" as const },
-  { key: "merge", label: "Processing results", engine: null },
-  { key: "intelligence", label: "Powering up your report", engine: null },
-] as const;
+  { key: "page",         label: "Loading website",                engine: null,       repoOnly: false, aiOnly: false },
+  { key: "repo",         label: "Reading repository",             engine: null,       repoOnly: true,  aiOnly: false },
+  { key: "axe",          label: "Running accessibility scans",    engine: "axe" as const, repoOnly: false, aiOnly: false },
+  { key: "cdp",          label: "Checking dynamic content",       engine: "cdp" as const, repoOnly: false, aiOnly: false },
+  { key: "pa11y",        label: "Analyzing rendered HTML",        engine: "pa11y" as const, repoOnly: false, aiOnly: false },
+  { key: "merge",        label: "Processing results",             engine: null,       repoOnly: false, aiOnly: false },
+  { key: "patterns",     label: "Scanning source code",           engine: null,       repoOnly: true,  aiOnly: false },
+  { key: "intelligence", label: "Powering up your report",        engine: null,       repoOnly: false, aiOnly: false },
+  { key: "ai",           label: "AI enrichment",                  engine: null,       repoOnly: false, aiOnly: true  },
+];
 
 interface CompletedStep {
   key: string;
   label: string;
+  skipped?: boolean;
+  extra?: Record<string, unknown>;
 }
 
 interface ScanProgressProps {
@@ -41,16 +47,20 @@ interface ScanProgressProps {
   scanError?: string | null;
   onRetry?: () => void;
   activeEngines?: EngineSelection;
+  hasRepo?: boolean;
+  hasAI?: boolean;
 }
 
-export default function ScanProgress({ isScanning, initialScanId, scanStartTime, scanError, onRetry, activeEngines }: ScanProgressProps) {
+export default function ScanProgress({ isScanning, initialScanId, scanStartTime, scanError, onRetry, activeEngines, hasRepo = false, hasAI = false }: ScanProgressProps) {
   const STEPS = useMemo(() => {
     const engines = activeEngines ?? { axe: true, cdp: true, pa11y: true };
     return ALL_STEPS.filter((step) => {
-      if (!step.engine) return true;
-      return engines[step.engine];
+      if (step.engine && !engines[step.engine]) return false;
+      if (step.repoOnly && !hasRepo) return false;
+      if (step.aiOnly && !hasAI) return false;
+      return true;
     });
-  }, [activeEngines]);
+  }, [activeEngines, hasRepo, hasAI]);
 
   const TOTAL_STEPS = STEPS.length;
 
@@ -105,20 +115,20 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
   const processSnapshot = useCallback((data: ProgressData) => {
     const steps = data.steps || {};
     let runningLabel: string | null = null;
+    let runningStepIdx: number = -1;
 
     if (data.scanId) {
       setScanId(data.scanId);
     }
 
-    for (const step of STEPS) {
+    for (const [i, step] of STEPS.entries()) {
       if (!activeStepKeys.has(step.key)) continue;
 
       const info = steps[step.key];
       if (!info) continue;
 
-      if (info.status === "done" && !seenDoneRef.current.has(step.key)) {
+      if ((info.status === "done" || info.status === "skipped") && !seenDoneRef.current.has(step.key)) {
         seenDoneRef.current.add(step.key);
-        // Count only active steps
         const activeDone = [...seenDoneRef.current].filter((k) => activeStepKeys.has(k)).length;
         setDoneCount(activeDone);
         setCompletedSteps((prev) => [
@@ -126,12 +136,15 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
           {
             key: step.key,
             label: step.label,
+            skipped: info.status === "skipped",
+            extra: info.extra,
           },
         ]);
       }
 
       if (info.status === "running") {
         runningLabel = step.label;
+        runningStepIdx = i;
       }
 
       if (info.status === "error") {
@@ -140,7 +153,12 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
     }
 
     if (runningLabel) {
-      setCurrentStepLabel(runningLabel);
+      const currentDoneCount = [...seenDoneRef.current].filter((k) => activeStepKeys.has(k)).length;
+      if (runningStepIdx !== -1 && runningStepIdx < currentDoneCount) {
+        setCurrentStepLabel("Finalizing...");
+      } else {
+        setCurrentStepLabel(runningLabel);
+      }
     }
   }, [STEPS, activeStepKeys]);
 
@@ -296,8 +314,18 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
           <div className="space-y-1.5">
             {completedSteps.map((step) => (
               <div key={step.key} className="flex items-center gap-2 text-xs motion-reduce:animate-none animate-in fade-in-0 slide-in-from-top-1 duration-300">
-                <CircleCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" aria-hidden="true" />
-                <span className="text-slate-600">{step.label}</span>
+                {step.skipped ? (
+                  <span className="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0 inline-block" aria-hidden="true" />
+                ) : (
+                  <CircleCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" aria-hidden="true" />
+                )}
+                <span className={step.skipped ? "text-slate-400" : "text-slate-600"}>
+                  {step.label}
+                  {step.skipped && step.extra?.reason ? ` — ${step.extra.reason}` : ""}
+                  {!step.skipped && step.key === "patterns" && typeof step.extra?.total === "number"
+                    ? ` — ${step.extra.total} pattern${step.extra.total !== 1 ? "s" : ""} found`
+                    : ""}
+                </span>
               </div>
             ))}
           </div>

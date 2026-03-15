@@ -12,11 +12,12 @@ const STEP_NAME_TO_KEY: Record<string, string> = {
 const SCAN_STEP_IMPLIES: string[] = ["cdp", "pa11y", "merge"];
 const ALL_KEYS = ["page", "axe", "cdp", "pa11y", "merge", "intelligence"] as const;
 
-type StepStatus = "pending" | "running" | "done" | "error";
+type StepStatus = "pending" | "running" | "done" | "error" | "skipped";
 
 interface StepInfo {
   status: StepStatus;
   updatedAt: string;
+  extra?: Record<string, unknown>;
 }
 
 function buildDefaultSteps(now: string): Record<string, StepInfo> {
@@ -28,7 +29,7 @@ function buildDefaultSteps(now: string): Record<string, StepInfo> {
 }
 
 function sanitizeStatus(value: string): StepStatus {
-  if (value === "running" || value === "done" || value === "error" || value === "pending") return value;
+  if (value === "running" || value === "done" || value === "error" || value === "pending" || value === "skipped") return value;
   return "pending";
 }
 
@@ -38,10 +39,11 @@ function normalizeSteps(input: unknown, now: string): Record<string, StepInfo> {
 
   for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
     if (!value || typeof value !== "object") continue;
-    const raw = value as { status?: string; updatedAt?: string };
+    const raw = value as { status?: string; updatedAt?: string; extra?: Record<string, unknown> };
     const status = sanitizeStatus(raw.status ?? "pending");
     const updatedAt = typeof raw.updatedAt === "string" ? raw.updatedAt : now;
-    steps[key] = { status, updatedAt };
+    const extra = raw.extra && typeof raw.extra === "object" ? raw.extra : undefined;
+    steps[key] = { status, updatedAt, ...(extra ? { extra } : {}) };
   }
   return steps;
 }

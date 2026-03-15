@@ -7,13 +7,6 @@ import * as Collapsible from "@radix-ui/react-collapsible";
 import { Code, ChevronDown, Info, Zap, Check, Copy, BookOpen, Globe } from "lucide-react";
 import type { Finding } from "@/types/scan";
 
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
 
 const SEVERITY_STYLES: Record<string, { badge: string; border: string }> = {
   Critical: {
@@ -319,7 +312,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                                     tabIndex={0}
                                     className="bg-slate-800 text-slate-50 p-3 rounded overflow-x-auto text-xs font-mono border border-slate-700"
                                   >
-                                    <code>{escapeHtml(item.html)}</code>
+                                    <code>{item.html}</code>
                                   </pre>
                                   <button
                                     type="button"

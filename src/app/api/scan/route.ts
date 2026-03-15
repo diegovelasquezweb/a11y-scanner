@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true, scanId });
+  return NextResponse.json({ success: true, scanId, hasAI: false });
 }
 
 const SCAN_MAX_AGE_MS = 24 * 60 * 60 * 1000;
@@ -202,7 +202,7 @@ async function runLocal(params: {
         axeTags: axeTags?.length ? axeTags : undefined,
         engines: engines ?? undefined,
         screenshotsDir: getScreenshotsDir(scanId),
-        onProgress: (step, status) => {
+        onProgress: (step, status, extra) => {
           const progressPath = getScanPath(scanId, "progress.json");
           let progress: Record<string, unknown> = {};
           try {
@@ -211,7 +211,7 @@ async function runLocal(params: {
             }
           } catch { /* ignore */ }
           const steps = (progress.steps || {}) as Record<string, unknown>;
-          steps[step] = { status, updatedAt: new Date().toISOString() };
+          steps[step] = { status, updatedAt: new Date().toISOString(), ...(extra ? { extra } : {}) };
           progress.steps = steps;
           progress.currentStep = step;
           progress.scanId = scanId;
@@ -247,5 +247,6 @@ async function runLocal(params: {
     }
   })();
 
-  return NextResponse.json({ success: true, scanId });
+  const hasAI = process.env.AI_ENABLED !== "false" && !!process.env.ANTHROPIC_API_KEY;
+  return NextResponse.json({ success: true, scanId, hasAI });
 }

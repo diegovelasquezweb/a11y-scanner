@@ -24,6 +24,8 @@ export default function Home() {
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanStartTime, setScanStartTime] = useState<number | null>(null);
   const [activeEngines, setActiveEngines] = useState<EngineSelection>({ axe: true, cdp: true, pa11y: true });
+  const [hasRepo, setHasRepo] = useState(false);
+  const [hasAI, setHasAI] = useState(false);
   const [knowledge, setKnowledge] = useState<EngineKnowledge | null>(null);
 
   const isScanning = status === "running";
@@ -44,6 +46,7 @@ export default function Home() {
     setPendingScanId(null);
     setScanStartTime(Date.now());
     setActiveEngines(engines);
+    setHasRepo(!!githubRepoUrl);
 
     try {
       const response = await fetch("/api/scan", {
@@ -58,7 +61,7 @@ export default function Home() {
         }),
       });
 
-      let data: { success?: boolean; scanId?: string; error?: string } = {};
+      let data: { success?: boolean; scanId?: string; error?: string; hasAI?: boolean } = {};
       try {
         data = await response.json();
       } catch {
@@ -69,6 +72,7 @@ export default function Home() {
 
       if (data.scanId) {
         setPendingScanId(data.scanId);
+        setHasAI(data.hasAI ?? false);
         return;
       }
 
@@ -124,6 +128,8 @@ export default function Home() {
           scanError={scanError}
           onRetry={handleRetry}
           activeEngines={activeEngines}
+          hasRepo={hasRepo}
+          hasAI={hasAI}
         />
       </div>
     </main>

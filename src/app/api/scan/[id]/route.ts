@@ -43,8 +43,7 @@ export async function GET(
     }
 
     const rawFindings = JSON.parse(fs.readFileSync(findingsPath, "utf-8"));
-    const axeTags: string[] = statusData.axeTags ?? [];
-    return buildResponse(scanId, rawFindings, axeTags);
+    return buildResponse(scanId, rawFindings);
   }
 
   const runStatus = await getRunStatus(scanId);
@@ -83,10 +82,10 @@ export async function GET(
     );
   }
 
-  return buildResponse(scanId, rawFindings, []);
+  return buildResponse(scanId, rawFindings);
 }
 
-async function buildResponse(scanId: string, rawFindings: Record<string, unknown>, axeTags: string[]) {
+async function buildResponse(scanId: string, rawFindings: Record<string, unknown>) {
   const { getFindings, getOverview } = await loadEngine();
 
   const payload = rawFindings as unknown as ScanPayload;
@@ -108,14 +107,10 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
     totalFindings,
   } = getOverview(findings, payload) as AuditSummary;
 
-  const bestPractices = axeTags.includes("best-practice");
-  const conformanceLevel = axeTags.includes("wcag2aaa")
-    ? "AAA"
-    : axeTags.includes("wcag2aa")
-      ? "AA"
-      : axeTags.includes("wcag2a")
-        ? "A"
-        : null;
+  const metadata = (payload as unknown as Record<string, unknown>).metadata as Record<string, unknown> | undefined;
+  const methodology = metadata?.testingMethodology as Record<string, unknown> | undefined;
+  const conformanceLevel = (methodology?.conformance_level as string) ?? null;
+  const bestPractices = (methodology?.best_practices as boolean) ?? false;
 
   return NextResponse.json({
     success: true,
