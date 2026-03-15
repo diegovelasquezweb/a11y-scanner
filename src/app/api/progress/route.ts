@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getScanPath } from "@/lib/scans";
 
 export const dynamic = "force-dynamic";
 
@@ -61,11 +62,9 @@ export async function GET(request: NextRequest) {
 
 async function getLocalProgress(scanId: string) {
   const fs = await import("node:fs");
-  const path = await import("node:path");
 
-  const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
-  const statusPath = path.join(SCANS_DIR, `${scanId}.status.json`);
-  const progressPath = path.join(SCANS_DIR, `${scanId}.progress.json`);
+  const statusPath = getScanPath(scanId, "status.json");
+  const progressPath = getScanPath(scanId, "progress.json");
 
   const now = new Date().toISOString();
 

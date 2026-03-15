@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
+import { getScreenshotsDir } from "@/lib/scans";
 
 export const dynamic = "force-dynamic";
 
@@ -34,10 +35,9 @@ export async function GET(
   let imageBuffer: Buffer | null = null;
 
   if (process.env.LOCAL_MODE === "true") {
-    const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
-    const screenshotsDir = path.join(SCANS_DIR, `${scanId}.screenshots`);
+    const screenshotsPath = getScreenshotsDir(scanId);
     const filename = path.basename(relativePath);
-    const absolutePath = path.join(screenshotsDir, filename);
+    const absolutePath = path.join(screenshotsPath, filename);
     if (fs.existsSync(absolutePath)) {
       imageBuffer = fs.readFileSync(absolutePath);
     }

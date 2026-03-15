@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
-import path from "node:path";
 import { getRunStatus, getArtifactFile } from "@/lib/github";
+import { getScanPath } from "@/lib/scans";
 import type { EnrichedFinding, AuditSummary, ScanPayload } from "@diegovelasquezweb/a11y-engine";
 
 export const dynamic = "force-dynamic";
@@ -21,8 +21,7 @@ export async function GET(
   }
 
   if (process.env.LOCAL_MODE === "true") {
-    const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
-    const statusPath = path.join(SCANS_DIR, `${scanId}.status.json`);
+    const statusPath = getScanPath(scanId, "status.json");
 
     if (!fs.existsSync(statusPath)) {
       return NextResponse.json({ success: false, error: "Scan not found." }, { status: 404 });
@@ -38,7 +37,7 @@ export async function GET(
       return NextResponse.json({ success: false, status: "error", error: statusData.error || "Scan failed." });
     }
 
-    const findingsPath = path.join(SCANS_DIR, `${scanId}.findings.json`);
+    const findingsPath = getScanPath(scanId, "findings.json");
     if (!fs.existsSync(findingsPath)) {
       return NextResponse.json({ success: false, error: "Scan result not found." }, { status: 404 });
     }

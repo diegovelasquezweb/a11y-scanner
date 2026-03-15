@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { triggerScan } from "@/lib/github";
+import { SCANS_DIR, getScanPath, getScreenshotsDir } from "@/lib/scans";
 
 export const maxDuration = 60;
 
@@ -73,16 +74,14 @@ export async function POST(request: NextRequest) {
 const SCAN_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 const SCAN_STUCK_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
-async function cleanupScans(scansDir: string) {
+async function cleanupScans() {
   const fs = await import("node:fs");
-  const path = await import("node:path");
 
-  if (!fs.existsSync(scansDir)) return;
+  if (!fs.existsSync(SCANS_DIR)) return;
 
   const now = Date.now();
-  const files = fs.readdirSync(scansDir);
+  const files = fs.readdirSync(SCANS_DIR);
 
-  // Group files by scan ID
   const scanIds = new Set<string>();
   for (const file of files) {
     const match = file.match(/^([a-f0-9-]+)\./);
@@ -90,13 +89,12 @@ async function cleanupScans(scansDir: string) {
   }
 
   for (const scanId of scanIds) {
-    const statusPath = path.join(scansDir, `${scanId}.status.json`);
+    const statusPath = getScanPath(scanId, "status.json");
     if (!fs.existsSync(statusPath)) continue;
 
     const stat = fs.statSync(statusPath);
     const ageMs = now - stat.mtimeMs;
 
-    // Mark stuck scans as error
     if (ageMs > SCAN_STUCK_TIMEOUT_MS) {
       try {
         const status = JSON.parse(fs.readFileSync(statusPath, "utf-8"));
@@ -109,20 +107,17 @@ async function cleanupScans(scansDir: string) {
       } catch { /* ignore */ }
     }
 
-    // Delete expired scans (all files for that scan ID)
     if (ageMs > SCAN_MAX_AGE_MS) {
       for (const file of files) {
-        if (file.startsWith(`${scanId}.`) || file.startsWith(`${scanId}/`)) {
-          const filePath = path.join(scansDir, file);
+        if (file.startsWith(`${scanId}.`)) {
           try {
-            fs.rmSync(filePath, { recursive: true, force: true });
+            fs.rmSync(getScanPath(scanId, file.slice(scanId.length + 1)), { recursive: true, force: true });
           } catch { /* ignore */ }
         }
       }
-      // Also remove screenshots directory
-      const screenshotsDir = path.join(scansDir, `${scanId}.screenshots`);
-      if (fs.existsSync(screenshotsDir)) {
-        try { fs.rmSync(screenshotsDir, { recursive: true, force: true }); } catch { /* ignore */ }
+      const screenshots = getScreenshotsDir(scanId);
+      if (fs.existsSync(screenshots)) {
+        try { fs.rmSync(screenshots, { recursive: true, force: true }); } catch { /* ignore */ }
       }
     }
   }
@@ -142,22 +137,18 @@ async function runLocal(params: {
   const execAsync = promisify(exec);
 
   const { scanId, targetUrl, githubRepoUrl, axeTags } = params;
-  const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
 
   fs.mkdirSync(SCANS_DIR, { recursive: true });
-
-  // Cleanup expired and stuck scans
-  await cleanupScans(SCANS_DIR).catch(() => { /* non-fatal */ });
+  await cleanupScans().catch(() => { /* non-fatal */ });
 
   fs.writeFileSync(
-    path.join(SCANS_DIR, `${scanId}.status.json`),
+    getScanPath(scanId, "status.json"),
     JSON.stringify({ status: "scanning", updatedAt: new Date().toISOString() })
   );
 
   (async () => {
     let tmpDir = "";
     try {
-      // Clone repo if provided (for project-dir intelligence)
       let projectDir: string | undefined;
       if (githubRepoUrl) {
         tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "a11y-scan-"));
@@ -168,10 +159,7 @@ async function runLocal(params: {
         } catch { /* ignore clone errors */ }
       }
 
-      // Run audit via engine API
       const { runAudit, getPDFReport, getChecklist } = await import("@diegovelasquezweb/a11y-engine");
-
-      const screenshotsDir = path.join(SCANS_DIR, `${scanId}.screenshots`);
 
       const payload = await runAudit({
         baseUrl: targetUrl,
@@ -179,10 +167,9 @@ async function runLocal(params: {
         skipPatterns: true,
         axeTags: axeTags?.length ? axeTags : undefined,
         projectDir,
-        screenshotsDir,
+        screenshotsDir: getScreenshotsDir(scanId),
         onProgress: (step, status) => {
-          // Write progress for polling
-          const progressPath = path.join(SCANS_DIR, `${scanId}.progress.json`);
+          const progressPath = getScanPath(scanId, "progress.json");
           let progress: Record<string, unknown> = {};
           try {
             if (fs.existsSync(progressPath)) {
@@ -198,31 +185,29 @@ async function runLocal(params: {
         },
       });
 
-      // Save findings
       payload.metadata = payload.metadata || {};
       (payload.metadata as Record<string, unknown>).target_url = targetUrl;
       fs.writeFileSync(
-        path.join(SCANS_DIR, `${scanId}.findings.json`),
+        getScanPath(scanId, "findings.json"),
         JSON.stringify(payload, null, 2)
       );
 
-      // Generate reports via engine API
       const [pdfReport, checklistReport] = await Promise.all([
         getPDFReport(payload, { baseUrl: targetUrl }),
         getChecklist({ baseUrl: targetUrl }),
       ]);
 
-      fs.writeFileSync(path.join(SCANS_DIR, `${scanId}.pdf`), pdfReport.buffer);
-      fs.writeFileSync(path.join(SCANS_DIR, `${scanId}.checklist.html`), checklistReport.html, "utf-8");
+      fs.writeFileSync(getScanPath(scanId, "pdf"), pdfReport.buffer);
+      fs.writeFileSync(getScanPath(scanId, "checklist.html"), checklistReport.html, "utf-8");
 
       fs.writeFileSync(
-        path.join(SCANS_DIR, `${scanId}.status.json`),
+        getScanPath(scanId, "status.json"),
         JSON.stringify({ status: "completed", updatedAt: new Date().toISOString() })
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       fs.writeFileSync(
-        path.join(SCANS_DIR, `${scanId}.status.json`),
+        getScanPath(scanId, "status.json"),
         JSON.stringify({ status: "error", error: message, updatedAt: new Date().toISOString() })
       );
     } finally {

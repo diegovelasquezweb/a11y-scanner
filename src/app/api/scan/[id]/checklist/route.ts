@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
-import path from "node:path";
+import { getScanPath } from "@/lib/scans";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,7 @@ export async function GET(
   let htmlBuffer: Buffer | null = null;
 
   if (process.env.LOCAL_MODE === "true") {
-    const checklistPath = path.join(process.cwd(), "src", "data", "scans", `${scanId}.checklist.html`);
+    const checklistPath = getScanPath(scanId, "checklist.html");
     if (fs.existsSync(checklistPath)) {
       htmlBuffer = fs.readFileSync(checklistPath);
     }

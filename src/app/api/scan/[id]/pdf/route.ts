@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
-import path from "node:path";
+import { getScanPath } from "@/lib/scans";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,7 @@ export async function GET(
   let pdfBuffer: Buffer | null = null;
 
   if (process.env.LOCAL_MODE === "true") {
-    const pdfPath = path.join(process.cwd(), "src", "data", "scans", `${scanId}.pdf`);
+    const pdfPath = getScanPath(scanId, "pdf");
     if (fs.existsSync(pdfPath)) {
       pdfBuffer = fs.readFileSync(pdfPath);
     }
