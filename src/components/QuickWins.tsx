@@ -31,7 +31,7 @@ export function QuickWins({ quickWins, onScrollToIssue, subtitle, tooltipTitle, 
       <div className="absolute -right-6 -bottom-6 opacity-[0.07] pointer-events-none" aria-hidden="true">
         <Zap className="w-40 h-40 text-sky-400" fill="currentColor" aria-hidden="true" />
       </div>
-      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-sky-500/40 to-transparent" aria-hidden="true" />
+      <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-sky-500/40 to-transparent" aria-hidden="true" />
 
       <div className="relative z-10">
         <div className="flex items-center gap-3 mb-2">

@@ -7,7 +7,6 @@ import type { EngineKnowledge, ScannerOptionHelp } from "@diegovelasquezweb/a11y
 import type {
   EngineSelection,
   AdvancedScanOptions,
-  WaitUntilStrategy,
   ColorScheme,
 } from "@/types/scan";
 import type { EnumOptionValue } from "@diegovelasquezweb/a11y-engine";

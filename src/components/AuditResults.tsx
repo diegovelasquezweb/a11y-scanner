@@ -30,7 +30,7 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
   const [allExpanded, setAllExpanded] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const concepts = knowledge?.concepts;
-  const wcagPrinciples = knowledge?.wcagPrinciples ?? [];
+  const wcagPrinciples = useMemo(() => knowledge?.wcagPrinciples ?? [], [knowledge]);
   const personaDescriptions = useMemo(() => {
     const entries = knowledge?.personas ?? [];
     return Object.fromEntries(entries.map((persona) => [persona.id, persona.description]));

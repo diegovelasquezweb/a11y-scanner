@@ -43,7 +43,7 @@ export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFo
     }
   }, [status, errorMessage]);
 
-  const conformanceLevels = knowledge?.conformanceLevels ?? [];
+  const conformanceLevels = useMemo(() => knowledge?.conformanceLevels ?? [], [knowledge]);
   const sliderIndex = conformanceLevels.findIndex((l) => l.id === conformance);
 
   const axeTags = useMemo(() => {
