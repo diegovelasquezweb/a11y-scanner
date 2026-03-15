@@ -34,8 +34,6 @@ const payload = await runAudit({
   colorScheme: "light",
   axeTags: ["wcag2a", "wcag21a", "wcag22a", "wcag2aa", "wcag21aa", "wcag22aa"],
   engines: { axe: true, cdp: true, pa11y: true },
-  repoUrl: "https://github.com/owner/repo",       // optional — enables remote stack detection and source pattern scanning
-  githubToken: process.env.GH_TOKEN || undefined,  // optional — required for private repos
 });
 ```
 
