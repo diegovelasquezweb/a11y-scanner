@@ -26,6 +26,7 @@ export interface ScanResult {
     detectedStack?: DetectedStack;
     conformanceLevel?: string | null;
     bestPractices?: boolean;
+    patternSummary?: { total: number; confirmed: number; potential: number } | null;
   };
 }
 

@@ -112,6 +112,9 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
   const conformanceLevel = (methodology?.conformance_level as string) ?? null;
   const bestPractices = (methodology?.best_practices as boolean) ?? false;
 
+  const rawPatternFindings = (payload as unknown as Record<string, unknown>).patternFindings as Record<string, unknown> | null | undefined;
+  const patternSummary = rawPatternFindings?.summary as { total: number; confirmed: number; potential: number } | undefined;
+
   return NextResponse.json({
     success: true,
     status: "completed",
@@ -129,6 +132,7 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
       detectedStack,
       conformanceLevel,
       bestPractices,
+      patternSummary: patternSummary ?? null,
     },
   });
 }
