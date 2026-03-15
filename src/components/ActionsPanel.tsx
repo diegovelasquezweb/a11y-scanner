@@ -18,7 +18,7 @@ const EXPORT_ACTIONS = {
   },
   checklist: {
     title: "Manual Checklist",
-    description: "An interactive WCAG 2.2 AA manual testing checklist.",
+    description: "An interactive manual testing checklist covering accessibility criteria that automation cannot detect.",
     detail: "Automated scanners catch around 30–40% of accessibility issues. This checklist covers the remaining manual checks — keyboard navigation, screen reader behavior, focus management, motion, zoom, and cognitive accessibility.",
     actionLabel: "Download Checklist",
   },

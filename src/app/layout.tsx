@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "a11y Scanner - Web Accessibility Audit",
   description:
-    "Scan any web page for WCAG 2.2 AA accessibility violations using axe-core and Playwright.",
+    "Scan any web page for WCAG 2.2 accessibility violations using axe-core and Playwright.",
 };
 
 export default function RootLayout({

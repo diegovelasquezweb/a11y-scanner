@@ -85,7 +85,7 @@ export function QuickWins({ quickWins, onScrollToIssue, subtitle, tooltipTitle, 
                   >
                     {w.severity}
                   </span>
-                  <span className="text-slate-500 text-[9px] font-mono">{w.id}</span>
+
                 </div>
                 <h4 className="text-sm font-bold text-slate-100 mb-1 line-clamp-2 leading-snug">
                   {w.title}

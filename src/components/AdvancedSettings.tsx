@@ -437,6 +437,13 @@ export function AdvancedSettings({
           </div>
         </section>
 
+        <button
+          type="button"
+          onClick={() => onOpenChange(false)}
+          className="w-full py-2.5 rounded-md bg-sky-600 text-white text-sm font-bold hover:bg-sky-700 transition-colors"
+        >
+          Done
+        </button>
       </div>
     </SidePanel>
   );
