@@ -27,6 +27,7 @@ export interface ScanResult {
     conformanceLevel?: string | null;
     bestPractices?: boolean;
     patternSummary?: { total: number; confirmed: number; potential: number } | null;
+    repoScanned?: string | null;
   };
 }
 

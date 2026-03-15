@@ -106,7 +106,7 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
               minute: "2-digit",
             })}
           </p>
-          {(result.conformanceLevel || result.bestPractices || result.detectedStack?.framework || result.patternSummary != null) && (
+          {(result.conformanceLevel || result.bestPractices || result.repoScanned) && (
             <div className="flex flex-wrap gap-1.5 mt-2">
               {result.conformanceLevel && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200/60">
@@ -118,14 +118,11 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
                   Best Practices
                 </span>
               )}
-              {result.detectedStack?.framework && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-50 text-violet-700 text-xs font-bold border border-violet-200/60" title="Framework detected from repository">
-                  {result.detectedStack.framework}
-                </span>
-              )}
-              {result.patternSummary != null && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 text-xs font-bold border border-sky-200/60" title="Source code patterns found in repository">
-                  {result.patternSummary.total} source {result.patternSummary.total === 1 ? "pattern" : "patterns"}
+              {result.repoScanned && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 text-xs font-bold border border-sky-200/60" title={result.repoScanned}>
+                  {result.patternSummary && result.patternSummary.total > 0
+                    ? `${result.patternSummary.total} source ${result.patternSummary.total === 1 ? "pattern" : "patterns"}`
+                    : "Repository scanned"}
                 </span>
               )}
             </div>

@@ -120,12 +120,6 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                       {normalizeBadgeText(finding.category, true)}
                     </span>
                   )}
-                  {finding.area && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200">
-                      <Globe className="w-3 h-3 shrink-0" aria-hidden="true" />
-                      {finding.area}
-                    </span>
-                  )}
                   {finding.pagesAffected != null && finding.pagesAffected > 1 && (
                     <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                       {finding.pagesAffected} pages
