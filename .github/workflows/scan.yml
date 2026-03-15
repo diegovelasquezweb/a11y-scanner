@@ -53,7 +53,6 @@ jobs:
 
       - name: Running accessibility scans
         run: |
-          ENGINE="node_modules/@diegovelasquezweb/a11y-engine/scripts/audit.mjs"
           AUDIT_DIR=".audit"
           mkdir -p $AUDIT_DIR
 
@@ -70,7 +69,7 @@ jobs:
             fi
           fi
 
-          node $ENGINE \
+          pnpm exec a11y-audit \
             --base-url "${{ inputs.target_url }}" \
             --max-routes 1 \
             --skip-patterns \
