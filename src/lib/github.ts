@@ -73,6 +73,7 @@ export async function triggerScan(params: {
     if (a.colorScheme) inputs.color_scheme = a.colorScheme;
   }
 
+
   const res = await fetch(
     `${API}/repos/${owner}/${repo}/actions/workflows/${workflowFile}/dispatches`,
     {

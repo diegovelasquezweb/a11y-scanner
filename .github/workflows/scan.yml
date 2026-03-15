@@ -25,6 +25,30 @@ on:
         description: "Comma-separated engines to run (axe,cdp,pa11y). Default: all"
         required: false
         type: string
+      max_routes:
+        description: "Maximum pages to crawl"
+        required: false
+        type: string
+      crawl_depth:
+        description: "BFS crawl depth (1-3)"
+        required: false
+        type: string
+      wait_until:
+        description: "Page load strategy (domcontentloaded|load|networkidle)"
+        required: false
+        type: string
+      timeout_ms:
+        description: "Network timeout per page in ms"
+        required: false
+        type: string
+      viewport:
+        description: "Viewport as WxH (e.g. 1280x800)"
+        required: false
+        type: string
+      color_scheme:
+        description: "Emulated color scheme (light|dark)"
+        required: false
+        type: string
 
 jobs:
   scan:
@@ -78,15 +102,50 @@ jobs:
             ENGINES_ARG="--engines ${{ inputs.engines }}"
           fi
 
+          MAX_ROUTES_ARG="--max-routes 1"
+          if [ -n "${{ inputs.max_routes }}" ]; then
+            MAX_ROUTES_ARG="--max-routes ${{ inputs.max_routes }}"
+          fi
+
+          CRAWL_DEPTH_ARG=""
+          if [ -n "${{ inputs.crawl_depth }}" ]; then
+            CRAWL_DEPTH_ARG="--crawl-depth ${{ inputs.crawl_depth }}"
+          fi
+
+          WAIT_UNTIL_ARG=""
+          if [ -n "${{ inputs.wait_until }}" ]; then
+            WAIT_UNTIL_ARG="--wait-until ${{ inputs.wait_until }}"
+          fi
+
+          TIMEOUT_ARG=""
+          if [ -n "${{ inputs.timeout_ms }}" ]; then
+            TIMEOUT_ARG="--timeout-ms ${{ inputs.timeout_ms }}"
+          fi
+
+          VIEWPORT_ARG=""
+          if [ -n "${{ inputs.viewport }}" ]; then
+            VIEWPORT_ARG="--viewport ${{ inputs.viewport }}"
+          fi
+
+          COLOR_SCHEME_ARG=""
+          if [ -n "${{ inputs.color_scheme }}" ]; then
+            COLOR_SCHEME_ARG="--color-scheme ${{ inputs.color_scheme }}"
+          fi
+
           pnpm exec a11y-audit \
             --base-url "${{ inputs.target_url }}" \
-            --max-routes 1 \
+            $MAX_ROUTES_ARG \
             --skip-patterns \
             --with-reports \
             --output $AUDIT_DIR/report.html \
             $PROJECT_DIR_ARG \
             $AXE_TAGS_ARG \
-            $ENGINES_ARG
+            $ENGINES_ARG \
+            $CRAWL_DEPTH_ARG \
+            $WAIT_UNTIL_ARG \
+            $TIMEOUT_ARG \
+            $VIEWPORT_ARG \
+            $COLOR_SCHEME_ARG
 
       - name: Powering up your report
         run: echo "Preparing report bundle"
