@@ -163,7 +163,7 @@ async function runLocal(params: {
 
       const payload = await runAudit({
         baseUrl: targetUrl,
-        maxRoutes: 1,
+        maxRoutes: 5,
         skipPatterns: true,
         axeTags: axeTags?.length ? axeTags : undefined,
         projectDir,
