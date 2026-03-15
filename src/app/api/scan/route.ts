@@ -170,8 +170,7 @@ async function runLocal(params: {
 
       const { runAudit, getPDFReport, getChecklist } = await import("@diegovelasquezweb/a11y-engine");
 
-      // engines option added in engine 0.6.0; cast to bypass published types
-      const payload = await (runAudit as unknown as (opts: Record<string, unknown>) => Promise<Record<string, unknown>>)({
+      const payload = await runAudit({
         baseUrl: targetUrl,
         maxRoutes: 1,
         skipPatterns: true,
@@ -179,7 +178,7 @@ async function runLocal(params: {
         engines: engines ?? undefined,
         projectDir,
         screenshotsDir: getScreenshotsDir(scanId),
-        onProgress: (step: string, status: string) => {
+        onProgress: (step, status) => {
           const progressPath = getScanPath(scanId, "progress.json");
           let progress: Record<string, unknown> = {};
           try {
@@ -204,7 +203,7 @@ async function runLocal(params: {
       );
 
       const [pdfReport, checklistReport] = await Promise.all([
-        getPDFReport(payload as unknown as Parameters<typeof getPDFReport>[0], { baseUrl: targetUrl }),
+        getPDFReport(payload, { baseUrl: targetUrl }),
         getChecklist({ baseUrl: targetUrl }),
       ]);
 
