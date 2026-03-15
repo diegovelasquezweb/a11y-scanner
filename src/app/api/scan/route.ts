@@ -76,44 +76,17 @@ async function runLocal(params: {
   githubRepoUrl?: string;
   axeTags?: string[];
 }) {
-  const { exec } = await import("node:child_process");
   const fs = await import("node:fs");
   const path = await import("node:path");
   const os = await import("node:os");
+  const { exec } = await import("node:child_process");
   const { promisify } = await import("node:util");
 
   const execAsync = promisify(exec);
   const { scanId, targetUrl, githubRepoUrl, axeTags } = params;
-
   const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
-  const symlinkBase = path.join(process.cwd(), "node_modules", "@diegovelasquezweb", "a11y-engine");
-  const engineBase = fs.realpathSync(symlinkBase);
-  const auditScriptPath = path.join(engineBase, "scripts", "audit.mjs");
-  const auditDir = path.join(engineBase, ".audit");
 
   fs.mkdirSync(SCANS_DIR, { recursive: true });
-  if (fs.existsSync(auditDir)) {
-    fs.rmSync(auditDir, { recursive: true, force: true });
-  }
-  fs.mkdirSync(auditDir, { recursive: true });
-
-  const progressPath = path.join(auditDir, "progress.json");
-  function writeProgress(step: string, status: string) {
-    let progress: Record<string, unknown> = {};
-    try {
-      if (fs.existsSync(progressPath)) {
-        progress = JSON.parse(fs.readFileSync(progressPath, "utf-8"));
-      }
-    } catch { /* ignore */ }
-    const steps = (progress.steps || {}) as Record<string, unknown>;
-    steps[step] = { status, updatedAt: new Date().toISOString() };
-    progress.steps = steps;
-    progress.currentStep = step;
-    progress.scanId = scanId;
-    fs.writeFileSync(progressPath, JSON.stringify(progress, null, 2));
-  }
-
-  writeProgress("page", "running");
 
   fs.writeFileSync(
     path.join(SCANS_DIR, `${scanId}.status.json`),
@@ -123,57 +96,60 @@ async function runLocal(params: {
   (async () => {
     let tmpDir = "";
     try {
-      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "a11y-scan-"));
-      let projectDirFlag = "";
-
+      // Clone repo if provided (for project-dir intelligence)
+      let projectDir: string | undefined;
       if (githubRepoUrl) {
+        tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "a11y-scan-"));
         const cloneDir = path.join(tmpDir, "repo");
         try {
           await execAsync(`git clone --depth 1 ${githubRepoUrl} ${cloneDir}`, { timeout: 30000 });
-          projectDirFlag = `--project-dir ${cloneDir}`;
+          projectDir = cloneDir;
         } catch { /* ignore clone errors */ }
       }
 
-      const axeTagsFlag = axeTags?.length ? `--axe-tags ${axeTags.join(",")}` : "";
+      // Run audit via engine API
+      const { runAudit, getPDFReport, getChecklist } = await import("@diegovelasquezweb/a11y-engine");
 
-      // Run scan only (no --with-reports) — reports are generated via engine API
-      const cmd = [
-        "node", auditScriptPath,
-        "--base-url", `"${targetUrl}"`,
-        "--max-routes", "1",
-        "--skip-patterns",
-        projectDirFlag,
-        axeTagsFlag,
-      ].filter(Boolean).join(" ");
-
-      await execAsync(cmd, { timeout: 55000, cwd: engineBase });
-      writeProgress("intelligence", "running");
-
-      const findingsPath = path.join(auditDir, "a11y-findings.json");
-      if (!fs.existsSync(findingsPath)) throw new Error("No findings file generated.");
-
-      const rawFindings = JSON.parse(fs.readFileSync(findingsPath, "utf-8"));
-      rawFindings.metadata = rawFindings.metadata || {};
-      rawFindings.metadata.target_url = targetUrl;
+      const payload = await runAudit({
+        baseUrl: targetUrl,
+        maxRoutes: 1,
+        skipPatterns: true,
+        axeTags: axeTags?.length ? axeTags : undefined,
+        projectDir,
+        onProgress: (step, status) => {
+          // Write progress for polling
+          const progressPath = path.join(SCANS_DIR, `${scanId}.progress.json`);
+          let progress: Record<string, unknown> = {};
+          try {
+            if (fs.existsSync(progressPath)) {
+              progress = JSON.parse(fs.readFileSync(progressPath, "utf-8"));
+            }
+          } catch { /* ignore */ }
+          const steps = (progress.steps || {}) as Record<string, unknown>;
+          steps[step] = { status, updatedAt: new Date().toISOString() };
+          progress.steps = steps;
+          progress.currentStep = step;
+          progress.scanId = scanId;
+          fs.writeFileSync(progressPath, JSON.stringify(progress, null, 2));
+        },
+      });
 
       // Save findings
+      payload.metadata = payload.metadata || {};
+      (payload.metadata as Record<string, unknown>).target_url = targetUrl;
       fs.writeFileSync(
         path.join(SCANS_DIR, `${scanId}.findings.json`),
-        JSON.stringify(rawFindings, null, 2)
+        JSON.stringify(payload, null, 2)
       );
 
       // Generate reports via engine API
-      const { getPDFReport, getChecklist } = await import("@diegovelasquezweb/a11y-engine");
-
       const [pdfReport, checklistReport] = await Promise.all([
-        getPDFReport(rawFindings, { baseUrl: targetUrl }),
+        getPDFReport(payload, { baseUrl: targetUrl }),
         getChecklist({ baseUrl: targetUrl }),
       ]);
 
       fs.writeFileSync(path.join(SCANS_DIR, `${scanId}.pdf`), pdfReport.buffer);
       fs.writeFileSync(path.join(SCANS_DIR, `${scanId}.checklist.html`), checklistReport.html, "utf-8");
-
-      writeProgress("intelligence", "done");
 
       fs.writeFileSync(
         path.join(SCANS_DIR, `${scanId}.status.json`),
