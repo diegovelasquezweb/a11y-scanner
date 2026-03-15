@@ -123,7 +123,7 @@ export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFo
             className="inline-flex items-center gap-1 rounded-full px-1.5 py-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30"
           >
             <Info className="w-4 h-4" aria-hidden="true" />
-            <span className="text-[11px] font-medium sm:sr-only">How it works</span>
+            <span className="text-[11px] font-medium sm:sr-only">Help</span>
           </button>
         </div>
         <p className="text-sm text-slate-500 mt-1">
@@ -327,7 +327,7 @@ export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFo
               className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-800 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:ring-offset-2 rounded"
             >
               <Info className="w-3.5 h-3.5" aria-hidden="true" />
-              How it works
+              Help
             </button>
           </div>
         </fieldset>
@@ -378,7 +378,7 @@ export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFo
       </form>
     </div>
 
-    <HowItWorks open={howItWorksOpen} onOpenChange={setHowItWorksOpen} />
+    <HowItWorks open={howItWorksOpen} onOpenChange={setHowItWorksOpen} knowledge={knowledge} />
     <AdvancedSettings
       open={advancedOpen}
       onOpenChange={setAdvancedOpen}
