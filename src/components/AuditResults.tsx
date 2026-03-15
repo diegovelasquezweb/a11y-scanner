@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { AlertTriangle, CheckCircle, Check, Plus, Settings, CloudUpload, FileText, ClipboardCheck } from "lucide-react";
+import { AlertTriangle, CheckCircle, Settings2 } from "lucide-react";
 import type { ScanResult, Finding } from "@/types/scan";
 import type { EngineKnowledge } from "@diegovelasquezweb/a11y-engine";
 import { ScoreGauge } from "@/components/ScoreGauge";
@@ -11,7 +11,8 @@ import { QuickWins } from "@/components/QuickWins";
 import { FindingsToolbar } from "@/components/FindingsToolbar";
 import type { PageOption } from "@/components/FindingsToolbar";
 import { IssueCard } from "@/components/IssueCard";
-import { JiraIntegration } from "@/components/JiraIntegration";
+import { ActionsPanel } from "@/components/ActionsPanel";
+import { Check } from "lucide-react";
 
 const WCAG_PRINCIPLES: Record<string, string> = {
   Perceivable: " 1.",
@@ -32,7 +33,7 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
   const [searchQuery, setSearchQuery] = useState("");
   const [pageFilter, setPageFilter] = useState("all");
   const [allExpanded, setAllExpanded] = useState(false);
-  const [jiraOpen, setJiraOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
   const tooltips = knowledge?.tooltips;
   const personaDescriptions = useMemo(() => {
     const entries = knowledge?.personas ?? [];
@@ -93,8 +94,9 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
   }, []);
 
   return (
-    <div id="results" className="pb-28">
+    <div id="results" className="pb-16">
 
+      {/* Header */}
       <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-extrabold mb-1">Web Accessibility Audit</h2>
@@ -128,24 +130,37 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
             </div>
           )}
         </div>
-        <div
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${
-            result.totalFindings > 0
-              ? "text-rose-700 bg-rose-50 border-rose-200"
-              : "text-emerald-600 bg-emerald-50 border-emerald-200"
-          }`}
-        >
-          {result.totalFindings > 0 ? (
-            <AlertTriangle className="w-5 h-5" aria-hidden="true" />
-          ) : (
-            <CheckCircle className="w-5 h-5" aria-hidden="true" />
-          )}
-          <span className="text-sm font-bold">
-            {result.totalFindings > 0 ? "WCAG Violations Found" : "Audit Passed"}
-          </span>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <div
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${
+              result.totalFindings > 0
+                ? "text-rose-700 bg-rose-50 border-rose-200"
+                : "text-emerald-600 bg-emerald-50 border-emerald-200"
+            }`}
+          >
+            {result.totalFindings > 0 ? (
+              <AlertTriangle className="w-5 h-5" aria-hidden="true" />
+            ) : (
+              <CheckCircle className="w-5 h-5" aria-hidden="true" />
+            )}
+            <span className="text-sm font-bold">
+              {result.totalFindings > 0 ? "WCAG Violations Found" : "Audit Passed"}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setActionsOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-slate-900 text-white text-sm font-bold hover:bg-slate-700 transition-colors shadow-sm"
+          >
+            <Settings2 className="w-4 h-4" aria-hidden="true" />
+            Actions
+          </button>
         </div>
       </div>
 
+      {/* Score + Severity + Persona */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-12 items-stretch">
         <div className="xl:col-span-8 grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
           <div className="md:col-span-5 flex">
@@ -220,81 +235,15 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none">
-        <nav
-          aria-label="Scan actions"
-          className="pointer-events-auto mb-5 flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200/80 shadow-2xl shadow-slate-900/10"
-        >
-          <FooterAction
-            label="New Scan"
-            onClick={onRunNewTest || (() => window.location.assign("/"))}
-            icon={<Plus className="w-5 h-5" aria-hidden="true" />}
-          />
-
-          <div className="w-px h-8 bg-slate-200 mx-1" aria-hidden="true" />
-
-          <FooterAction
-            label="Configure Jira"
-            onClick={() => setJiraOpen(true)}
-            icon={<Settings className="w-5 h-5" aria-hidden="true" />}
-          />
-
-          <FooterAction
-            label="Send to Jira"
-            onClick={() => setJiraOpen(true)}
-            variant="primary"
-            icon={<CloudUpload className="w-5 h-5" aria-hidden="true" />}
-          />
-
-          <FooterAction
-            label="Stakeholder Report"
-            onClick={() => window.open(`/api/scan/${scanId}/pdf`, "_blank", "noopener,noreferrer")}
-            icon={<FileText className="w-5 h-5" aria-hidden="true" />}
-          />
-
-          <FooterAction
-            label="Checklist"
-            onClick={() => window.open(`/api/scan/${scanId}/checklist`, "_blank", "noopener,noreferrer")}
-            icon={<ClipboardCheck className="w-5 h-5" aria-hidden="true" />}
-          />
-        </nav>
-      </div>
-
-      <JiraIntegration
+      <ActionsPanel
+        open={actionsOpen}
+        onOpenChange={setActionsOpen}
+        scanId={scanId}
         targetUrl={result.targetUrl}
         totals={result.totals}
         findings={result.findings}
-        open={jiraOpen}
-        onOpenChange={setJiraOpen}
+        onNewScan={onRunNewTest || (() => window.location.assign("/"))}
       />
     </div>
-  );
-}
-
-interface FooterActionProps {
-  label: string;
-  onClick: () => void;
-  icon: React.ReactNode;
-  variant?: "default" | "primary";
-}
-
-function FooterAction({ label, onClick, icon, variant = "default" }: FooterActionProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all group ${
-        variant === "primary"
-          ? "bg-sky-600 text-white hover:bg-sky-700 shadow-md shadow-sky-600/20"
-          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-      }`}
-    >
-      <span className={`transition-transform group-hover:scale-110 ${variant === "primary" ? "text-white" : ""}`}>
-        {icon}
-      </span>
-      <span className="text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
-        {label}
-      </span>
-    </button>
   );
 }
