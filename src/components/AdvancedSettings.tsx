@@ -99,6 +99,19 @@ export function AdvancedSettings({
       description="Configure scan scope, browser behavior, and engines."
     >
       <div className="space-y-8" aria-disabled={disabled}>
+        <div className="flex items-center justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              onAdvancedChange({ ...DEFAULT_ADVANCED });
+              onEnginesChange({ axe: true, cdp: true, pa11y: true });
+            }}
+            disabled={disabled}
+            className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-800 transition-colors disabled:opacity-50"
+          >
+            Reset to defaults
+          </button>
+        </div>
 
         {/* Scan Engines */}
         <section>
@@ -147,7 +160,7 @@ export function AdvancedSettings({
                         </span>
                         <span className="text-[10px] text-slate-400 font-medium">{engine.description}</span>
                       </div>
-                      <p className="text-xs text-slate-500 leading-relaxed mb-1.5">{engineHelp?.description ?? details.coverage}</p>
+                      <p className="text-xs text-slate-500 leading-relaxed mb-1.5">{engineHelp?.description}</p>
                       <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
                         details.speed === "Fast" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
                       }`}>
@@ -190,7 +203,7 @@ export function AdvancedSettings({
                 <span className="text-[10px] text-slate-400">50</span>
               </div>
               <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                {getOptionHelp(helpOptions, "maxRoutes")?.description ?? "Maximum unique pages to discover and scan. Higher values increase coverage and scan time."}
+                {getOptionHelp(helpOptions, "maxRoutes")?.description}
               </p>
             </div>
 
@@ -219,7 +232,7 @@ export function AdvancedSettings({
                 <span className="text-[10px] text-slate-400">3 — deep crawl</span>
               </div>
               <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                {getOptionHelp(helpOptions, "crawlDepth")?.description ?? "How many link levels to follow from the starting URL. Ignored when scanning a single page."}
+                {getOptionHelp(helpOptions, "crawlDepth")?.description}
               </p>
             </div>
           </div>
@@ -303,7 +316,7 @@ export function AdvancedSettings({
                 <span className="text-xs text-slate-400">({(advanced.timeoutMs / 1000).toFixed(0)}s)</span>
               </div>
               <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                {getOptionHelp(helpOptions, "timeoutMs")?.description ?? "Network timeout per page load. Range: 5 000 – 120 000 ms."}
+                {getOptionHelp(helpOptions, "timeoutMs")?.description}
               </p>
             </div>
           </div>
@@ -312,6 +325,9 @@ export function AdvancedSettings({
         {/* Emulation */}
         <section>
           <SectionHeading>Emulation</SectionHeading>
+          <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+            Set the viewport and color scheme used during the audit to catch issues specific to screen size or dark mode.
+          </p>
           <div className="space-y-4">
 
             {/* Viewport */}
@@ -417,27 +433,12 @@ export function AdvancedSettings({
                 ))}
               </div>
               <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                {getOptionHelp(helpOptions, "colorScheme")?.description ?? "Emulates prefers-color-scheme. Use Dark to catch contrast issues in dark mode."}
+                {getOptionHelp(helpOptions, "colorScheme")?.description}
               </p>
             </div>
 
           </div>
         </section>
-
-        {/* Reset */}
-        <div className="pt-2 border-t border-slate-100">
-          <button
-            type="button"
-            onClick={() => {
-              onAdvancedChange({ ...DEFAULT_ADVANCED });
-              onEnginesChange({ axe: true, cdp: true, pa11y: true });
-            }}
-            disabled={disabled}
-            className="text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
-          >
-            Reset to defaults
-          </button>
-        </div>
 
       </div>
     </SidePanel>
