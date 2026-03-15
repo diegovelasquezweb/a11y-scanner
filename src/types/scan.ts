@@ -85,7 +85,7 @@ export interface AdvancedScanOptions {
 
 export const DEFAULT_ADVANCED: AdvancedScanOptions = {
   maxRoutes: 1,
-  crawlDepth: 2,
+  crawlDepth: 1,
   waitUntil: "domcontentloaded",
   timeoutMs: 30000,
   viewport: { width: 1280, height: 800 },
