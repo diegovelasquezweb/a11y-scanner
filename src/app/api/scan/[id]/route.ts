@@ -86,11 +86,11 @@ export async function GET(
 }
 
 async function buildResponse(scanId: string, rawFindings: Record<string, unknown>) {
-  const { getEnrichedFindings, getAuditSummary } = await loadEngine();
+  const { getFindings, getOverview } = await loadEngine();
 
   const payload = rawFindings as unknown as ScanPayload;
 
-  const findings: EnrichedFinding[] = getEnrichedFindings(payload, {
+  const findings: EnrichedFinding[] = getFindings(payload, {
     screenshotUrlBuilder: (rawPath) =>
       `/api/scan/${scanId}/screenshot?path=${encodeURIComponent(rawPath)}`,
   });
@@ -105,7 +105,7 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
     targetUrl,
     detectedStack,
     totalFindings,
-  } = getAuditSummary(findings, payload) as AuditSummary;
+  } = getOverview(findings, payload) as AuditSummary;
 
   return NextResponse.json({
     success: true,
