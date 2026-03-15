@@ -9,8 +9,8 @@ const STEP_NAME_TO_KEY: Record<string, string> = {
   "Powering up your report": "intelligence",
 };
 
-const SCAN_STEP_IMPLIES: string[] = ["cdp", "pa11y", "merge"];
-const ALL_KEYS = ["page", "axe", "cdp", "pa11y", "merge", "intelligence"] as const;
+const SCAN_STEP_IMPLIES: string[] = ["cdp", "pa11y", "merge", "repo", "patterns"];
+const ALL_KEYS = ["page", "repo", "axe", "cdp", "pa11y", "merge", "patterns", "intelligence"] as const;
 
 type StepStatus = "pending" | "running" | "done" | "error" | "skipped";
 
