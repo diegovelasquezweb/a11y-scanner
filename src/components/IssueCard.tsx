@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import Image from "next/image";
 import * as Tabs from "@radix-ui/react-tabs";
 import * as Collapsible from "@radix-ui/react-collapsible";
-import { Code, ChevronDown, Info, Zap, Check, Copy, BookOpen, Globe } from "lucide-react";
+import { Code, ChevronDown, Info, Zap, Check, Copy, BookOpen, Globe, Sparkles } from "lucide-react";
 import type { Finding } from "@/types/scan";
 
 
@@ -123,6 +123,12 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                   {finding.pagesAffected != null && finding.pagesAffected > 1 && (
                     <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                       {finding.pagesAffected} pages
+                    </span>
+                  )}
+                  {(finding as Finding & { aiEnhanced?: boolean }).aiEnhanced && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-200" title="Fix suggestions improved by Claude AI">
+                      <Sparkles className="w-3 h-3" aria-hidden="true" />
+                      AI Enhanced
                     </span>
                   )}
                 </div>
