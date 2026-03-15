@@ -11,8 +11,9 @@ import { QuickWins } from "@/components/QuickWins";
 import { FindingsToolbar } from "@/components/FindingsToolbar";
 import type { PageOption } from "@/components/FindingsToolbar";
 import { IssueCard } from "@/components/IssueCard";
+import { PatternCard } from "@/components/PatternCard";
 import { ActionsPanel } from "@/components/ActionsPanel";
-import { Check } from "lucide-react";
+import { Check, FileCode } from "lucide-react";
 
 
 
@@ -236,6 +237,28 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
           ))
         )}
       </div>
+
+      {/* Source Code Pattern Findings */}
+      {result.patternFindings && result.patternFindings.length > 0 && (
+        <div className="mt-12">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-violet-100 text-violet-700">
+              <FileCode className="w-4 h-4" aria-hidden="true" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-900">Source Code Patterns</h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {result.patternFindings.filter(f => f.status === "confirmed").length} confirmed
+                {" · "}
+                {result.patternFindings.filter(f => f.status === "potential").length} potential
+              </p>
+            </div>
+          </div>
+          {result.patternFindings.map((finding) => (
+            <PatternCard key={finding.id} finding={finding} />
+          ))}
+        </div>
+      )}
 
       <ActionsPanel
         open={actionsOpen}

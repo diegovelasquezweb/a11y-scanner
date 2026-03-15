@@ -8,6 +8,24 @@ import type {
 
 export type { EnrichedFinding as Finding, SeverityTotals, PersonaGroup, DetectedStack, ConformanceLevel };
 
+export interface PatternFinding {
+  id: string;
+  pattern_id: string;
+  title: string;
+  severity: string;
+  wcag: string;
+  wcag_criterion: string;
+  wcag_level: string;
+  type: string;
+  fix_description: string | null;
+  status: "confirmed" | "potential";
+  file: string;
+  line: number;
+  match: string;
+  context: string;
+  source: "code-pattern";
+}
+
 export interface ScanResult {
   success: boolean;
   scanId?: string;
@@ -28,6 +46,7 @@ export interface ScanResult {
     bestPractices?: boolean;
     patternSummary?: { total: number; confirmed: number; potential: number } | null;
     repoScanned?: string | null;
+    patternFindings?: PatternFinding[] | null;
   };
 }
 

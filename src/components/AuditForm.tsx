@@ -185,6 +185,9 @@ export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFo
               className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2"
             >
               GitHub Repo URL{" "}
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-100 text-violet-700 border border-violet-200 normal-case tracking-normal align-middle ml-1">
+                Beta
+              </span>{" "}
               <span className="text-slate-400 font-normal normal-case tracking-normal">
                 (optional, enables source pattern scan)
               </span>
