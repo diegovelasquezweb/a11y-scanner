@@ -86,23 +86,6 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
       : []),
   ];
 
-  const stackNotes = [
-    ...(finding.frameworkNotes
-      ? Object.entries(finding.frameworkNotes).map(([fw, note]) => ({
-          key: fw,
-          note,
-          style: "bg-slate-100 text-slate-600 border-slate-200",
-        }))
-      : []),
-    ...(finding.cmsNotes
-      ? Object.entries(finding.cmsNotes).map(([cms, note]) => ({
-          key: cms,
-          note,
-          style: "bg-violet-50 text-violet-700 border-violet-200",
-        }))
-      : []),
-  ];
-
   return (
     <article
       id={finding.id}
@@ -315,25 +298,13 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                           <h4 className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                             Implementation Notes
                           </h4>
-                          <p className="text-[12px] text-amber-900/80 leading-relaxed bg-amber-50/60 border border-amber-100/60 rounded p-3">
-                            {finding.fixDifficultyNotes}
-                          </p>
-                        </div>
-                      )}
-                      {stackNotes.length > 0 && (
-                        <div className="mt-4 pt-3 border-t border-sky-100/50">
-                          <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                            Stack Notes
-                          </h4>
-                          <div className="space-y-2">
-                            {stackNotes.map(({ key, note, style }) => (
-                              <div key={key} className="flex gap-2 items-start">
-                                <span className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-bold border ${style} uppercase tracking-wider mt-0.5`}>
-                                  {key}
-                                </span>
-                                <p className="text-[12px] text-slate-600 leading-relaxed">{note}</p>
-                              </div>
-                            ))}
+                          <div className="text-[12px] text-amber-900/80 leading-relaxed bg-amber-50/60 border border-amber-100/60 rounded p-3">
+                            {Array.isArray(finding.fixDifficultyNotes)
+                              ? finding.fixDifficultyNotes.map((note, i) => (
+                                  <p key={i} className={i > 0 ? "mt-1" : ""}>{note}</p>
+                                ))
+                              : <p>{finding.fixDifficultyNotes}</p>
+                            }
                           </div>
                         </div>
                       )}
@@ -349,7 +320,9 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                         Technical Evidence
                       </h4>
                       <div className="relative z-10 space-y-4">
-                        {finding.evidence.map((item, idx) => (
+                        {finding.evidence.map((rawItem, idx) => {
+                          const item = rawItem as { html?: string; failureSummary?: string };
+                          return (
                           <div key={idx} className="mb-4 last:mb-0">
                             {item.html && (
                               <div className="mb-2">
@@ -393,7 +366,8 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                               </div>
                             )}
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   </Tabs.Content>

@@ -122,7 +122,6 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
       findings,
       quickWins,
       totalFindings,
-      sourcePatternFindings: [],
       detectedStack,
     },
   });

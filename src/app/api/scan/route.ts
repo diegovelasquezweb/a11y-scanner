@@ -81,8 +81,8 @@ async function runLocal(params: {
   const os = await import("node:os");
   const { exec } = await import("node:child_process");
   const { promisify } = await import("node:util");
-
   const execAsync = promisify(exec);
+
   const { scanId, targetUrl, githubRepoUrl, axeTags } = params;
   const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
 

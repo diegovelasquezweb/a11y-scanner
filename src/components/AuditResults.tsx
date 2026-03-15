@@ -96,7 +96,7 @@ export function AuditResults({ result, scanId, onRunNewTest }: AuditResultsProps
                   {result.detectedStack.cms}
                 </span>
               )}
-              {result.detectedStack.uiLibraries.map((lib) => (
+              {result.detectedStack.uiLibraries.map((lib: string) => (
                 <span key={lib} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-xs font-bold border border-slate-200/60">
                   {lib}
                 </span>

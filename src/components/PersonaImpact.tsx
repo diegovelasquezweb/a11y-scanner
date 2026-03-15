@@ -49,7 +49,7 @@ export function PersonaImpact({ personaGroups, totalFindings }: PersonaImpactPro
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded bg-slate-50 flex items-center justify-center text-slate-600 group-hover:bg-primary-light group-hover:text-primary transition-colors">
-                  {PERSONA_ICONS[persona.icon] ?? PERSONA_ICONS.sr}
+                  {PERSONA_ICONS[persona.icon] ?? PERSONA_ICONS.screenReader}
                 </div>
                 <span className="text-xs font-bold text-slate-700">{persona.label}</span>
               </div>
