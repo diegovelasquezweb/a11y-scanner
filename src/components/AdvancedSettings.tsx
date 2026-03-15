@@ -99,23 +99,23 @@ export function AdvancedSettings({
       description="Configure scan scope, browser behavior, and engines."
     >
       <div className="space-y-8" aria-disabled={disabled}>
-        <div className="flex items-center justify-end">
-          <button
-            type="button"
-            onClick={() => {
-              onAdvancedChange({ ...DEFAULT_ADVANCED });
-              onEnginesChange({ axe: true, cdp: true, pa11y: true });
-            }}
-            disabled={disabled}
-            className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-800 transition-colors disabled:opacity-50"
-          >
-            Reset to defaults
-          </button>
-        </div>
 
         {/* Scan Engines */}
         <section>
-          <SectionHeading>Scan Engines</SectionHeading>
+          <div className="flex items-center justify-between mb-1">
+            <SectionHeading noMargin>Scan Engines</SectionHeading>
+            <button
+              type="button"
+              onClick={() => {
+                onAdvancedChange({ ...DEFAULT_ADVANCED });
+                onEnginesChange({ axe: true, cdp: true, pa11y: true });
+              }}
+              disabled={disabled}
+              className="text-xs font-medium text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors disabled:opacity-50 mb-10"
+            >
+              Reset to defaults
+            </button>
+          </div>
           <p className="text-xs text-slate-500 mb-3 leading-relaxed">
             More engines = broader coverage and longer scan time.
             {enabledCount === 0 && (
@@ -177,9 +177,12 @@ export function AdvancedSettings({
         {/* Crawling */}
         <section>
           <SectionHeading>Crawling</SectionHeading>
+          <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+            Control how many pages the scanner discovers and how deep it follows links from the starting URL.
+          </p>
           <div className="space-y-4">
             <div>
-              <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center justify-between mb-0.5">
                 <label htmlFor={maxRoutesId} className="text-xs font-bold text-slate-700 uppercase tracking-widest">
                   Max Pages
                 </label>
@@ -187,6 +190,7 @@ export function AdvancedSettings({
                   {advanced.maxRoutes === 1 ? "1 page" : `${advanced.maxRoutes} pages`}
                 </span>
               </div>
+              <p className="text-xs text-slate-400 mb-2 leading-relaxed">How many unique pages to discover and scan.</p>
               <input
                 id={maxRoutesId}
                 type="range"
@@ -208,7 +212,7 @@ export function AdvancedSettings({
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center justify-between mb-0.5">
                 <label htmlFor={crawlDepthId} className="text-xs font-bold text-slate-700 uppercase tracking-widest">
                   Crawl Depth
                 </label>
@@ -216,6 +220,7 @@ export function AdvancedSettings({
                   {advanced.crawlDepth === 1 ? "1 level" : `${advanced.crawlDepth} levels`}
                 </span>
               </div>
+              <p className="text-xs text-slate-400 mb-2 leading-relaxed">How many link levels to follow from the starting URL.</p>
               <input
                 id={crawlDepthId}
                 type="range"
@@ -238,90 +243,6 @@ export function AdvancedSettings({
           </div>
         </section>
 
-        {/* Browser Behavior */}
-        <section>
-          <SectionHeading>Browser Behavior</SectionHeading>
-          <div className="space-y-4">
-
-            {/* Wait Strategy */}
-            <div>
-              <p className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
-                Wait Strategy
-              </p>
-              <div className="space-y-2">
-                {WAIT_UNTIL_OPTIONS.map((opt) => (
-                  <label
-                    key={opt.value}
-                    className={`block rounded-md border px-3.5 py-3 cursor-pointer select-none transition-all ${
-                      advanced.waitUntil === opt.value
-                        ? "bg-sky-50 border-sky-300"
-                        : "bg-white border-slate-200 hover:border-slate-300"
-                    } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="radio"
-                        name="waitUntil"
-                        value={opt.value}
-                        checked={advanced.waitUntil === opt.value}
-                        onChange={() => setField("waitUntil", opt.value)}
-                        disabled={disabled}
-                        className="sr-only"
-                      />
-                      <span
-                        className={`w-4 h-4 mt-0.5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                          advanced.waitUntil === opt.value
-                            ? "border-sky-600"
-                            : "border-slate-300"
-                        }`}
-                        aria-hidden="true"
-                      >
-                        {advanced.waitUntil === opt.value && (
-                          <span className="w-2 h-2 rounded-full bg-sky-600 block" />
-                        )}
-                      </span>
-                      <div>
-                        <span className={`text-sm font-bold block ${advanced.waitUntil === opt.value ? "text-sky-800" : "text-slate-700"}`}>
-                          {opt.label}
-                        </span>
-                        <span className="text-xs text-slate-500 leading-relaxed">{opt.description}</span>
-                      </div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Per-page Timeout */}
-            <div>
-              <label htmlFor={timeoutId} className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-1.5">
-                Per-page Timeout
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  id={timeoutId}
-                  type="number"
-                  min={5000}
-                  max={120000}
-                  step={1000}
-                  value={advanced.timeoutMs}
-                  onChange={(e) => {
-                    const v = Number(e.target.value);
-                    if (v >= 5000 && v <= 120000) setField("timeoutMs", v);
-                  }}
-                  disabled={disabled}
-                  className="w-32 px-3 py-2 bg-white border border-slate-200 rounded-md text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors disabled:opacity-50 tabular-nums"
-                />
-                <span className="text-xs text-slate-500">ms</span>
-                <span className="text-xs text-slate-400">({(advanced.timeoutMs / 1000).toFixed(0)}s)</span>
-              </div>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                {getOptionHelp(helpOptions, "timeoutMs")?.description}
-              </p>
-            </div>
-          </div>
-        </section>
-
         {/* Emulation */}
         <section>
           <SectionHeading>Emulation</SectionHeading>
@@ -332,9 +253,10 @@ export function AdvancedSettings({
 
             {/* Viewport */}
             <div>
-              <p className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
+              <p className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-0.5">
                 Viewport
               </p>
+              <p className="text-xs text-slate-400 mb-2 leading-relaxed">Browser window size used during the audit.</p>
               <div className="flex flex-wrap gap-2 mb-2.5">
                 {VIEWPORT_PRESETS.map((preset) => {
                   const active = advanced.viewport.width === preset.width && advanced.viewport.height === preset.height;
@@ -412,9 +334,10 @@ export function AdvancedSettings({
 
             {/* Color Scheme */}
             <div>
-              <p className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
+              <p className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-0.5">
                 Color Scheme
               </p>
+              <p className="text-xs text-slate-400 mb-2 leading-relaxed">Emulates light or dark mode during the scan.</p>
               <div className="flex gap-2">
                 {(["light", "dark"] as ColorScheme[]).map((scheme) => (
                   <button
@@ -440,14 +363,102 @@ export function AdvancedSettings({
           </div>
         </section>
 
+        {/* Browser Behavior */}
+        <section>
+          <SectionHeading>Browser Behavior</SectionHeading>
+          <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+            Configure how the browser loads each page before scanning and how long it waits per route.
+          </p>
+          <div className="space-y-4">
+
+            {/* Wait Strategy */}
+            <div>
+              <p className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-0.5">
+                Wait Strategy
+              </p>
+              <p className="text-xs text-slate-400 mb-2 leading-relaxed">When the browser considers a page ready to scan.</p>
+              <div className="space-y-2">
+                {WAIT_UNTIL_OPTIONS.map((opt) => (
+                  <label
+                    key={opt.value}
+                    className={`block rounded-md border px-3.5 py-3 cursor-pointer select-none transition-all ${
+                      advanced.waitUntil === opt.value
+                        ? "bg-sky-50 border-sky-300"
+                        : "bg-white border-slate-200 hover:border-slate-300"
+                    } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="radio"
+                        name="waitUntil"
+                        value={opt.value}
+                        checked={advanced.waitUntil === opt.value}
+                        onChange={() => setField("waitUntil", opt.value)}
+                        disabled={disabled}
+                        className="sr-only"
+                      />
+                      <span
+                        className={`w-4 h-4 mt-0.5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                          advanced.waitUntil === opt.value
+                            ? "border-sky-600"
+                            : "border-slate-300"
+                        }`}
+                        aria-hidden="true"
+                      >
+                        {advanced.waitUntil === opt.value && (
+                          <span className="w-2 h-2 rounded-full bg-sky-600 block" />
+                        )}
+                      </span>
+                      <div>
+                        <span className={`text-sm font-bold block ${advanced.waitUntil === opt.value ? "text-sky-800" : "text-slate-700"}`}>
+                          {opt.label}
+                        </span>
+                        <span className="text-xs text-slate-500 leading-relaxed">{opt.description}</span>
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Per-page Timeout */}
+            <div>
+              <label htmlFor={timeoutId} className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-0.5">
+                Per-page Timeout
+              </label>
+              <p className="text-xs text-slate-400 mb-2 leading-relaxed">Maximum time to wait for each page to load before aborting.</p>              <div className="flex items-center gap-2">
+                <input
+                  id={timeoutId}
+                  type="number"
+                  min={5000}
+                  max={120000}
+                  step={1000}
+                  value={advanced.timeoutMs}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (v >= 5000 && v <= 120000) setField("timeoutMs", v);
+                  }}
+                  disabled={disabled}
+                  className="w-32 px-3 py-2 bg-white border border-slate-200 rounded-md text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors disabled:opacity-50 tabular-nums"
+                />
+                <span className="text-xs text-slate-500">ms</span>
+                <span className="text-xs text-slate-400">({(advanced.timeoutMs / 1000).toFixed(0)}s)</span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                {getOptionHelp(helpOptions, "timeoutMs")?.description}
+              </p>
+            </div>
+          </div>
+        </section>
+
       </div>
     </SidePanel>
   );
 }
 
-function SectionHeading({ children }: { children: React.ReactNode }) {
+function SectionHeading({ children, noMargin }: { children: React.ReactNode; noMargin?: boolean }) {
   return (
-    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+    <h3 className={`text-[10px] font-bold text-slate-400 uppercase tracking-widest ${noMargin ? "" : "mb-3"}`}>
       {children}
     </h3>
   );
