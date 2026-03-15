@@ -10,44 +10,13 @@ import type {
   WaitUntilStrategy,
   ColorScheme,
 } from "@/types/scan";
+import type { EnumOptionValue } from "@diegovelasquezweb/a11y-engine";
 import {
-  ENGINE_OPTIONS,
   VIEWPORT_PRESETS,
   DEFAULT_ADVANCED,
 } from "@/types/scan";
 
-const WAIT_UNTIL_OPTIONS: { value: WaitUntilStrategy; label: string; description: string }[] = [
-  {
-    value: "domcontentloaded",
-    label: "DOM Ready",
-    description: "Fires when the initial HTML is parsed. Fastest — use for server-rendered pages.",
-  },
-  {
-    value: "load",
-    label: "Page Load",
-    description: "Waits for all resources (images, scripts) to finish loading. More reliable for asset-heavy pages.",
-  },
-  {
-    value: "networkidle",
-    label: "Network Idle",
-    description: "Waits until no network requests for 500ms. Best for SPAs and JS-heavy pages. Slowest.",
-  },
-];
 
-const ENGINE_DETAILS: Record<string, { coverage: string; speed: string }> = {
-  axe: {
-    coverage: "Broadest WCAG rule coverage with over 90 checks. Industry standard used by most accessibility tools.",
-    speed: "Fast",
-  },
-  cdp: {
-    coverage: "Inspects the browser accessibility tree directly via Chrome DevTools Protocol. Catches rendering and ARIA issues that DOM-only checks miss.",
-    speed: "Medium",
-  },
-  pa11y: {
-    coverage: "Runs HTML CodeSniffer against the rendered page. Strong on structural HTML validation and heading hierarchy.",
-    speed: "Medium",
-  },
-};
 
 function getOptionHelp(options: ScannerOptionHelp[] | undefined, id: string): ScannerOptionHelp | undefined {
   return options?.find((entry) => entry.id === id);
@@ -82,6 +51,9 @@ export function AdvancedSettings({
   const enabledCount = Object.values(engines).filter(Boolean).length;
   const scannerHelp = knowledge?.scanner;
   const helpOptions = scannerHelp?.options;
+  const engineList = scannerHelp?.engines ?? [];
+  const waitUntilOption = helpOptions?.find((o) => o.id === "waitUntil");
+  const waitUntilValues = (waitUntilOption?.allowedValues ?? []) as EnumOptionValue[];
 
   const isCustomViewport = !VIEWPORT_PRESETS.some(
     (p) => p.width === advanced.viewport.width && p.height === advanced.viewport.height
@@ -126,10 +98,8 @@ export function AdvancedSettings({
           </p>
           <fieldset disabled={disabled} className="space-y-2.5">
             <legend className="sr-only">Scan engines</legend>
-            {ENGINE_OPTIONS.map((engine) => {
-              const checked = engines[engine.id];
-              const details = ENGINE_DETAILS[engine.id];
-              const engineHelp = scannerHelp?.engines.find((entry) => entry.id === engine.id);
+            {engineList.map((engine) => {
+              const checked = !!engines[engine.id as keyof typeof engines];
               return (
                 <label
                   key={engine.id}
@@ -141,7 +111,7 @@ export function AdvancedSettings({
                     <input
                       type="checkbox"
                       checked={checked}
-                      onChange={() => onEnginesChange({ ...engines, [engine.id]: !engines[engine.id] })}
+                      onChange={() => onEnginesChange({ ...engines, [engine.id]: !engines[engine.id as keyof typeof engines] })}
                       disabled={disabled}
                       className="sr-only"
                     />
@@ -160,11 +130,11 @@ export function AdvancedSettings({
                         </span>
                         <span className="text-[10px] text-slate-400 font-medium">{engine.description}</span>
                       </div>
-                      <p className="text-xs text-slate-500 leading-relaxed mb-1.5">{engineHelp?.description}</p>
+                      <p className="text-xs text-slate-500 leading-relaxed mb-1.5">{engine.coverage}</p>
                       <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
-                        details.speed === "Fast" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                        engine.speed === "Fast" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
                       }`}>
-                        {details.speed}
+                        {engine.speed}
                       </span>
                     </div>
                   </div>
@@ -392,7 +362,7 @@ export function AdvancedSettings({
               </p>
               <p className="text-xs text-slate-400 mb-2 leading-relaxed">When the browser considers a page ready to scan.</p>
               <div className="space-y-2">
-                {WAIT_UNTIL_OPTIONS.map((opt) => (
+                {waitUntilValues.map((opt) => (
                   <label
                     key={opt.value}
                     className={`block rounded-md border px-3.5 py-3 cursor-pointer select-none transition-all ${
@@ -407,15 +377,13 @@ export function AdvancedSettings({
                         name="waitUntil"
                         value={opt.value}
                         checked={advanced.waitUntil === opt.value}
-                        onChange={() => setField("waitUntil", opt.value)}
+                        onChange={() => setField("waitUntil", opt.value as typeof advanced.waitUntil)}
                         disabled={disabled}
                         className="sr-only"
                       />
                       <span
                         className={`w-4 h-4 mt-0.5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                          advanced.waitUntil === opt.value
-                            ? "border-sky-600"
-                            : "border-slate-300"
+                          advanced.waitUntil === opt.value ? "border-sky-600" : "border-slate-300"
                         }`}
                         aria-hidden="true"
                       >

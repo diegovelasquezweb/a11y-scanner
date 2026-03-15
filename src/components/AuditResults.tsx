@@ -14,12 +14,7 @@ import { IssueCard } from "@/components/IssueCard";
 import { ActionsPanel } from "@/components/ActionsPanel";
 import { Check } from "lucide-react";
 
-const WCAG_PRINCIPLES: Record<string, string> = {
-  Perceivable: " 1.",
-  Operable: " 2.",
-  Understandable: " 3.",
-  Robust: " 4.",
-};
+
 
 interface AuditResultsProps {
   result: NonNullable<ScanResult["data"]>;
@@ -34,7 +29,8 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
   const [pageFilter, setPageFilter] = useState("all");
   const [allExpanded, setAllExpanded] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
-  const tooltips = knowledge?.tooltips;
+  const concepts = knowledge?.concepts;
+  const wcagPrinciples = knowledge?.wcagPrinciples ?? [];
   const personaDescriptions = useMemo(() => {
     const entries = knowledge?.personas ?? [];
     return Object.fromEntries(entries.map((persona) => [persona.id, persona.description]));
@@ -58,9 +54,9 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
     }
 
     if (filterValue !== "all") {
-      const principleMatch = WCAG_PRINCIPLES[filterValue];
-      if (principleMatch) {
-        findings = findings.filter((f) => f.wcag.includes(principleMatch));
+      const principle = wcagPrinciples.find((p) => p.name === filterValue);
+      if (principle) {
+        findings = findings.filter((f) => f.wcag.includes(principle.criterionPrefix));
       } else {
         findings = findings.filter((f) => f.severity === filterValue);
       }
@@ -79,7 +75,7 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
     }
 
     return findings;
-  }, [result, filterValue, pageFilter, searchQuery]);
+  }, [result, filterValue, pageFilter, searchQuery, wcagPrinciples]);
 
   const handleScrollToIssue = useCallback((id: string) => {
     const el = document.getElementById(id);
@@ -168,16 +164,18 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
               score={result.score}
               label={result.scoreLabel}
               wcagStatus={result.wcagStatus}
-              tooltipTitle={tooltips?.scoreGauge?.title}
-              tooltipBody={tooltips?.scoreGauge?.body}
+              tooltipTitle={concepts?.score?.title}
+              tooltipBody={concepts?.score?.body}
+              description={concepts?.score?.context}
             />
           </div>
           <div className="md:col-span-7 flex">
             <div className="w-full">
               <SeverityCards
                 totals={result.totals}
-                tooltipTitle={tooltips?.severityCards?.title}
-                tooltipBody={tooltips?.severityCards?.body}
+                severityLevels={knowledge?.severityLevels}
+                tooltipTitle={concepts?.severityBreakdown?.title}
+                tooltipBody={concepts?.severityBreakdown?.body}
               />
             </div>
           </div>
@@ -186,8 +184,8 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
           <PersonaImpact
             personaGroups={result.personaGroups}
             totalFindings={result.totalFindings}
-            tooltipTitle={tooltips?.personaImpact?.title}
-            tooltipBody={tooltips?.personaImpact?.body}
+            tooltipTitle={concepts?.personaImpact?.title}
+            tooltipBody={concepts?.personaImpact?.body}
             personaDescriptions={personaDescriptions}
           />
         </div>
@@ -196,8 +194,9 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
       <QuickWins
         quickWins={result.quickWins}
         onScrollToIssue={handleScrollToIssue}
-        tooltipTitle={tooltips?.quickWins?.title}
-        tooltipBody={tooltips?.quickWins?.body}
+        tooltipTitle={concepts?.quickWins?.title}
+        tooltipBody={concepts?.quickWins?.body}
+        subtitle={concepts?.quickWins?.context}
       />
 
       <FindingsToolbar
@@ -207,6 +206,7 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
         allExpanded={allExpanded}
         pageFilter={pageFilter}
         pages={pages}
+        knowledge={knowledge}
         onFilterChange={setFilterValue}
         onSearchChange={setSearchQuery}
         onToggleAll={() => setAllExpanded(!allExpanded)}
@@ -242,6 +242,7 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
         targetUrl={result.targetUrl}
         totals={result.totals}
         findings={result.findings}
+        knowledge={knowledge}
         onNewScan={onRunNewTest || (() => window.location.assign("/"))}
       />
     </div>

@@ -9,6 +9,8 @@ import type { Finding, SeverityTotals } from "@/types/scan";
 
 type ModalType = "pdf" | "checklist" | "json" | "remediation" | null;
 
+import type { EngineKnowledge } from "@diegovelasquezweb/a11y-engine";
+
 interface ActionsPanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -16,6 +18,7 @@ interface ActionsPanelProps {
   targetUrl: string;
   totals: SeverityTotals;
   findings: Finding[];
+  knowledge?: EngineKnowledge | null;
   onNewScan: () => void;
 }
 
@@ -65,14 +68,16 @@ export function ActionsPanel({
   targetUrl,
   totals,
   findings,
+  knowledge,
   onNewScan,
 }: ActionsPanelProps) {
   const [modal, setModal] = useState<ModalType>(null);
   const [jiraOpen, setJiraOpen] = useState(false);
+  const outputs = knowledge?.outputs;
 
   const jsonPreview = JSON.stringify(
     {
-      version: "0.6.1",
+      version: knowledge?.version ?? "…",
       targetUrl,
       score: "…",
       wcagStatus: "…",
@@ -108,29 +113,29 @@ export function ActionsPanel({
 
           <ActionCard
             icon={<FileText className="w-5 h-5" aria-hidden="true" />}
-            title="Stakeholder Report"
-            description="Download a formal PDF compliance report for clients, stakeholders, and auditors."
+            title={outputs?.pdf?.title ?? "Stakeholder Report"}
+            description={outputs?.pdf?.description ?? "A formal PDF accessibility compliance report."}
             onClick={() => setModal("pdf")}
           />
 
           <ActionCard
             icon={<ClipboardCheck className="w-5 h-5" aria-hidden="true" />}
-            title="Manual Checklist"
-            description="Download an interactive checklist of manual WCAG 2.2 AA checks."
+            title={outputs?.checklist?.title ?? "Manual Checklist"}
+            description={outputs?.checklist?.description ?? "An interactive WCAG 2.2 AA manual testing checklist."}
             onClick={() => setModal("checklist")}
           />
 
           <ActionCard
             icon={<FileJson className="w-5 h-5" aria-hidden="true" />}
-            title="Export JSON"
-            description="Download a machine-readable snapshot of all findings and scores."
+            title={outputs?.json?.title ?? "JSON Export"}
+            description={outputs?.json?.description ?? "Machine-readable snapshot of all findings and scores."}
             onClick={() => setModal("json")}
           />
 
           <ActionCard
             icon={<Brain className="w-5 h-5" aria-hidden="true" />}
-            title="Remediation Guide"
-            description="Download a Markdown guide optimized for AI agents and developers."
+            title={outputs?.remediation?.title ?? "Remediation Guide"}
+            description={outputs?.remediation?.description ?? "A structured Markdown guide for AI agents and developers."}
             onClick={() => setModal("remediation")}
           />
         </div>
@@ -139,9 +144,9 @@ export function ActionsPanel({
       <ExportModal
         open={modal === "pdf"}
         onOpenChange={(v) => !v && setModal(null)}
-        title="Stakeholder Report"
-        description="A formal PDF accessibility compliance report."
-        detail="This report is designed for clients, non-technical stakeholders, project managers, and auditors. It includes the compliance score, WCAG status, severity breakdown, and a prioritized list of findings with recommended fixes — formatted for sharing and sign-off."
+        title={outputs?.pdf?.title ?? "Stakeholder Report"}
+        description={outputs?.pdf?.description ?? "A formal PDF accessibility compliance report."}
+        detail={outputs?.pdf?.detail ?? ""}
         actionLabel="Download PDF"
         onAction={() => window.open(`/api/scan/${scanId}/pdf`, "_blank", "noopener,noreferrer")}
       />
@@ -149,9 +154,9 @@ export function ActionsPanel({
       <ExportModal
         open={modal === "checklist"}
         onOpenChange={(v) => !v && setModal(null)}
-        title="Manual Checklist"
-        description="An interactive WCAG 2.2 AA manual testing checklist."
-        detail="Automated scanners catch around 30–40% of accessibility issues. This checklist covers the remaining manual checks — keyboard navigation, screen reader behavior, focus management, motion, zoom, and cognitive accessibility. Use it alongside the automated findings for a complete audit."
+        title={outputs?.checklist?.title ?? "Manual Checklist"}
+        description={outputs?.checklist?.description ?? "An interactive WCAG 2.2 AA manual testing checklist."}
+        detail={outputs?.checklist?.detail ?? ""}
         actionLabel="Download Checklist"
         onAction={() => window.open(`/api/scan/${scanId}/checklist`, "_blank", "noopener,noreferrer")}
       />
@@ -159,9 +164,9 @@ export function ActionsPanel({
       <ExportModal
         open={modal === "json"}
         onOpenChange={(v) => !v && setModal(null)}
-        title="Export JSON"
-        description="Machine-readable snapshot of all findings, scores, and metadata."
-        detail="Useful for integrating with CI/CD pipelines, tracking compliance over time, importing into dashboards, or diffing two audits programmatically. Includes all enriched findings with WCAG mappings, fix code, severity, and page location."
+        title={outputs?.json?.title ?? "JSON Export"}
+        description={outputs?.json?.description ?? "Machine-readable snapshot of all findings."}
+        detail={outputs?.json?.detail ?? ""}
         actionLabel="Download JSON"
         onAction={() => window.open(`/api/scan/${scanId}/json`, "_blank", "noopener,noreferrer")}
         preview={
@@ -174,9 +179,9 @@ export function ActionsPanel({
       <ExportModal
         open={modal === "remediation"}
         onOpenChange={(v) => !v && setModal(null)}
-        title="Remediation Guide"
-        description="A structured Markdown guide for AI agents and developers."
-        detail="Contains prioritized fixes with ready-to-use code snippets, framework-specific guardrails, WCAG mappings, selector context, and verification commands. Designed to be fed directly into an AI coding agent (Claude, Copilot, Cursor) or used by developers for systematic remediation."
+        title={outputs?.remediation?.title ?? "Remediation Guide"}
+        description={outputs?.remediation?.description ?? "A Markdown guide for AI agents and developers."}
+        detail={outputs?.remediation?.detail ?? ""}
         actionLabel="Download Guide"
         onAction={() => window.open(`/api/scan/${scanId}/remediation`, "_blank", "noopener,noreferrer")}
       />

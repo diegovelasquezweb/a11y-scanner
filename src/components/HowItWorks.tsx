@@ -17,14 +17,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   brain: <Brain className="w-3.5 h-3.5" aria-hidden="true" />,
 };
 
-const TAG_COLORS: Record<string, string> = {
-  neutral: "bg-slate-100 text-slate-600",
-  info: "bg-sky-50 text-sky-600",
-  violet: "bg-violet-50 text-violet-600",
-  warning: "bg-amber-50 text-amber-700",
-  success: "bg-emerald-50 text-emerald-700",
-  purple: "bg-purple-50 text-purple-700",
-};
+const BADGE_STYLE = "bg-slate-100 text-slate-600";
 
 function ArticleCard({ article }: { article: DocArticle }) {
   const [open, setOpen] = useState(false);
@@ -43,9 +36,9 @@ function ArticleCard({ article }: { article: DocArticle }) {
                   <span className="text-slate-500">{ICON_MAP[article.icon]}</span>
                 )}
                 <span className="text-sm font-bold text-slate-900">{article.title}</span>
-                {article.tag && (
-                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${TAG_COLORS[article.tagVariant ?? "neutral"] ?? TAG_COLORS.neutral}`}>
-                    {article.tag}
+                {article.badge && (
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${BADGE_STYLE}`}>
+                    {article.badge}
                   </span>
                 )}
               </div>

@@ -11,15 +11,18 @@ async function loadEngine() {
 }
 
 async function buildJsonExport(rawFindings: Record<string, unknown>) {
-  const { getFindings, getOverview } = await loadEngine();
+  const engine = await loadEngine();
+  const { getFindings, getOverview, getKnowledge } = engine;
   const payload = rawFindings as unknown as ScanPayload;
 
   const findings: EnrichedFinding[] = getFindings(payload);
   const { totals, score, scoreLabel, wcagStatus, personaGroups, targetUrl, detectedStack, totalFindings } =
     getOverview(findings, payload) as AuditSummary & { scoreLabel: string };
 
+  const engineVersion = getKnowledge().version;
+
   return {
-    version: "0.6.1",
+    version: engineVersion,
     generatedAt: new Date().toISOString(),
     targetUrl,
     score,

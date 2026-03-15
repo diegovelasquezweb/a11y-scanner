@@ -9,9 +9,10 @@ interface ScoreGaugeProps {
   wcagStatus: "Pass" | "Conditional Pass" | "Fail";
   tooltipTitle?: string;
   tooltipBody?: string;
+  description?: string;
 }
 
-export function ScoreGauge({ score, label, wcagStatus, tooltipTitle, tooltipBody }: ScoreGaugeProps) {
+export function ScoreGauge({ score, label, wcagStatus, tooltipTitle, tooltipBody, description }: ScoreGaugeProps) {
   const scoreHue = wcagStatus === "Fail" ? 0 : score >= 75 ? 142 : score >= 55 ? 38 : 0;
 
   return (
@@ -75,7 +76,7 @@ export function ScoreGauge({ score, label, wcagStatus, tooltipTitle, tooltipBody
       </div>
       <h3 className="text-xl font-bold text-slate-900 mb-1">{label} Compliance</h3>
       <p className="text-xs font-medium text-slate-500 max-w-50 leading-snug">
-        Based on automated accessibility technical checks.
+        {description ?? "Based on automated accessibility technical checks."}
       </p>
     </div>
     </Tooltip.Provider>

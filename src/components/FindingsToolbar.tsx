@@ -1,8 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
 import * as Select from "@radix-ui/react-select";
 import * as Toggle from "@radix-ui/react-toggle";
 import { Search, ChevronDown, Check } from "lucide-react";
+import type { EngineKnowledge } from "@diegovelasquezweb/a11y-engine";
 
 export interface PageOption {
   path: string;
@@ -16,36 +18,12 @@ interface FindingsToolbarProps {
   allExpanded: boolean;
   pageFilter: string;
   pages: PageOption[];
+  knowledge?: EngineKnowledge | null;
   onFilterChange: (value: string) => void;
   onSearchChange: (value: string) => void;
   onToggleAll: () => void;
   onPageFilterChange: (value: string) => void;
 }
-
-const FILTER_GROUPS = [
-  {
-    label: "General",
-    items: [{ value: "all", label: "All Issues" }],
-  },
-  {
-    label: "Severity",
-    items: [
-      { value: "Critical", label: "Critical" },
-      { value: "Serious", label: "Serious" },
-      { value: "Moderate", label: "Moderate" },
-      { value: "Minor", label: "Minor" },
-    ],
-  },
-  {
-    label: "WCAG Principle",
-    items: [
-      { value: "Perceivable", label: "Perceivable" },
-      { value: "Operable", label: "Operable" },
-      { value: "Understandable", label: "Understandable" },
-      { value: "Robust", label: "Robust" },
-    ],
-  },
-];
 
 export function FindingsToolbar({
   totalFindings,
@@ -54,12 +32,24 @@ export function FindingsToolbar({
   allExpanded,
   pageFilter,
   pages,
+  knowledge,
   onFilterChange,
   onSearchChange,
   onToggleAll,
   onPageFilterChange,
 }: FindingsToolbarProps) {
   const hasMultiplePages = pages.length > 1;
+
+  const filterGroups = useMemo(() => {
+    const severityItems = (knowledge?.severityLevels ?? []).map((s) => ({ value: s.id, label: s.label }));
+    const principleItems = (knowledge?.wcagPrinciples ?? []).map((p) => ({ value: p.name, label: p.name }));
+
+    return [
+      { label: "General", items: [{ value: "all", label: "All Issues" }] },
+      ...(severityItems.length > 0 ? [{ label: "Severity", items: severityItems }] : []),
+      ...(principleItems.length > 0 ? [{ label: "WCAG Principle", items: principleItems }] : []),
+    ];
+  }, [knowledge]);
 
   return (
     <div className="sticky top-0 z-40 bg-[#f8fafc]/95 backdrop-blur-md py-5 border-b border-slate-200/80 mb-8 flex flex-col gap-5">
@@ -117,7 +107,7 @@ export function FindingsToolbar({
                 sideOffset={4}
               >
                 <Select.Viewport className="p-1.5">
-                  {FILTER_GROUPS.map((group, groupIdx) => (
+                  {filterGroups.map((group, groupIdx) => (
                     <Select.Group key={group.label}>
                       {groupIdx > 0 && (
                         <Select.Separator className="h-px bg-slate-100 mx-2 my-1" />

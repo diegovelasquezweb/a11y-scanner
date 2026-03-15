@@ -4,11 +4,9 @@ import { useState, useRef, useId, useMemo, useEffect } from "react";
 import { Info, Check, Search, Settings } from "lucide-react";
 import * as Slider from "@radix-ui/react-slider";
 import * as Toggle from "@radix-ui/react-toggle";
-import type { ScanStatus, ConformanceLevel, EngineSelection, AdvancedScanOptions } from "@/types/scan";
-import type { EngineKnowledge } from "@diegovelasquezweb/a11y-engine";
+import type { ScanStatus, EngineSelection, AdvancedScanOptions } from "@/types/scan";
+import type { EngineKnowledge, ConformanceLevel } from "@diegovelasquezweb/a11y-engine";
 import {
-  CONFORMANCE_LEVELS,
-  CONFORMANCE_TAG_MAP,
   DEFAULT_CONFORMANCE,
   DEFAULT_ENGINES,
   DEFAULT_ADVANCED,
@@ -26,7 +24,7 @@ interface AuditFormProps {
 export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFormProps) {
   const [targetUrl, setTargetUrl] = useState("");
   const [githubRepoUrl, setGithubRepoUrl] = useState("");
-  const [conformance, setConformance] = useState<ConformanceLevel>(DEFAULT_CONFORMANCE);
+  const [conformance, setConformance] = useState<ConformanceLevel["id"]>(DEFAULT_CONFORMANCE);
   const [bestPractices, setBestPractices] = useState(false);
   const [engines, setEngines] = useState<EngineSelection>({ ...DEFAULT_ENGINES });
   const [advanced, setAdvanced] = useState<AdvancedScanOptions>({ ...DEFAULT_ADVANCED });
@@ -45,13 +43,15 @@ export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFo
     }
   }, [status, errorMessage]);
 
-  const sliderIndex = CONFORMANCE_LEVELS.findIndex((l) => l.id === conformance);
+  const conformanceLevels = knowledge?.conformanceLevels ?? [];
+  const sliderIndex = conformanceLevels.findIndex((l) => l.id === conformance);
 
   const axeTags = useMemo(() => {
-    const tags = [...CONFORMANCE_TAG_MAP[conformance]];
+    const level = conformanceLevels.find((l) => l.id === conformance);
+    const tags = level ? [...level.tags] : [];
     if (bestPractices) tags.push("best-practice");
     return tags;
-  }, [conformance, bestPractices]);
+  }, [conformance, bestPractices, conformanceLevels]);
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
@@ -235,10 +235,10 @@ export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFo
           <div className="bg-sky-50/60 border border-sky-100 rounded-md p-5">
             <Slider.Root
               min={0}
-              max={CONFORMANCE_LEVELS.length - 1}
+              max={Math.max(0, conformanceLevels.length - 1)}
               step={1}
-              value={[sliderIndex]}
-              onValueChange={([val]) => setConformance(CONFORMANCE_LEVELS[val].id)}
+              value={[Math.max(0, sliderIndex)]}
+              onValueChange={([val]) => conformanceLevels[val] && setConformance(conformanceLevels[val].id)}
               disabled={isRunning}
               aria-label="WCAG conformance level"
               className="relative flex items-center select-none touch-none h-5 mb-3"
@@ -253,7 +253,7 @@ export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFo
             </Slider.Root>
 
             <div className="flex justify-between px-0.5">
-              {CONFORMANCE_LEVELS.map((level) => {
+              {conformanceLevels.map((level) => {
                 const isActive = conformance === level.id;
                 return (
                   <button
@@ -265,38 +265,28 @@ export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFo
                       isActive ? "" : "opacity-60 hover:opacity-80"
                     }`}
                   >
-                    <span
-                      className={`block text-sm font-bold ${
-                        isActive ? "text-sky-700" : "text-slate-500"
-                      }`}
-                    >
+                    <span className={`block text-sm font-bold ${isActive ? "text-sky-700" : "text-slate-500"}`}>
                       {level.label}
                     </span>
-                    <span
-                      className={`block text-[11px] ${
-                        isActive ? "text-sky-500" : "text-slate-400"
-                      }`}
-                    >
-                      {level.description}
+                    <span className={`block text-[11px] ${isActive ? "text-sky-500" : "text-slate-400"}`}>
+                      {level.badge}
                     </span>
                   </button>
                 );
               })}
             </div>
 
-            <p className="mt-4 pt-3 border-t border-sky-100 text-sm text-slate-600">
-              Current:{" "}
-              <span className="font-bold text-sky-700">WCAG {conformance}</span>
-              {conformance === "AA" && (
-                <span className="text-slate-400 ml-1">(Recommended for most websites)</span>
-              )}
-              {conformance === "A" && (
-                <span className="text-slate-400 ml-1">(Minimum baseline)</span>
-              )}
-              {conformance === "AAA" && (
-                <span className="text-slate-400 ml-1">(Strictest — not required by most regulations)</span>
-              )}
-            </p>
+            {conformanceLevels.length > 0 && (
+              <p className="mt-4 pt-3 border-t border-sky-100 text-sm text-slate-600">
+                Current:{" "}
+                <span className="font-bold text-sky-700">WCAG {conformance}</span>
+                {conformanceLevels.find((l) => l.id === conformance)?.shortDescription && (
+                  <span className="text-slate-400 ml-1">
+                    ({conformanceLevels.find((l) => l.id === conformance)!.shortDescription})
+                  </span>
+                )}
+              </p>
+            )}
           </div>
 
           <div className="mt-3 flex items-center justify-between">

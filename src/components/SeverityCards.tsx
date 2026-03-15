@@ -3,45 +3,31 @@
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { Info } from "lucide-react";
 import type { SeverityTotals } from "@/types/scan";
+import type { SeverityLevel } from "@diegovelasquezweb/a11y-engine";
 
-const SEVERITY_CONFIG = [
-  {
-    key: "Critical" as const,
-    color: "border-rose-500",
-    textColor: "text-rose-600",
-    description: "Functional blockers",
-  },
-  {
-    key: "Serious" as const,
-    color: "border-orange-500",
-    textColor: "text-orange-700",
-    description: "Serious impediments",
-  },
-  {
-    key: "Moderate" as const,
-    color: "border-amber-400",
-    textColor: "text-amber-700",
-    description: "Significant friction",
-  },
-  {
-    key: "Minor" as const,
-    color: "border-emerald-500",
-    textColor: "text-emerald-700",
-    description: "Minor violations",
-  },
-];
+const ORDER_COLORS: Record<number, { color: string; textColor: string }> = {
+  1: { color: "border-rose-500",    textColor: "text-rose-600" },
+  2: { color: "border-orange-500",  textColor: "text-orange-700" },
+  3: { color: "border-amber-400",   textColor: "text-amber-700" },
+  4: { color: "border-emerald-500", textColor: "text-emerald-700" },
+};
 
 interface SeverityCardsProps {
   totals: SeverityTotals;
+  severityLevels?: SeverityLevel[];
   tooltipTitle?: string;
   tooltipBody?: string;
 }
 
-export function SeverityCards({ totals, tooltipTitle, tooltipBody }: SeverityCardsProps) {
+export function SeverityCards({ totals, severityLevels = [], tooltipTitle, tooltipBody }: SeverityCardsProps) {
   return (
     <Tooltip.Provider delayDuration={200}>
     <div className="grid grid-cols-2 gap-4 h-full">
-      {SEVERITY_CONFIG.map(({ key, color, textColor, description }) => (
+      {severityLevels.map((level) => {
+        const { color, textColor } = ORDER_COLORS[level.order] ?? ORDER_COLORS[4];
+        const key = level.id as keyof SeverityTotals;
+        const description = level.shortDescription;
+        return (
         <div
           key={key}
           className={`premium-card p-5 rounded-md border-l-[6px] ${color} flex flex-col justify-between`}
@@ -83,7 +69,8 @@ export function SeverityCards({ totals, tooltipTitle, tooltipBody }: SeverityCar
             {description}
           </p>
         </div>
-      ))}
+        );
+      })}
     </div>
     </Tooltip.Provider>
   );
