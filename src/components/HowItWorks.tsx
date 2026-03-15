@@ -110,8 +110,13 @@ interface HowItWorksProps {
   knowledge?: EngineKnowledge | null;
 }
 
+const SECTION_ORDER = ["understanding-wcag", "how-it-works"];
+
 export function HowItWorks({ open, onOpenChange, knowledge }: HowItWorksProps) {
-  const sections = knowledge?.docs?.sections ?? [];
+  const raw = knowledge?.docs?.sections ?? [];
+  const sections = [...raw].sort(
+    (a, b) => SECTION_ORDER.indexOf(a.id) - SECTION_ORDER.indexOf(b.id)
+  );
 
   return (
     <SidePanel open={open} onOpenChange={onOpenChange} title="Help">
