@@ -168,11 +168,6 @@ async function runLocal(params: {
   advanced: Required<AdvancedOptions>;
 }) {
   const fs = await import("node:fs");
-  const path = await import("node:path");
-  const os = await import("node:os");
-  const { exec } = await import("node:child_process");
-  const { promisify } = await import("node:util");
-  const execAsync = promisify(exec);
 
   const { scanId, targetUrl, githubRepoUrl, axeTags, engines, advanced } = params;
 
@@ -185,18 +180,7 @@ async function runLocal(params: {
   );
 
   (async () => {
-    let tmpDir = "";
     try {
-      let projectDir: string | undefined;
-      if (githubRepoUrl) {
-        tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "a11y-scan-"));
-        const cloneDir = path.join(tmpDir, "repo");
-        try {
-          await execAsync(`git clone --depth 1 ${githubRepoUrl} ${cloneDir}`, { timeout: 30000 });
-          projectDir = cloneDir;
-        } catch { /* ignore clone errors */ }
-      }
-
       const { runAudit, getPDFReport, getChecklist } = await import("@diegovelasquezweb/a11y-engine");
 
       const payload = await runAudit({
@@ -207,10 +191,16 @@ async function runLocal(params: {
         timeoutMs: advanced.timeoutMs,
         viewport: advanced.viewport,
         colorScheme: advanced.colorScheme,
-        skipPatterns: !projectDir,
+        repoUrl: githubRepoUrl || undefined,
+        githubToken: process.env.GH_TOKEN || undefined,
+        skipPatterns: false,
+        ai: {
+          enabled: process.env.AI_ENABLED !== "false" && !!process.env.ANTHROPIC_API_KEY,
+          apiKey: process.env.ANTHROPIC_API_KEY || undefined,
+          githubToken: process.env.GH_TOKEN || undefined,
+        },
         axeTags: axeTags?.length ? axeTags : undefined,
         engines: engines ?? undefined,
-        projectDir,
         screenshotsDir: getScreenshotsDir(scanId),
         onProgress: (step, status) => {
           const progressPath = getScanPath(scanId, "progress.json");
@@ -254,10 +244,6 @@ async function runLocal(params: {
         getScanPath(scanId, "status.json"),
         JSON.stringify({ status: "error", error: message, updatedAt: new Date().toISOString() })
       );
-    } finally {
-      if (tmpDir) {
-        try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* ignore */ }
-      }
     }
   })();
 
