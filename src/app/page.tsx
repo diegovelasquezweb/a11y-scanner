@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { ScanStatus } from "@/types/scan";
+import type { ScanStatus, EngineSelection } from "@/types/scan";
 import { AuditForm } from "@/components/AuditForm";
 import ScanProgress from "@/components/ScanProgress";
 
@@ -11,6 +11,7 @@ export default function Home() {
   const [pendingScanId, setPendingScanId] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanStartTime, setScanStartTime] = useState<number | null>(null);
+  const [activeEngines, setActiveEngines] = useState<EngineSelection>({ axe: true, cdp: true, pa11y: true });
 
   const isScanning = status === "running";
 
@@ -20,14 +21,16 @@ export default function Home() {
     setScanError(null);
     setPendingScanId(null);
     setScanStartTime(null);
+    setActiveEngines({ axe: true, cdp: true, pa11y: true });
   }, []);
 
-  const handleSubmit = useCallback(async (targetUrl: string, githubRepoUrl: string, axeTags: string[]) => {
+  const handleSubmit = useCallback(async (targetUrl: string, githubRepoUrl: string, axeTags: string[], engines: EngineSelection) => {
     setStatus("running");
     setErrorMessage("");
     setScanError(null);
     setPendingScanId(null);
     setScanStartTime(Date.now());
+    setActiveEngines(engines);
 
     try {
       const response = await fetch("/api/scan", {
@@ -37,6 +40,7 @@ export default function Home() {
           targetUrl,
           githubRepoUrl: githubRepoUrl || undefined,
           axeTags: axeTags.length > 0 ? axeTags : undefined,
+          engines,
         }),
       });
 
@@ -99,6 +103,7 @@ export default function Home() {
           scanStartTime={scanStartTime}
           scanError={scanError}
           onRetry={handleRetry}
+          activeEngines={activeEngines}
         />
       </div>
     </main>

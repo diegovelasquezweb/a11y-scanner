@@ -21,6 +21,10 @@ on:
         description: "Comma-separated axe tags"
         required: false
         type: string
+      engines:
+        description: "Comma-separated engines to run (axe,cdp,pa11y). Default: all"
+        required: false
+        type: string
 
 jobs:
   scan:
@@ -69,6 +73,11 @@ jobs:
             fi
           fi
 
+          ENGINES_ARG=""
+          if [ -n "${{ inputs.engines }}" ]; then
+            ENGINES_ARG="--engines ${{ inputs.engines }}"
+          fi
+
           pnpm exec a11y-audit \
             --base-url "${{ inputs.target_url }}" \
             --max-routes 1 \
@@ -76,7 +85,8 @@ jobs:
             --with-reports \
             --output $AUDIT_DIR/report.html \
             $PROJECT_DIR_ARG \
-            $AXE_TAGS_ARG
+            $AXE_TAGS_ARG \
+            $ENGINES_ARG
 
       - name: Powering up your report
         run: echo "Preparing report bundle"

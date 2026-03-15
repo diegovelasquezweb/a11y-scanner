@@ -26,11 +26,18 @@ function ghHeaders(token: string): HeadersInit {
   };
 }
 
+interface EngineSelection {
+  axe?: boolean;
+  cdp?: boolean;
+  pa11y?: boolean;
+}
+
 export async function triggerScan(params: {
   scanToken: string;
   targetUrl: string;
   githubRepoUrl?: string;
   axeTags?: string[];
+  engines?: EngineSelection;
 }): Promise<void> {
   const { token, owner, repo, workflowFile, ref } = cfg();
 
@@ -40,6 +47,12 @@ export async function triggerScan(params: {
   };
   if (params.githubRepoUrl) inputs.github_repo_url = params.githubRepoUrl;
   if (params.axeTags?.length) inputs.axe_tags = params.axeTags.join(",");
+  if (params.engines) {
+    const active = Object.entries(params.engines)
+      .filter(([, v]) => v !== false)
+      .map(([k]) => k);
+    if (active.length < 3) inputs.engines = active.join(",");
+  }
 
   const res = await fetch(
     `${API}/repos/${owner}/${repo}/actions/workflows/${workflowFile}/dispatches`,

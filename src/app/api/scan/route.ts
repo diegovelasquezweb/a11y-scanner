@@ -5,10 +5,17 @@ import { SCANS_DIR, getScanPath, getScreenshotsDir } from "@/lib/scans";
 
 export const maxDuration = 60;
 
+interface EngineSelection {
+  axe?: boolean;
+  cdp?: boolean;
+  pa11y?: boolean;
+}
+
 interface ScanRequestBody {
   targetUrl: string;
   githubRepoUrl?: string;
   axeTags?: string[];
+  engines?: EngineSelection;
 }
 
 function validateUrl(url: string): boolean {
@@ -34,7 +41,7 @@ function validateGithubUrl(url: string): boolean {
 
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as ScanRequestBody;
-  const { targetUrl, githubRepoUrl, axeTags } = body;
+  const { targetUrl, githubRepoUrl, axeTags, engines } = body;
 
   if (!targetUrl || !validateUrl(targetUrl)) {
     return NextResponse.json(
@@ -53,7 +60,7 @@ export async function POST(request: NextRequest) {
   const scanId = randomUUID();
 
   if (process.env.LOCAL_MODE === "true") {
-    return runLocal({ scanId, targetUrl, githubRepoUrl, axeTags });
+    return runLocal({ scanId, targetUrl, githubRepoUrl, axeTags, engines });
   }
 
   try {
@@ -62,6 +69,7 @@ export async function POST(request: NextRequest) {
       targetUrl,
       githubRepoUrl: githubRepoUrl || undefined,
       axeTags: axeTags?.length ? axeTags : undefined,
+      engines,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to start scan.";
@@ -128,6 +136,7 @@ async function runLocal(params: {
   targetUrl: string;
   githubRepoUrl?: string;
   axeTags?: string[];
+  engines?: EngineSelection;
 }) {
   const fs = await import("node:fs");
   const path = await import("node:path");
@@ -136,7 +145,7 @@ async function runLocal(params: {
   const { promisify } = await import("node:util");
   const execAsync = promisify(exec);
 
-  const { scanId, targetUrl, githubRepoUrl, axeTags } = params;
+  const { scanId, targetUrl, githubRepoUrl, axeTags, engines } = params;
 
   fs.mkdirSync(SCANS_DIR, { recursive: true });
   await cleanupScans().catch(() => { /* non-fatal */ });
@@ -161,14 +170,16 @@ async function runLocal(params: {
 
       const { runAudit, getPDFReport, getChecklist } = await import("@diegovelasquezweb/a11y-engine");
 
-      const payload = await runAudit({
+      // engines option added in engine 0.6.0; cast to bypass published types
+      const payload = await (runAudit as unknown as (opts: Record<string, unknown>) => Promise<Record<string, unknown>>)({
         baseUrl: targetUrl,
         maxRoutes: 1,
         skipPatterns: true,
         axeTags: axeTags?.length ? axeTags : undefined,
+        engines: engines ?? undefined,
         projectDir,
         screenshotsDir: getScreenshotsDir(scanId),
-        onProgress: (step, status) => {
+        onProgress: (step: string, status: string) => {
           const progressPath = getScanPath(scanId, "progress.json");
           let progress: Record<string, unknown> = {};
           try {
@@ -193,7 +204,7 @@ async function runLocal(params: {
       );
 
       const [pdfReport, checklistReport] = await Promise.all([
-        getPDFReport(payload, { baseUrl: targetUrl }),
+        getPDFReport(payload as unknown as Parameters<typeof getPDFReport>[0], { baseUrl: targetUrl }),
         getChecklist({ baseUrl: targetUrl }),
       ]);
 

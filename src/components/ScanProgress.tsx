@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+
+interface EngineSelection {
+  axe: boolean;
+  cdp: boolean;
+  pa11y: boolean;
+}
 
 interface StepInfo {
   status: "pending" | "running" | "done" | "error";
@@ -13,16 +19,14 @@ interface ProgressData {
   scanId?: string;
 }
 
-const STEPS = [
-  { key: "page", label: "Loading website" },
-  { key: "axe", label: "Running accessibility scans" },
-  { key: "cdp", label: "Checking dynamic content" },
-  { key: "pa11y", label: "Analyzing rendered HTML" },
-  { key: "merge", label: "Processing results" },
-  { key: "intelligence", label: "Powering up your report" },
+const ALL_STEPS = [
+  { key: "page", label: "Loading website", engine: null },
+  { key: "axe", label: "Running accessibility scans", engine: "axe" as const },
+  { key: "cdp", label: "Checking dynamic content", engine: "cdp" as const },
+  { key: "pa11y", label: "Analyzing rendered HTML", engine: "pa11y" as const },
+  { key: "merge", label: "Processing results", engine: null },
+  { key: "intelligence", label: "Powering up your report", engine: null },
 ] as const;
-
-const TOTAL_STEPS = STEPS.length;
 
 interface CompletedStep {
   key: string;
@@ -35,9 +39,22 @@ interface ScanProgressProps {
   scanStartTime?: number | null;
   scanError?: string | null;
   onRetry?: () => void;
+  activeEngines?: EngineSelection;
 }
 
-export default function ScanProgress({ isScanning, initialScanId, scanStartTime, scanError, onRetry }: ScanProgressProps) {
+export default function ScanProgress({ isScanning, initialScanId, scanStartTime, scanError, onRetry, activeEngines }: ScanProgressProps) {
+  const engines = activeEngines ?? { axe: true, cdp: true, pa11y: true };
+
+  const STEPS = useMemo(() =>
+    ALL_STEPS.filter((step) => {
+      if (!step.engine) return true;
+      return engines[step.engine];
+    }), [engines]);
+
+  const TOTAL_STEPS = STEPS.length;
+
+  const activeStepKeys = useMemo(() => new Set<string>(STEPS.map((s) => s.key)), [STEPS]);
+
   const [elapsed, setElapsed] = useState(0);
   const [currentStepLabel, setCurrentStepLabel] = useState<string>("Loading website");
   const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
@@ -93,12 +110,16 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
     }
 
     for (const step of STEPS) {
+      if (!activeStepKeys.has(step.key)) continue;
+
       const info = steps[step.key];
       if (!info) continue;
 
       if (info.status === "done" && !seenDoneRef.current.has(step.key)) {
         seenDoneRef.current.add(step.key);
-        setDoneCount(seenDoneRef.current.size);
+        // Count only active steps
+        const activeDone = [...seenDoneRef.current].filter((k) => activeStepKeys.has(k)).length;
+        setDoneCount(activeDone);
         setCompletedSteps((prev) => [
           ...prev,
           {
@@ -120,7 +141,7 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
     if (runningLabel) {
       setCurrentStepLabel(runningLabel);
     }
-  }, []);
+  }, [STEPS, activeStepKeys]);
 
   useEffect(() => {
     if (!isScanning) {

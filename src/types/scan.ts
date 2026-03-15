@@ -28,6 +28,20 @@ export interface ScanResult {
 
 export type ScanStatus = "idle" | "running" | "success" | "error";
 
+export interface EngineSelection {
+  axe: boolean;
+  cdp: boolean;
+  pa11y: boolean;
+}
+
+export const DEFAULT_ENGINES: EngineSelection = { axe: true, cdp: true, pa11y: true };
+
+export const ENGINE_OPTIONS: { id: keyof EngineSelection; label: string; description: string }[] = [
+  { id: "axe", label: "axe-core", description: "WCAG rule engine" },
+  { id: "cdp", label: "CDP", description: "Chrome DevTools checks" },
+  { id: "pa11y", label: "pa11y", description: "HTML CodeSniffer" },
+];
+
 export type ConformanceLevel = "A" | "AA" | "AAA";
 
 export const CONFORMANCE_TAG_MAP: Record<ConformanceLevel, string[]> = {

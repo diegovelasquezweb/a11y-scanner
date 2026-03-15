@@ -4,18 +4,20 @@ import { useState, useRef, useId, useMemo, useEffect } from "react";
 import * as Slider from "@radix-ui/react-slider";
 import * as Toggle from "@radix-ui/react-toggle";
 import * as Tooltip from "@radix-ui/react-tooltip";
-import type { ScanStatus, ConformanceLevel } from "@/types/scan";
+import type { ScanStatus, ConformanceLevel, EngineSelection } from "@/types/scan";
 import {
   CONFORMANCE_LEVELS,
   CONFORMANCE_TAG_MAP,
   DEFAULT_CONFORMANCE,
+  DEFAULT_ENGINES,
+  ENGINE_OPTIONS,
 } from "@/types/scan";
 import { WcagEducation, WcagEducationTrigger } from "@/components/WcagEducation";
 
 interface AuditFormProps {
   status: ScanStatus;
   errorMessage: string;
-  onSubmit: (targetUrl: string, githubRepoUrl: string, axeTags: string[]) => void;
+  onSubmit: (targetUrl: string, githubRepoUrl: string, axeTags: string[], engines: EngineSelection) => void;
 }
 
 export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
@@ -23,6 +25,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
   const [githubRepoUrl, setGithubRepoUrl] = useState("");
   const [conformance, setConformance] = useState<ConformanceLevel>(DEFAULT_CONFORMANCE);
   const [bestPractices, setBestPractices] = useState(false);
+  const [engines, setEngines] = useState<EngineSelection>({ ...DEFAULT_ENGINES });
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const targetInputRef = useRef<HTMLInputElement>(null);
   const scanErrorRef = useRef<HTMLDivElement>(null);
@@ -73,6 +76,10 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
       }
     }
 
+    if (!engines.axe && !engines.cdp && !engines.pa11y) {
+      errors.engines = "Select at least one scan engine.";
+    }
+
     setValidationErrors(errors);
 
     if (Object.keys(errors).length > 0) {
@@ -87,7 +94,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
     e.preventDefault();
     if (status === "running") return;
     if (!validate()) return;
-    onSubmit(targetUrl.trim(), githubRepoUrl.trim(), axeTags);
+    onSubmit(targetUrl.trim(), githubRepoUrl.trim(), axeTags, engines);
   };
 
   const isRunning = status === "running";
@@ -328,6 +335,60 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
             </Toggle.Root>
             <WcagEducationTrigger />
           </div>
+        </fieldset>
+
+        <fieldset className="mb-6" disabled={isRunning}>
+          <legend className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-3">
+            Scan Engines
+          </legend>
+          <div className="flex flex-wrap gap-3">
+            {ENGINE_OPTIONS.map((engine) => {
+              const checked = engines[engine.id];
+              return (
+                <label
+                  key={engine.id}
+                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-md border cursor-pointer select-none transition-all text-sm font-medium ${
+                    checked
+                      ? "bg-sky-50 border-sky-300 text-sky-800"
+                      : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                  } ${isRunning ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() =>
+                      setEngines((prev) => ({ ...prev, [engine.id]: !prev[engine.id] }))
+                    }
+                    disabled={isRunning}
+                    className="sr-only"
+                  />
+                  <span
+                    className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                      checked ? "bg-sky-600 border-sky-600" : "border-slate-300 bg-white"
+                    }`}
+                    aria-hidden="true"
+                  >
+                    {checked && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </span>
+                  <span>
+                    {engine.label}
+                    <span className="text-[10px] text-slate-400 ml-1 font-normal">
+                      {engine.description}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+          {validationErrors.engines && (
+            <p className="mt-2 text-xs font-medium text-rose-600" role="alert">
+              {validationErrors.engines}
+            </p>
+          )}
         </fieldset>
 
         {!isRunning && (
