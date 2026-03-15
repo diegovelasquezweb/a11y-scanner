@@ -9,6 +9,33 @@ import type { Finding, SeverityTotals } from "@/types/scan";
 
 type ModalType = "pdf" | "checklist" | "json" | "remediation" | null;
 
+const EXPORT_ACTIONS = {
+  pdf: {
+    title: "Stakeholder Report",
+    description: "A formal PDF accessibility compliance report for clients, stakeholders, and auditors.",
+    detail: "Includes the compliance score, WCAG status, severity breakdown, and a prioritized list of findings with recommended fixes — formatted for sharing and sign-off.",
+    actionLabel: "Download PDF",
+  },
+  checklist: {
+    title: "Manual Checklist",
+    description: "An interactive WCAG 2.2 AA manual testing checklist.",
+    detail: "Automated scanners catch around 30–40% of accessibility issues. This checklist covers the remaining manual checks — keyboard navigation, screen reader behavior, focus management, motion, zoom, and cognitive accessibility.",
+    actionLabel: "Download Checklist",
+  },
+  json: {
+    title: "JSON Export",
+    description: "Machine-readable snapshot of all findings, scores, and metadata.",
+    detail: "Useful for CI/CD pipelines, compliance tracking over time, dashboards, or diffing two audits. Includes all enriched findings with WCAG mappings, fix code, severity, and page location.",
+    actionLabel: "Download JSON",
+  },
+  remediation: {
+    title: "Remediation Guide",
+    description: "A structured Markdown guide for AI agents and developers.",
+    detail: "Contains prioritized fixes with ready-to-use code snippets, framework-specific guardrails, WCAG mappings, selector context, and verification commands. Feed it directly into an AI coding agent or use it for systematic remediation.",
+    actionLabel: "Download Guide",
+  },
+} as const;
+
 import type { EngineKnowledge } from "@diegovelasquezweb/a11y-engine";
 
 interface ActionsPanelProps {
@@ -73,7 +100,6 @@ export function ActionsPanel({
 }: ActionsPanelProps) {
   const [modal, setModal] = useState<ModalType>(null);
   const [jiraOpen, setJiraOpen] = useState(false);
-  const outputs = knowledge?.outputs;
 
   const jsonPreview = JSON.stringify(
     {
@@ -113,29 +139,29 @@ export function ActionsPanel({
 
           <ActionCard
             icon={<FileText className="w-5 h-5" aria-hidden="true" />}
-            title={outputs?.pdf?.title ?? "Stakeholder Report"}
-            description={outputs?.pdf?.description ?? "A formal PDF accessibility compliance report."}
+            title={EXPORT_ACTIONS.pdf.title}
+            description={EXPORT_ACTIONS.pdf.description}
             onClick={() => setModal("pdf")}
           />
 
           <ActionCard
             icon={<ClipboardCheck className="w-5 h-5" aria-hidden="true" />}
-            title={outputs?.checklist?.title ?? "Manual Checklist"}
-            description={outputs?.checklist?.description ?? "An interactive WCAG 2.2 AA manual testing checklist."}
+            title={EXPORT_ACTIONS.checklist.title}
+            description={EXPORT_ACTIONS.checklist.description}
             onClick={() => setModal("checklist")}
           />
 
           <ActionCard
             icon={<FileJson className="w-5 h-5" aria-hidden="true" />}
-            title={outputs?.json?.title ?? "JSON Export"}
-            description={outputs?.json?.description ?? "Machine-readable snapshot of all findings and scores."}
+            title={EXPORT_ACTIONS.json.title}
+            description={EXPORT_ACTIONS.json.description}
             onClick={() => setModal("json")}
           />
 
           <ActionCard
             icon={<Brain className="w-5 h-5" aria-hidden="true" />}
-            title={outputs?.remediation?.title ?? "Remediation Guide"}
-            description={outputs?.remediation?.description ?? "A structured Markdown guide for AI agents and developers."}
+            title={EXPORT_ACTIONS.remediation.title}
+            description={EXPORT_ACTIONS.remediation.description}
             onClick={() => setModal("remediation")}
           />
         </div>
@@ -144,30 +170,21 @@ export function ActionsPanel({
       <ExportModal
         open={modal === "pdf"}
         onOpenChange={(v) => !v && setModal(null)}
-        title={outputs?.pdf?.title ?? "Stakeholder Report"}
-        description={outputs?.pdf?.description ?? "A formal PDF accessibility compliance report."}
-        detail={outputs?.pdf?.detail ?? ""}
-        actionLabel="Download PDF"
+        {...EXPORT_ACTIONS.pdf}
         onAction={() => window.open(`/api/scan/${scanId}/pdf`, "_blank", "noopener,noreferrer")}
       />
 
       <ExportModal
         open={modal === "checklist"}
         onOpenChange={(v) => !v && setModal(null)}
-        title={outputs?.checklist?.title ?? "Manual Checklist"}
-        description={outputs?.checklist?.description ?? "An interactive WCAG 2.2 AA manual testing checklist."}
-        detail={outputs?.checklist?.detail ?? ""}
-        actionLabel="Download Checklist"
+        {...EXPORT_ACTIONS.checklist}
         onAction={() => window.open(`/api/scan/${scanId}/checklist`, "_blank", "noopener,noreferrer")}
       />
 
       <ExportModal
         open={modal === "json"}
         onOpenChange={(v) => !v && setModal(null)}
-        title={outputs?.json?.title ?? "JSON Export"}
-        description={outputs?.json?.description ?? "Machine-readable snapshot of all findings."}
-        detail={outputs?.json?.detail ?? ""}
-        actionLabel="Download JSON"
+        {...EXPORT_ACTIONS.json}
         onAction={() => window.open(`/api/scan/${scanId}/json`, "_blank", "noopener,noreferrer")}
         preview={
           <pre className="text-emerald-300 text-xs font-mono leading-relaxed whitespace-pre">
@@ -179,10 +196,7 @@ export function ActionsPanel({
       <ExportModal
         open={modal === "remediation"}
         onOpenChange={(v) => !v && setModal(null)}
-        title={outputs?.remediation?.title ?? "Remediation Guide"}
-        description={outputs?.remediation?.description ?? "A Markdown guide for AI agents and developers."}
-        detail={outputs?.remediation?.detail ?? ""}
-        actionLabel="Download Guide"
+        {...EXPORT_ACTIONS.remediation}
         onAction={() => window.open(`/api/scan/${scanId}/remediation`, "_blank", "noopener,noreferrer")}
       />
 
