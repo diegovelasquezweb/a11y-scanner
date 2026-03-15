@@ -1,18 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { CircleX, CircleCheck, RefreshCw } from "lucide-react";
-
-interface EngineSelection {
-  axe: boolean;
-  cdp: boolean;
-  pa11y: boolean;
-}
 
 interface StepInfo {
   status: "pending" | "running" | "done" | "skipped" | "error";
   updatedAt?: string;
-  extra?: Record<string, unknown>;
 }
 
 interface ProgressData {
@@ -21,24 +14,13 @@ interface ProgressData {
   scanId?: string;
 }
 
-const ALL_STEPS = [
-  { key: "page",         label: "Loading website",                engine: null,       repoOnly: false, aiOnly: false },
-  { key: "repo",         label: "Reading repository",             engine: null,       repoOnly: true,  aiOnly: false },
-  { key: "axe",          label: "Running accessibility scans",    engine: "axe" as const, repoOnly: false, aiOnly: false },
-  { key: "cdp",          label: "Checking dynamic content",       engine: "cdp" as const, repoOnly: false, aiOnly: false },
-  { key: "pa11y",        label: "Analyzing rendered HTML",        engine: "pa11y" as const, repoOnly: false, aiOnly: false },
-  { key: "merge",        label: "Processing results",             engine: null,       repoOnly: false, aiOnly: false },
-  { key: "patterns",     label: "Scanning source code",           engine: null,       repoOnly: true,  aiOnly: false },
-  { key: "intelligence", label: "Powering up your report",        engine: null,       repoOnly: false, aiOnly: false },
-  { key: "ai",           label: "AI enrichment",                  engine: null,       repoOnly: false, aiOnly: true  },
-];
+const STEPS = [
+  { key: "page",         label: "Preparing scan" },
+  { key: "axe",          label: "Running accessibility scans" },
+  { key: "intelligence", label: "Generating report" },
+] as const;
 
-interface CompletedStep {
-  key: string;
-  label: string;
-  skipped?: boolean;
-  extra?: Record<string, unknown>;
-}
+const TOTAL_STEPS = STEPS.length;
 
 interface ScanProgressProps {
   isScanning: boolean;
@@ -46,32 +28,14 @@ interface ScanProgressProps {
   scanStartTime?: number | null;
   scanError?: string | null;
   onRetry?: () => void;
-  activeEngines?: EngineSelection;
-  hasRepo?: boolean;
-  hasAI?: boolean;
 }
 
-export default function ScanProgress({ isScanning, initialScanId, scanStartTime, scanError, onRetry, activeEngines, hasRepo = false, hasAI = false }: ScanProgressProps) {
-  const STEPS = useMemo(() => {
-    const engines = activeEngines ?? { axe: true, cdp: true, pa11y: true };
-    return ALL_STEPS.filter((step) => {
-      if (step.engine && !engines[step.engine]) return false;
-      if (step.repoOnly && !hasRepo) return false;
-      if (step.aiOnly && !hasAI) return false;
-      return true;
-    });
-  }, [activeEngines, hasRepo, hasAI]);
-
-  const TOTAL_STEPS = STEPS.length;
-
-  const activeStepKeys = useMemo(() => new Set<string>(STEPS.map((s) => s.key)), [STEPS]);
-
+export default function ScanProgress({ isScanning, initialScanId, scanStartTime, scanError, onRetry }: ScanProgressProps) {
   const [elapsed, setElapsed] = useState(0);
-  const [currentStepLabel, setCurrentStepLabel] = useState<string>("Loading website");
-  const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
+  const [currentStepLabel, setCurrentStepLabel] = useState<string>("Preparing scan");
+  const [completedSteps, setCompletedSteps] = useState<{ key: string; label: string }[]>([]);
   const [doneCount, setDoneCount] = useState(0);
   const [scanId, setScanId] = useState<string | null>(initialScanId || null);
-
   const [failedStep, setFailedStep] = useState<string | null>(null);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -82,33 +46,22 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
   const errorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (scanStartTime) {
-      startTimeRef.current = scanStartTime;
-    }
+    if (scanStartTime) startTimeRef.current = scanStartTime;
   }, [scanStartTime]);
 
   useEffect(() => {
     if (!isScanning) return;
 
-    if (!startTimeRef.current) {
-      startTimeRef.current = Date.now();
-    }
+    if (!startTimeRef.current) startTimeRef.current = Date.now();
 
     timerRef.current = setInterval(() => {
-      if (startTimeRef.current) {
-        setElapsed((Date.now() - startTimeRef.current) / 1000);
-      }
+      if (startTimeRef.current) setElapsed((Date.now() - startTimeRef.current) / 1000);
     }, 100);
 
-    requestAnimationFrame(() => {
-      progressRef.current?.focus();
-    });
+    requestAnimationFrame(() => progressRef.current?.focus());
 
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     };
   }, [isScanning]);
 
@@ -116,51 +69,29 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
     const steps = data.steps || {};
     let runningLabel: string | null = null;
 
-    if (data.scanId) {
-      setScanId(data.scanId);
-    }
+    if (data.scanId) setScanId(data.scanId);
 
-    for (const [, step] of STEPS.entries()) {
-      if (!activeStepKeys.has(step.key)) continue;
-
+    for (const step of STEPS) {
       const info = steps[step.key];
       if (!info) continue;
 
       if ((info.status === "done" || info.status === "skipped") && !seenDoneRef.current.has(step.key)) {
         seenDoneRef.current.add(step.key);
-        const activeDone = [...seenDoneRef.current].filter((k) => activeStepKeys.has(k)).length;
-        setDoneCount(activeDone);
-        setCompletedSteps((prev) => [
-          ...prev,
-          {
-            key: step.key,
-            label: step.label,
-            skipped: info.status === "skipped",
-            extra: info.extra,
-          },
-        ]);
+        const count = [...seenDoneRef.current].filter((k) => STEPS.some((s) => s.key === k)).length;
+        setDoneCount(count);
+        setCompletedSteps((prev) => [...prev, { key: step.key, label: step.label }]);
       }
 
-      if (info.status === "running") {
-        runningLabel = step.label;
-      }
-
-      if (info.status === "error") {
-        setFailedStep(step.label);
-      }
+      if (info.status === "running") runningLabel = step.label;
+      if (info.status === "error") setFailedStep(step.label);
     }
 
-    if (runningLabel) {
-      setCurrentStepLabel(runningLabel);
-    }
-  }, [STEPS, activeStepKeys]);
+    if (runningLabel) setCurrentStepLabel(runningLabel);
+  }, []);
 
   useEffect(() => {
     if (!isScanning) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
       return;
     }
 
@@ -169,23 +100,15 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
         const id = scanId || initialScanId;
         const url = id ? `/api/progress?scanId=${encodeURIComponent(id)}` : "/api/progress";
         const res = await fetch(url);
-        if (res.ok) {
-          const data: ProgressData = await res.json();
-          processSnapshot(data);
-        }
-      } catch {
-        // ignore
-      }
+        if (res.ok) processSnapshot(await res.json() as ProgressData);
+      } catch { /* ignore */ }
     };
 
     poll();
     intervalRef.current = setInterval(poll, 3000);
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
     };
   }, [isScanning, processSnapshot, scanId, initialScanId]);
 
@@ -194,9 +117,7 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
 
   useEffect(() => {
     if (allDone && timerRef.current) {
-      if (startTimeRef.current) {
-        setElapsed((Date.now() - startTimeRef.current) / 1000);
-      }
+      if (startTimeRef.current) setElapsed((Date.now() - startTimeRef.current) / 1000);
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
@@ -204,24 +125,17 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
 
   useEffect(() => {
     if (allDone && !hasError && scanId) {
-      const timeout = setTimeout(() => {
-        window.location.href = `/scan/${scanId}`;
-      }, 3000);
+      const timeout = setTimeout(() => { window.location.href = `/scan/${scanId}`; }, 3000);
       return () => clearTimeout(timeout);
     }
   }, [allDone, hasError, scanId]);
 
   useEffect(() => {
-    if (hasError && errorRef.current) {
-      errorRef.current.focus();
-    }
+    if (hasError && errorRef.current) errorRef.current.focus();
   }, [hasError]);
 
   useEffect(() => {
-    if (hasError && intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
+    if (hasError && intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
   }, [hasError]);
 
   if (!isScanning) return null;
@@ -239,7 +153,7 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
             {hasError ? (
               <CircleX className="w-4 h-4 text-rose-500 shrink-0" aria-hidden="true" />
             ) : allDone ? (
-              <CircleCheck className="w-4 h-4 text-emerald-500 shrink-0 motion-reduce:transition-none" aria-hidden="true" />
+              <CircleCheck className="w-4 h-4 text-emerald-500 shrink-0" aria-hidden="true" />
             ) : (
               <span className="w-4 h-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin motion-reduce:animate-none shrink-0" aria-hidden="true" />
             )}
@@ -260,22 +174,15 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
           <p
             aria-live="polite"
             aria-atomic="true"
-            className="text-sm font-semibold text-sky-700 mb-3 motion-reduce:transition-none"
+            className="text-sm font-semibold text-sky-700 mb-3"
           >
             {currentStepLabel}
           </p>
         )}
 
         {hasError && (
-          <div
-            ref={errorRef}
-            tabIndex={-1}
-            role="alert"
-            className="mb-3 outline-none"
-          >
-            {scanError && (
-              <p className="text-sm text-rose-600 mb-2">{scanError}</p>
-            )}
+          <div ref={errorRef} tabIndex={-1} role="alert" className="mb-3 outline-none">
+            {scanError && <p className="text-sm text-rose-600 mb-2">{scanError}</p>}
             {onRetry && (
               <button
                 type="button"
@@ -306,19 +213,9 @@ export default function ScanProgress({ isScanning, initialScanId, scanStartTime,
         {completedSteps.length > 0 && (
           <div className="space-y-1.5">
             {completedSteps.map((step) => (
-              <div key={step.key} className="flex items-center gap-2 text-xs motion-reduce:animate-none animate-in fade-in-0 slide-in-from-top-1 duration-300">
-                {step.skipped ? (
-                  <span className="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0 inline-block" aria-hidden="true" />
-                ) : (
-                  <CircleCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" aria-hidden="true" />
-                )}
-                <span className={step.skipped ? "text-slate-400" : "text-slate-600"}>
-                  {step.label}
-                  {step.skipped && step.extra?.reason ? ` — ${step.extra.reason}` : ""}
-                  {!step.skipped && step.key === "patterns" && typeof step.extra?.total === "number"
-                    ? ` — ${step.extra.total} pattern${step.extra.total !== 1 ? "s" : ""} found`
-                    : ""}
-                </span>
+              <div key={step.key} className="flex items-center gap-2 text-xs animate-in fade-in-0 slide-in-from-top-1 duration-300 motion-reduce:animate-none">
+                <CircleCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" aria-hidden="true" />
+                <span className="text-slate-600">{step.label}</span>
               </div>
             ))}
           </div>

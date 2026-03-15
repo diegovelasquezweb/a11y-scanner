@@ -23,9 +23,6 @@ export default function Home() {
   const [pendingScanId, setPendingScanId] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanStartTime, setScanStartTime] = useState<number | null>(null);
-  const [activeEngines, setActiveEngines] = useState<EngineSelection>({ axe: true, cdp: true, pa11y: true });
-  const [hasRepo, setHasRepo] = useState(false);
-  const [hasAI, setHasAI] = useState(false);
   const [knowledge, setKnowledge] = useState<EngineKnowledge | null>(null);
 
   const isScanning = status === "running";
@@ -36,7 +33,6 @@ export default function Home() {
     setScanError(null);
     setPendingScanId(null);
     setScanStartTime(null);
-    setActiveEngines({ axe: true, cdp: true, pa11y: true });
   }, []);
 
   const handleSubmit = useCallback(async (targetUrl: string, githubRepoUrl: string, axeTags: string[], engines: EngineSelection, advanced: AdvancedScanOptions) => {
@@ -45,8 +41,6 @@ export default function Home() {
     setScanError(null);
     setPendingScanId(null);
     setScanStartTime(Date.now());
-    setActiveEngines(engines);
-    setHasRepo(!!githubRepoUrl);
 
     try {
       const response = await fetch("/api/scan", {
@@ -61,7 +55,7 @@ export default function Home() {
         }),
       });
 
-      let data: { success?: boolean; scanId?: string; error?: string; hasAI?: boolean } = {};
+      let data: { success?: boolean; scanId?: string; error?: string } = {};
       try {
         data = await response.json();
       } catch {
@@ -72,7 +66,6 @@ export default function Home() {
 
       if (data.scanId) {
         setPendingScanId(data.scanId);
-        setHasAI(data.hasAI ?? false);
         return;
       }
 
@@ -82,9 +75,7 @@ export default function Home() {
         return;
       }
     } catch (err) {
-      setScanError(
-        err instanceof Error ? err.message : "Network error. Please try again."
-      );
+      setScanError(err instanceof Error ? err.message : "Network error. Please try again.");
       setStatus("idle");
     }
   }, []);
@@ -127,9 +118,6 @@ export default function Home() {
           scanStartTime={scanStartTime}
           scanError={scanError}
           onRetry={handleRetry}
-          activeEngines={activeEngines}
-          hasRepo={hasRepo}
-          hasAI={hasAI}
         />
       </div>
     </main>
