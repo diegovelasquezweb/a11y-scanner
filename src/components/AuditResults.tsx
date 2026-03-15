@@ -125,6 +125,20 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
               ))}
             </div>
           )}
+          {(result.conformanceLevel || result.bestPractices) && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {result.conformanceLevel && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200/60">
+                  WCAG 2.2 {result.conformanceLevel}
+                </span>
+              )}
+              {result.bestPractices && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200/60">
+                  Best Practices
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-3 shrink-0">

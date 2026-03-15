@@ -176,7 +176,7 @@ async function runLocal(params: {
 
   fs.writeFileSync(
     getScanPath(scanId, "status.json"),
-    JSON.stringify({ status: "scanning", updatedAt: new Date().toISOString() })
+    JSON.stringify({ status: "scanning", axeTags: axeTags ?? [], updatedAt: new Date().toISOString() })
   );
 
   (async () => {

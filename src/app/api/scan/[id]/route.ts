@@ -43,7 +43,8 @@ export async function GET(
     }
 
     const rawFindings = JSON.parse(fs.readFileSync(findingsPath, "utf-8"));
-    return buildResponse(scanId, rawFindings);
+    const axeTags: string[] = statusData.axeTags ?? [];
+    return buildResponse(scanId, rawFindings, axeTags);
   }
 
   const runStatus = await getRunStatus(scanId);
@@ -82,10 +83,10 @@ export async function GET(
     );
   }
 
-  return buildResponse(scanId, rawFindings);
+  return buildResponse(scanId, rawFindings, []);
 }
 
-async function buildResponse(scanId: string, rawFindings: Record<string, unknown>) {
+async function buildResponse(scanId: string, rawFindings: Record<string, unknown>, axeTags: string[]) {
   const { getFindings, getOverview } = await loadEngine();
 
   const payload = rawFindings as unknown as ScanPayload;
@@ -107,6 +108,15 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
     totalFindings,
   } = getOverview(findings, payload) as AuditSummary;
 
+  const bestPractices = axeTags.includes("best-practice");
+  const conformanceLevel = axeTags.includes("wcag2aaa")
+    ? "AAA"
+    : axeTags.includes("wcag2aa")
+      ? "AA"
+      : axeTags.includes("wcag2a")
+        ? "A"
+        : null;
+
   return NextResponse.json({
     success: true,
     status: "completed",
@@ -122,6 +132,8 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
       quickWins,
       totalFindings,
       detectedStack,
+      conformanceLevel,
+      bestPractices,
     },
   });
 }

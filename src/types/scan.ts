@@ -24,6 +24,8 @@ export interface ScanResult {
     quickWins: EnrichedFinding[];
     totalFindings: number;
     detectedStack?: DetectedStack;
+    conformanceLevel?: string | null;
+    bestPractices?: boolean;
   };
 }
 
