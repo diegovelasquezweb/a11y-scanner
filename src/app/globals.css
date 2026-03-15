@@ -103,19 +103,19 @@ body {
   overflow: hidden;
 }
 
-.wcag-panel-overlay {
+.side-panel-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(2px);
   z-index: 50;
-  animation: wcag-overlay-in 0.25s ease-out;
+  animation: side-panel-overlay-in 0.25s ease-out;
 }
-.wcag-panel-overlay[data-state="closed"] {
-  animation: wcag-overlay-out 0.2s ease-in;
+.side-panel-overlay[data-state="closed"] {
+  animation: side-panel-overlay-out 0.2s ease-in;
 }
 
-.wcag-panel-content {
+.side-panel-content {
   position: fixed;
   top: 0;
   right: 0;
@@ -128,25 +128,25 @@ body {
   box-shadow: -8px 0 30px -5px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  animation: wcag-panel-in 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  animation: side-panel-in 0.3s cubic-bezier(0.32, 0.72, 0, 1);
 }
-.wcag-panel-content[data-state="closed"] {
-  animation: wcag-panel-out 0.2s ease-in;
+.side-panel-content[data-state="closed"] {
+  animation: side-panel-out 0.2s ease-in;
 }
 
-@keyframes wcag-overlay-in {
+@keyframes side-panel-overlay-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-@keyframes wcag-overlay-out {
+@keyframes side-panel-overlay-out {
   from { opacity: 1; }
   to { opacity: 0; }
 }
-@keyframes wcag-panel-in {
+@keyframes side-panel-in {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
-@keyframes wcag-panel-out {
+@keyframes side-panel-out {
   from { transform: translateX(0); }
   to { transform: translateX(100%); }
 }
@@ -166,10 +166,10 @@ body {
     transition: none;
   }
 
-  .wcag-panel-overlay,
-  .wcag-panel-overlay[data-state="closed"],
-  .wcag-panel-content,
-  .wcag-panel-content[data-state="closed"] {
+  .side-panel-overlay,
+  .side-panel-overlay[data-state="closed"],
+  .side-panel-content,
+  .side-panel-content[data-state="closed"] {
     animation: none;
   }
 }
