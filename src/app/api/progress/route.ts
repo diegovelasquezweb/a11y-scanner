@@ -65,10 +65,7 @@ async function getLocalProgress(scanId: string) {
 
   const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
   const statusPath = path.join(SCANS_DIR, `${scanId}.status.json`);
-
-  const symlinkBase = path.join(process.cwd(), "node_modules", "@diegovelasquezweb", "a11y-engine");
-  const engineBase = fs.realpathSync(symlinkBase);
-  const progressPath = path.join(engineBase, ".audit", "progress.json");
+  const progressPath = path.join(SCANS_DIR, `${scanId}.progress.json`);
 
   const now = new Date().toISOString();
 

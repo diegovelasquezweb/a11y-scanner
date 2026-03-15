@@ -34,14 +34,10 @@ export async function GET(
   let imageBuffer: Buffer | null = null;
 
   if (process.env.LOCAL_MODE === "true") {
-    const symlinkBase = path.join(
-      process.cwd(),
-      "node_modules",
-      "@diegovelasquezweb",
-      "a11y-engine"
-    );
-    const engineBase = fs.realpathSync(symlinkBase);
-    const absolutePath = path.join(engineBase, ".audit", relativePath);
+    const SCANS_DIR = path.join(process.cwd(), "src", "data", "scans");
+    const screenshotsDir = path.join(SCANS_DIR, `${scanId}.screenshots`);
+    const filename = path.basename(relativePath);
+    const absolutePath = path.join(screenshotsDir, filename);
     if (fs.existsSync(absolutePath)) {
       imageBuffer = fs.readFileSync(absolutePath);
     }

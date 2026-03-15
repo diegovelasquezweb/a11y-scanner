@@ -110,12 +110,15 @@ async function runLocal(params: {
       // Run audit via engine API
       const { runAudit, getPDFReport, getChecklist } = await import("@diegovelasquezweb/a11y-engine");
 
+      const screenshotsDir = path.join(SCANS_DIR, `${scanId}.screenshots`);
+
       const payload = await runAudit({
         baseUrl: targetUrl,
         maxRoutes: 1,
         skipPatterns: true,
         axeTags: axeTags?.length ? axeTags : undefined,
         projectDir,
+        screenshotsDir,
         onProgress: (step, status) => {
           // Write progress for polling
           const progressPath = path.join(SCANS_DIR, `${scanId}.progress.json`);
