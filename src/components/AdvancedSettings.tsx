@@ -111,7 +111,7 @@ export function AdvancedSettings({
                 onEnginesChange({ axe: true, cdp: true, pa11y: true });
               }}
               disabled={disabled}
-              className="text-xs font-medium text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors disabled:opacity-50 mb-10"
+              className="text-xs font-medium text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors disabled:opacity-50 mb-2"
             >
               Reset to defaults
             </button>
