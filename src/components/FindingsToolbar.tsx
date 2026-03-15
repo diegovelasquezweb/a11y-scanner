@@ -2,6 +2,7 @@
 
 import * as Select from "@radix-ui/react-select";
 import * as Toggle from "@radix-ui/react-toggle";
+import { Search, ChevronDown, Check } from "lucide-react";
 
 interface FindingsToolbarProps {
   totalFindings: number;
@@ -78,20 +79,7 @@ export function FindingsToolbar({
             placeholder="Search violations..."
             className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-md text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm"
           />
-          <svg
-            className="absolute left-4 top-3.5 w-5 h-5 text-slate-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <Search className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" aria-hidden="true" />
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -105,9 +93,7 @@ export function FindingsToolbar({
             >
               <Select.Value />
               <Select.Icon>
-                <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <ChevronDown className="w-4 h-4 text-slate-400" aria-hidden="true" />
               </Select.Icon>
             </Select.Trigger>
 
@@ -134,9 +120,7 @@ export function FindingsToolbar({
                         >
                           <Select.ItemText>{item.label}</Select.ItemText>
                           <Select.ItemIndicator className="absolute right-3">
-                            <svg className="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                            </svg>
+                            <Check className="w-4 h-4 text-sky-600" strokeWidth={2.5} aria-hidden="true" />
                           </Select.ItemIndicator>
                         </Select.Item>
                       ))}

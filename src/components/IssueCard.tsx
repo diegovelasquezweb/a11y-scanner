@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import Image from "next/image";
 import * as Tabs from "@radix-ui/react-tabs";
 import * as Collapsible from "@radix-ui/react-collapsible";
+import { Code, ChevronDown, Info, Zap, Check, Copy, BookOpen } from "lucide-react";
 import type { Finding } from "@/types/scan";
 
 function escapeHtml(str: string): string {
@@ -133,20 +134,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                 {finding.selector && (
                   <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px] text-slate-600 font-medium">
                     <div className="flex items-center gap-1.5 min-w-0 bg-slate-50/50 px-2 py-1 rounded-md border border-slate-100">
-                      <svg
-                        className="w-3.5 h-3.5 text-slate-500 shrink-0"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-                        />
-                      </svg>
+                      <Code className="w-3.5 h-3.5 text-slate-500 shrink-0" aria-hidden="true" />
                       <code className="text-[12px] text-slate-800 font-mono truncate min-w-0 flex-1">
                         {finding.selector}
                       </code>
@@ -155,17 +143,13 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                 )}
               </div>
               <div className="bg-white p-1.5 rounded-full border border-slate-200 shadow-sm group-hover:bg-slate-50 transition-colors mt-1 shrink-0">
-                <svg
+                <ChevronDown
                   className={`card-chevron w-5 h-5 text-slate-500 transition-transform duration-300 ${
                     isExpanded ? "rotate-180" : ""
                   }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
                   aria-hidden="true"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                </svg>
+                />
               </div>
             </div>
           </button>
@@ -194,9 +178,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                   <div className="bg-white rounded-md border border-slate-200/60 shadow-sm p-5 space-y-5">
                     <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
                       <div className="p-1 bg-slate-100 rounded-md">
-                        <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                        <Info className="w-4 h-4 text-slate-500" aria-hidden="true" />
                       </div>
                       The Problem
                     </h4>
@@ -232,9 +214,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                 <Tabs.Content value="fix">
                   <div className="bg-linear-to-br from-sky-50 to-white border border-sky-100/80 rounded-md p-5 relative overflow-hidden shadow-sm">
                     <h4 className="text-[11px] font-black text-sky-700 uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2">
-                      <svg className="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
+                      <Zap className="w-4 h-4 text-sky-500" aria-hidden="true" />
                       The Fix
                     </h4>
                     <div className="relative z-10 space-y-4">
@@ -267,13 +247,9 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                             }`}
                           >
                             {copiedId === `fix-${finding.id}` ? (
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M5 13l4 4L19 7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
+                              <Check className="w-3.5 h-3.5" strokeWidth={3} aria-hidden="true" />
                             ) : (
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
+                              <Copy className="w-3.5 h-3.5" aria-hidden="true" />
                             )}
                           </button>
                         </div>
@@ -286,9 +262,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                             rel="noopener noreferrer"
                             className="text-[11px] font-bold text-slate-500 hover:text-sky-600 transition-colors flex items-center gap-1.5 uppercase tracking-wider"
                           >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                              <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18 18.246 18.477 16.5 18c-1.746 0-3.332.477-4.5 1.253" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
+                            <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
                             MDN Docs
                           </a>
                         </div>
@@ -348,13 +322,9 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                                     }`}
                                   >
                                     {copiedId === `ev-${finding.id}-${idx}` ? (
-                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path d="M5 13l4 4L19 7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                                      </svg>
+                                      <Check className="w-3.5 h-3.5" strokeWidth={3} aria-hidden="true" />
                                     ) : (
-                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                      </svg>
+                                      <Copy className="w-3.5 h-3.5" aria-hidden="true" />
                                     )}
                                   </button>
                                 </div>

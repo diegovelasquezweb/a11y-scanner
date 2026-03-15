@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useId, useMemo, useEffect } from "react";
+import { Info, Check, Search } from "lucide-react";
 import * as Slider from "@radix-ui/react-slider";
 import * as Toggle from "@radix-ui/react-toggle";
 import * as Tooltip from "@radix-ui/react-tooltip";
@@ -114,9 +115,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
                   type="button"
                   className="inline-flex items-center gap-1 rounded-full px-1 py-0.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <Info className="w-4 h-4" aria-hidden="true" />
                   <span className="text-[11px] font-medium sm:sr-only">How it works</span>
                 </button>
               </Tooltip.Trigger>
@@ -323,9 +322,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
                 aria-hidden="true"
               >
                 {bestPractices && (
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <Check className="w-3 h-3 text-white" strokeWidth={3} aria-hidden="true" />
                 )}
               </span>
               Include Best Practices
@@ -369,9 +366,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
                     aria-hidden="true"
                   >
                     {checked && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
+                      <Check className="w-3 h-3 text-white" strokeWidth={3} aria-hidden="true" />
                     )}
                   </span>
                   <span>
@@ -397,9 +392,7 @@ export function AuditForm({ status, errorMessage, onSubmit }: AuditFormProps) {
               type="submit"
               className="px-8 py-3 bg-sky-600 text-white font-bold text-sm rounded-md shadow-md hover:bg-sky-700 focus:outline-none focus:ring-4 focus:ring-sky-600/20 transition-all flex items-center gap-2"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <Search className="w-4 h-4" aria-hidden="true" />
               Run Audit
             </button>
 

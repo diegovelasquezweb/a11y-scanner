@@ -1,30 +1,14 @@
 "use client";
 
 import * as Tooltip from "@radix-ui/react-tooltip";
+import { Volume2, Smartphone, Eye, Lightbulb, Users, Info } from "lucide-react";
 import type { PersonaGroup } from "@/types/scan";
 
 const PERSONA_ICONS: Record<string, React.ReactNode> = {
-  screenReader: (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-    </svg>
-  ),
-  keyboard: (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-    </svg>
-  ),
-  vision: (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-    </svg>
-  ),
-  cognitive: (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-    </svg>
-  ),
+  screenReader: <Volume2 className="w-4 h-4" aria-hidden="true" />,
+  keyboard: <Smartphone className="w-4 h-4" aria-hidden="true" />,
+  vision: <Eye className="w-4 h-4" aria-hidden="true" />,
+  cognitive: <Lightbulb className="w-4 h-4" aria-hidden="true" />,
 };
 
 interface PersonaImpactProps {
@@ -38,9 +22,7 @@ export function PersonaImpact({ personaGroups, totalFindings }: PersonaImpactPro
     <div className="premium-card rounded-md p-5 w-full flex flex-col">
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <Users className="w-4 h-4" aria-hidden="true" />
           Persona Impact
         </h3>
         <Tooltip.Root>
@@ -50,9 +32,7 @@ export function PersonaImpact({ personaGroups, totalFindings }: PersonaImpactPro
               aria-label="About Persona Impact"
               className="rounded-full p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30"
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+               <Info className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           </Tooltip.Trigger>
           <Tooltip.Portal>

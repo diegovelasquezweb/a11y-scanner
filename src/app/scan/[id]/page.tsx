@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, use } from "react";
+import { AlertTriangle, Frown } from "lucide-react";
 import type { ScanResult } from "@/types/scan";
 import ScanProgress from "@/components/ScanProgress";
 import { AuditResults } from "@/components/AuditResults";
@@ -98,9 +99,7 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
       {status === "error" && (
         <div className="text-center py-20">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-rose-100 mb-4">
-            <svg className="w-7 h-7 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+            <AlertTriangle className="w-7 h-7 text-rose-600" aria-hidden="true" />
           </div>
           <h2 className="text-lg font-bold text-slate-900 mb-2">Scan Failed</h2>
           <p className="text-sm text-rose-600 mb-6">{errorMessage}</p>
@@ -116,9 +115,7 @@ export default function ScanPage({ params }: { params: Promise<{ id: string }> }
       {status === "not_found" && (
         <div className="text-center py-20">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-slate-100 mb-4">
-            <svg className="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <Frown className="w-7 h-7 text-slate-400" aria-hidden="true" />
           </div>
           <h2 className="text-lg font-bold text-slate-900 mb-2">Scan Not Found</h2>
           <p className="text-sm text-slate-500 mb-6">This scan ID does not exist or has expired.</p>

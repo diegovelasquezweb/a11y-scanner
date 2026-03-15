@@ -3,6 +3,7 @@
 import { useState, useCallback, useId } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Select from "@radix-ui/react-select";
+import { X, ChevronDown, Check } from "lucide-react";
 import type { Finding, SeverityTotals } from "@/types/scan";
 
 const FIXED_JIRA_BASE_URL = "https://wondersauce.atlassian.net";
@@ -137,9 +138,7 @@ export function JiraIntegration({
                 className="rounded p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
                 aria-label="Close"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </Dialog.Close>
           </div>
@@ -180,9 +179,7 @@ export function JiraIntegration({
                 >
                   <Select.Value />
                   <Select.Icon>
-                    <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                    <ChevronDown className="w-4 h-4 text-slate-400" aria-hidden="true" />
                   </Select.Icon>
                 </Select.Trigger>
                 <Select.Portal>
@@ -200,9 +197,7 @@ export function JiraIntegration({
                         >
                           <Select.ItemText>{type}</Select.ItemText>
                           <Select.ItemIndicator className="absolute right-3">
-                            <svg className="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                            </svg>
+                            <Check className="w-4 h-4 text-sky-600" strokeWidth={2.5} aria-hidden="true" />
                           </Select.ItemIndicator>
                         </Select.Item>
                       ))}

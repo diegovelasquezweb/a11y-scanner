@@ -1,5 +1,6 @@
 "use client";
 
+import { Zap, ArrowRight } from "lucide-react";
 import type { Finding } from "@/types/scan";
 
 const SEVERITY_BADGE: Record<string, string> = {
@@ -23,9 +24,7 @@ export function QuickWins({ quickWins, onScrollToIssue }: QuickWinsProps) {
       className="rounded-md bg-slate-900 p-8 mb-12 relative overflow-hidden border border-slate-800 shadow-2xl"
     >
       <div className="absolute -right-6 -bottom-6 opacity-[0.07] pointer-events-none" aria-hidden="true">
-        <svg className="w-40 h-40 text-sky-400" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
+        <Zap className="w-40 h-40 text-sky-400" fill="currentColor" aria-hidden="true" />
       </div>
       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-sky-500/40 to-transparent" aria-hidden="true" />
 
@@ -72,20 +71,10 @@ export function QuickWins({ quickWins, onScrollToIssue }: QuickWinsProps) {
                   className="text-[10px] font-bold text-sky-400 hover:text-sky-300 transition-colors uppercase tracking-widest flex items-center gap-1.5 group-hover/qw:gap-2"
                 >
                   View Solution
-                  <svg
+                  <ArrowRight
                     className="w-3 h-3 transition-transform group-hover/qw:translate-x-0.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
                     aria-hidden="true"
-                  >
-                    <path
-                      d="M17 8l4 4m0 0l-4 4m4-4H3"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  />
                 </button>
               </div>
             );
