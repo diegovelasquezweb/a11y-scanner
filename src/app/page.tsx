@@ -5,6 +5,7 @@ import type { ScanStatus, EngineSelection, AdvancedScanOptions } from "@/types/s
 import type { EngineKnowledge } from "@diegovelasquezweb/a11y-engine";
 import { AuditForm } from "@/components/AuditForm";
 import ScanProgress from "@/components/ScanProgress";
+import { AccessibilityQuiz } from "@/components/AccessibilityQuiz";
 
 async function fetchKnowledgePack(signal?: AbortSignal): Promise<EngineKnowledge | null> {
   try {
@@ -112,13 +113,16 @@ export default function Home() {
             : "opacity-0 translate-y-4 motion-reduce:translate-y-0 max-h-0 overflow-hidden pointer-events-none"
         }`}
       >
-        <ScanProgress
-          isScanning={isScanning}
-          initialScanId={pendingScanId}
-          scanStartTime={scanStartTime}
-          scanError={scanError}
-          onRetry={handleRetry}
-        />
+        <div className="flex flex-col items-center w-full max-w-2xl">
+          <ScanProgress
+            isScanning={isScanning}
+            initialScanId={pendingScanId}
+            scanStartTime={scanStartTime}
+            scanError={scanError}
+            onRetry={handleRetry}
+          />
+          <AccessibilityQuiz knowledge={knowledge} visible={isScanning} />
+        </div>
       </div>
     </main>
   );
