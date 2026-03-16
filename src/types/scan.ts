@@ -80,6 +80,7 @@ export interface AdvancedScanOptions {
   viewport: { width: number; height: number };
   colorScheme: ColorScheme;
   includeIncomplete: boolean;
+  countIncompleteInScore: boolean;
   aiEnabled: boolean;
   aiSystemPrompt: string;
 }
@@ -94,6 +95,7 @@ export const DEFAULT_ADVANCED: AdvancedScanOptions = {
   viewport: { width: 1280, height: 800 },
   colorScheme: "light",
   includeIncomplete: false,
+  countIncompleteInScore: false,
   aiEnabled: true,
   aiSystemPrompt: DEFAULT_AI_SYSTEM_PROMPT,
 };

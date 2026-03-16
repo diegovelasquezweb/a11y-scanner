@@ -435,6 +435,38 @@ export function AdvancedSettings({
               </div>
             </div>
           </label>
+          {advanced.includeIncomplete && (
+            <label className={`mt-3 block rounded-md border p-3.5 cursor-pointer select-none transition-all ${
+              advanced.countIncompleteInScore ? "bg-sky-50 border-sky-300" : "bg-white border-slate-200 hover:border-slate-300"
+            } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={advanced.countIncompleteInScore}
+                  onChange={() => setField("countIncompleteInScore", !advanced.countIncompleteInScore)}
+                  disabled={disabled}
+                  className="sr-only"
+                />
+                <span
+                  className={`w-4 h-4 mt-0.5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                    advanced.countIncompleteInScore ? "bg-sky-600 border-sky-600" : "border-slate-300 bg-white"
+                  }`}
+                  aria-hidden="true"
+                >
+                  {advanced.countIncompleteInScore && <Check className="w-3 h-3 text-white" strokeWidth={3} aria-hidden="true" />}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-800">
+                    Count in compliance score
+                    <HintTip text="When enabled, incomplete findings count toward severity totals and compliance score." />
+                  </span>
+                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                    Include manual-verification findings in score and totals.
+                  </p>
+                </div>
+              </div>
+            </label>
+          )}
         </section>
 
         <section>

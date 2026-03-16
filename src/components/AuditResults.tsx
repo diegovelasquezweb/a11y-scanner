@@ -47,6 +47,11 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
       .map(([path, count]) => ({ path, count }));
   }, [result.findings]);
 
+  const hasVerificationFindings = useMemo(
+    () => result.findings.some((f) => !!f.needsVerification),
+    [result.findings]
+  );
+
   const filteredFindings = useMemo((): Finding[] => {
     let findings = result.findings;
 
@@ -55,11 +60,15 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
     }
 
     if (filterValue !== "all") {
+      if (filterValue === "needs-verification") {
+        findings = findings.filter((f) => !!f.needsVerification);
+      } else {
       const principle = wcagPrinciples.find((p) => p.name === filterValue);
       if (principle) {
         findings = findings.filter((f) => f.wcag.includes(principle.criterionPrefix));
       } else {
         findings = findings.filter((f) => f.severity === filterValue);
+      }
       }
     }
 
@@ -201,6 +210,7 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
 
       <FindingsToolbar
         totalFindings={filteredFindings.length}
+        hasVerificationFindings={hasVerificationFindings}
         filterValue={filterValue}
         searchQuery={searchQuery}
         allExpanded={allExpanded}

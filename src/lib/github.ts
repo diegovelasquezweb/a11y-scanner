@@ -63,6 +63,7 @@ export async function triggerScan(params: {
     if (a.viewport) inputs.viewport = `${a.viewport.width}x${a.viewport.height}`;
     if (a.colorScheme) inputs.color_scheme = a.colorScheme;
     if (a.includeIncomplete) inputs.include_incomplete = "true";
+    if (a.countIncompleteInScore) inputs.count_incomplete_in_score = "true";
   }
   if (params.aiEnabled === false) inputs.ai_enabled = "false";
   if (params.aiSystemPrompt) inputs.ai_system_prompt = params.aiSystemPrompt;
@@ -78,6 +79,14 @@ export async function triggerScan(params: {
 
   if (!res.ok) {
     const text = await res.text();
+    if (
+      res.status === 422 &&
+      /include_incomplete|count_incomplete_in_score|unexpected inputs?/i.test(text)
+    ) {
+      throw new Error(
+        "Remote workflow is outdated: it does not accept findings scoring inputs. Update .github/workflows/scan.yml in the Actions repo and re-run the scan."
+      );
+    }
     throw new Error(`GitHub workflow_dispatch failed: ${res.status} ${text}`);
   }
 }

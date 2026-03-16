@@ -13,6 +13,7 @@ export interface PageOption {
 
 interface FindingsToolbarProps {
   totalFindings: number;
+  hasVerificationFindings: boolean;
   filterValue: string;
   searchQuery: string;
   allExpanded: boolean;
@@ -27,6 +28,7 @@ interface FindingsToolbarProps {
 
 export function FindingsToolbar({
   totalFindings,
+  hasVerificationFindings,
   filterValue,
   searchQuery,
   allExpanded,
@@ -45,11 +47,19 @@ export function FindingsToolbar({
     const principleItems = (knowledge?.wcagPrinciples ?? []).map((p) => ({ value: p.name, label: p.name }));
 
     return [
-      { label: "General", items: [{ value: "all", label: "All Issues" }] },
+      {
+        label: "General",
+        items: [
+          { value: "all", label: "All Issues" },
+          ...(hasVerificationFindings
+            ? [{ value: "needs-verification", label: "Needs Verification" }]
+            : []),
+        ],
+      },
       ...(severityItems.length > 0 ? [{ label: "Severity", items: severityItems }] : []),
       ...(principleItems.length > 0 ? [{ label: "WCAG Principle", items: principleItems }] : []),
     ];
-  }, [knowledge]);
+  }, [hasVerificationFindings, knowledge]);
 
   return (
     <div className="sticky top-0 z-40 bg-[#f8fafc]/95 backdrop-blur-md py-5 border-b border-slate-200/80 mb-8 flex flex-col gap-5">

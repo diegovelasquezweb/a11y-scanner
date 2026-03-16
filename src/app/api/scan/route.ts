@@ -51,6 +51,7 @@ function normalizeAdvanced(raw?: AdvancedOptions): AdvancedScanOptions {
     },
     colorScheme: (raw?.colorScheme === "dark" ? "dark" : "light") as AdvancedScanOptions["colorScheme"],
     includeIncomplete: raw?.includeIncomplete === true,
+    countIncompleteInScore: raw?.countIncompleteInScore === true,
     aiEnabled: raw?.aiEnabled !== false,
     aiSystemPrompt: typeof raw?.aiSystemPrompt === "string" && raw.aiSystemPrompt.trim()
       ? raw.aiSystemPrompt.trim()
@@ -222,6 +223,7 @@ async function runLocal(params: {
 
       payload.metadata = payload.metadata || {};
       (payload.metadata as Record<string, unknown>).target_url = targetUrl;
+      (payload.metadata as Record<string, unknown>).countIncompleteInScore = advanced.countIncompleteInScore;
       fs.writeFileSync(
         getScanPath(scanId, "findings.json"),
         JSON.stringify(payload, null, 2)

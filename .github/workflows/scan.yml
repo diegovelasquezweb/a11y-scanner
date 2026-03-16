@@ -53,6 +53,10 @@ on:
         description: "Include axe incomplete findings (true|false)"
         required: false
         type: string
+      count_incomplete_in_score:
+        description: "Count incomplete findings in score (true|false)"
+        required: false
+        type: string
       ai_enabled:
         description: "Enable AI enrichment (true|false)"
         required: false
@@ -198,11 +202,12 @@ jobs:
               const data = JSON.parse(fs.readFileSync('$FINDINGS_PATH','utf8'));
               data.metadata = data.metadata || {};
               data.metadata.target_url = '${{ inputs.target_url }}';
+              data.metadata.countIncompleteInScore = '${{ inputs.count_incomplete_in_score }}' === 'true';
               data.patternFindings = $PATTERN_FINDINGS;
               fs.writeFileSync('out/result.json', JSON.stringify(data));
             "
           else
-            echo "{\"findings\":[],\"metadata\":{\"target_url\":\"${{ inputs.target_url }}\"},\"patternFindings\":$PATTERN_FINDINGS}" > out/result.json
+            echo "{\"findings\":[],\"metadata\":{\"target_url\":\"${{ inputs.target_url }}\",\"countIncompleteInScore\":${{ inputs.count_incomplete_in_score == 'true' }}},\"patternFindings\":$PATTERN_FINDINGS}" > out/result.json
           fi
           # checklist
           cp $AUDIT_DIR/checklist.html out/checklist.html 2>/dev/null || echo "<html><body>No checklist generated</body></html>" > out/checklist.html

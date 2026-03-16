@@ -110,6 +110,15 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
     return ai ? { ...f, ...ai } : f;
   });
 
+  const metadata = (payload as unknown as Record<string, unknown>).metadata as Record<string, unknown> | undefined;
+  const countIncompleteInScore = metadata?.countIncompleteInScore === true;
+
+  const getOverviewWithOptions = getOverview as (
+    findings: EnrichedFinding[],
+    payload?: ScanPayload | null,
+    options?: { countIncompleteInScore?: boolean }
+  ) => AuditSummary;
+
   const {
     totals,
     score,
@@ -120,9 +129,8 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
     targetUrl,
     detectedStack,
     totalFindings,
-  } = getOverview(findings, payload) as AuditSummary;
+  } = getOverviewWithOptions(findings, payload, { countIncompleteInScore });
 
-  const metadata = (payload as unknown as Record<string, unknown>).metadata as Record<string, unknown> | undefined;
   const methodology = metadata?.testingMethodology as Record<string, unknown> | undefined;
   const conformanceLevel = (methodology?.conformance_level as string) ?? null;
   const bestPractices = (methodology?.best_practices as boolean) ?? false;
