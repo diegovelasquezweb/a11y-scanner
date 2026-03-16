@@ -67,27 +67,6 @@ const findings = getFindings(payload, {
 });
 ```
 
-When AI enrichment ran, the AI fields are stored in the raw payload and must be merged back onto the normalized findings:
-
-```ts
-// Build an AI field map from the raw payload before calling getFindings
-const rawList = (payload as Record<string, unknown>).findings as Record<string, unknown>[];
-const aiMap = new Map(
-  rawList
-    .filter((f) => f.aiEnhanced)
-    .map((f) => [f.id as string, {
-      aiEnhanced: true,
-      aiFixDescription: f.ai_fix_description as string | null,
-      aiFixCode: f.ai_fix_code as string | null,
-      aiFixCodeLang: f.ai_fix_code_lang as string | null,
-    }])
-);
-
-const findings = getFindings(payload, { screenshotUrlBuilder }).map((f) => {
-  const ai = aiMap.get(f.id);
-  return ai ? { ...f, ...ai } : f;
-});
-```
 
 
 
