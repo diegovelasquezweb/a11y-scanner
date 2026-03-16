@@ -91,12 +91,24 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
   const payload = rawFindings as unknown as ScanPayload;
 
   const rawFindingsList = (payload as unknown as Record<string, unknown>).findings as Record<string, unknown>[] | undefined ?? [];
-  const aiEnhancedIds = new Set(rawFindingsList.filter(f => f.aiEnhanced).map(f => f.id as string));
+  const aiMap = new Map(
+    rawFindingsList
+      .filter(f => f.aiEnhanced)
+      .map(f => [f.id as string, {
+        aiEnhanced: true,
+        aiFixDescription: f.ai_fix_description as string | null ?? null,
+        aiFixCode: f.ai_fix_code as string | null ?? null,
+        aiFixCodeLang: f.ai_fix_code_lang as string | null ?? null,
+      }])
+  );
 
   const findings: EnrichedFinding[] = getFindings(payload, {
     screenshotUrlBuilder: (rawPath) =>
       `/api/scan/${scanId}/screenshot?path=${encodeURIComponent(rawPath)}`,
-  }).map((f: EnrichedFinding) => aiEnhancedIds.has(f.id) ? { ...f, aiEnhanced: true } : f);
+  }).map((f: EnrichedFinding) => {
+    const ai = aiMap.get(f.id);
+    return ai ? { ...f, ...ai } : f;
+  });
 
   const {
     totals,

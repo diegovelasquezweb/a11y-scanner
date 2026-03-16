@@ -18,6 +18,7 @@ interface EnumOptionValue {
 import {
   VIEWPORT_PRESETS,
   DEFAULT_ADVANCED,
+  DEFAULT_AI_SYSTEM_PROMPT,
 } from "@/types/scan";
 
 
@@ -106,6 +107,35 @@ export function AdvancedSettings({
               </div>
             </div>
           </label>
+
+          {advanced.aiEnabled && (
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-widest">
+                  System Prompt
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setField("aiSystemPrompt", DEFAULT_AI_SYSTEM_PROMPT)}
+                  disabled={disabled}
+                  className="text-xs font-medium text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors disabled:opacity-50"
+                >
+                  Reset to default
+                </button>
+              </div>
+              <textarea
+                value={advanced.aiSystemPrompt}
+                onChange={(e) => setField("aiSystemPrompt", e.target.value)}
+                disabled={disabled}
+                rows={8}
+                className="w-full text-xs font-mono text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-3 resize-y focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400 disabled:opacity-50 disabled:cursor-not-allowed leading-relaxed"
+                placeholder="Enter custom system prompt for Claude..."
+              />
+              <p className="text-[10px] text-slate-400 mt-1">
+                Customize how Claude interprets and improves accessibility findings.
+              </p>
+            </div>
+          )}
         </section>
 
         {/* Scan Engines */}

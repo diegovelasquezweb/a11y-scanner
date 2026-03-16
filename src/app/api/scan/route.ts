@@ -19,6 +19,7 @@ interface AdvancedOptions {
   viewport?: { width: number; height: number };
   colorScheme?: string;
   aiEnabled?: boolean;
+  aiSystemPrompt?: string;
 }
 
 interface ScanRequestBody {
@@ -64,6 +65,9 @@ function normalizeAdvanced(raw?: AdvancedOptions): Required<AdvancedOptions> {
     },
     colorScheme: raw?.colorScheme === "dark" ? "dark" : "light",
     aiEnabled: raw?.aiEnabled !== false,
+    aiSystemPrompt: typeof raw?.aiSystemPrompt === "string" && raw.aiSystemPrompt.trim()
+      ? raw.aiSystemPrompt.trim()
+      : "",
   };
 }
 
@@ -101,6 +105,7 @@ export async function POST(request: NextRequest) {
       engines,
       advanced: normalizedAdvanced,
       aiEnabled: normalizedAdvanced.aiEnabled,
+      aiSystemPrompt: normalizedAdvanced.aiSystemPrompt || undefined,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to start scan.";

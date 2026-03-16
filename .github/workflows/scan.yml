@@ -54,6 +54,10 @@ on:
         required: false
         type: string
         default: "true"
+      ai_system_prompt:
+        description: "Custom system prompt for Claude AI enrichment"
+        required: false
+        type: string
 
 jobs:
   scan:
@@ -87,6 +91,7 @@ jobs:
       - name: Running accessibility scans
         env:
           ANTHROPIC_API_KEY: ${{ inputs.ai_enabled != 'false' && secrets.ANTHROPIC_API_KEY || '' }}
+          AI_SYSTEM_PROMPT: ${{ inputs.ai_system_prompt }}
         run: |
           AUDIT_DIR=".audit"
           mkdir -p $AUDIT_DIR

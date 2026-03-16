@@ -291,24 +291,24 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                         <span className="text-[9px] font-bold bg-violet-100 text-violet-600 border border-violet-200 px-1.5 py-0.5 rounded ml-1">Claude</span>
                       </h4>
                       <div className="space-y-4">
-                        {finding.fixDescription && (
+                        {(finding as Finding & { aiFixDescription?: string }).aiFixDescription && (
                           <p className="text-sm text-violet-900 leading-relaxed">
-                            {finding.fixDescription}
+                            {(finding as Finding & { aiFixDescription?: string }).aiFixDescription}
                           </p>
                         )}
-                        {finding.fixCode && (
+                        {(finding as Finding & { aiFixCode?: string }).aiFixCode && (
                           <div className="relative group/aicode">
                             <pre
                               tabIndex={0}
                               className="bg-slate-900 text-violet-300 p-3 rounded overflow-x-auto text-xs font-mono border border-slate-700 whitespace-pre-wrap"
                             >
-                              <code>{finding.fixCode}</code>
+                              <code>{(finding as Finding & { aiFixCode?: string }).aiFixCode}</code>
                             </pre>
                             <button
                               type="button"
                               aria-label="Copy AI code suggestion"
                               title="Copy AI code suggestion"
-                              onClick={() => copyToClipboard(finding.fixCode!, `ai-${finding.id}`)}
+                              onClick={() => copyToClipboard((finding as Finding & { aiFixCode?: string }).aiFixCode!, `ai-${finding.id}`)}
                               className={`absolute top-2 right-2 p-1.5 rounded text-white opacity-0 group-hover/aicode:opacity-100 transition-all ${
                                 copiedId === `ai-${finding.id}`
                                   ? "bg-emerald-500"
