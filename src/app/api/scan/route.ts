@@ -191,7 +191,7 @@ async function runLocal(params: {
         githubToken: process.env.GH_TOKEN || undefined,
         skipPatterns: false,
         ai: {
-          enabled: !!process.env.ANTHROPIC_API_KEY,
+          enabled: advanced.aiEnabled && !!process.env.ANTHROPIC_API_KEY,
           apiKey: process.env.ANTHROPIC_API_KEY || undefined,
           githubToken: process.env.GH_TOKEN || undefined,
         },
