@@ -11,14 +11,7 @@ pnpm install
 pnpm dev
 ```
 
-Copy `.env.example` and fill in the required values:
-
-| Variable | Required | Description |
-|---|---|---|
-| `GH_TOKEN` | Yes | [Fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) with **Actions (Read and write)** permission on the workflow repo |
-| `GH_OWNER` | Yes | GitHub username where the scan workflow lives |
-| `GH_REPO` | Yes | Repo name where the scan workflow lives |
-| `ANTHROPIC_API_KEY` | No | Enables AI-powered fix suggestions via Claude |
+Copy `.env.example` and fill in the required values.
 
 ## How the engine is used
 

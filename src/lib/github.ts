@@ -15,8 +15,8 @@ function cfg() {
     token,
     owner,
     repo,
-    workflowFile: process.env.GH_WORKFLOW_FILE ?? "scan.yml",
-    ref: process.env.GH_WORKFLOW_REF ?? "main",
+    workflowFile: "scan.yml",
+    ref: "main",
   };
 }
 
