@@ -49,11 +49,12 @@ import { getFindings, getOverview } from "@diegovelasquezweb/a11y-engine";
 const findings = getFindings(payload, {
   screenshotUrlBuilder: (path) => `/api/scan/${scanId}/screenshot?path=${encodeURIComponent(path)}`,
 });
-const { score, scoreLabel, wcagStatus, totals, personaGroups, quickWins, detectedStack } = getOverview(findings, payload);
+const { score, label, wcagStatus, totals, personaGroups, quickWins, targetUrl, detectedStack, totalFindings } = getOverview(findings, payload);
 
 // score: 0–100
-// scoreLabel: "Excellent" | "Good" | "Fair" | "Poor" | "Critical"
+// label: "Excellent" | "Good" | "Fair" | "Poor" | "Critical"
 // wcagStatus: "Pass" | "Conditional Pass" | "Fail"
+// personaGroups: { screenReader: { label, count, icon }, keyboard: { ... }, ... }
 // detectedStack: { framework: "nextjs", cms: null, uiLibraries: ["radix-ui"] }
 
 // AI-enhanced findings have extra fields when AI ran:
@@ -94,7 +95,7 @@ const knowledge = getKnowledge({ locale: "en" });
 
 **`src/lib/github.ts`** handles the GitHub Actions integration when `LOCAL_MODE` is not set. It triggers a `workflow_dispatch` event to start a remote scan, polls the run status, and downloads the result artifacts as ZIP files using the GitHub REST API. The engine runs inside the workflow, not inside the Next.js process.
 
-**`src/lib/scans.ts`** manages local scan file paths under `os.tmpdir()/a11y-scans/`. Each scan is identified by a UUID and stored as individual files (`status.json`, `findings.json`, `pdf`, `checklist.html`). This is only used when `LOCAL_MODE=true`.
+**`src/lib/scans.ts`** manages local scan file paths under `os.tmpdir()/a11y-scans/`. Each scan is identified by a UUID and stored as individual files (`status.json`, `findings.json`, `progress.json`, `pdf`, `checklist.html`) plus a `<scanId>.screenshots/` directory. This is only used when `LOCAL_MODE=true`.
 
 ## Powered by
 
