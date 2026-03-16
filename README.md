@@ -43,11 +43,8 @@ const payload = await runAudit({
     apiKey: process.env.ANTHROPIC_API_KEY,
     githubToken: process.env.GH_TOKEN,
   },
-  // Optional: track progress per step
-  onProgress: (step, status, extra) => {
-    // step: "page" | "axe" | "cdp" | "pa11y" | "merge" | "intelligence" | "repo" | "patterns" | "ai"
-    // status: "running" | "done" | "error" | "skipped"
-  },
+  // Optional: track progress per step — see engine API reference for step keys and statuses
+  onProgress: (step, status, extra) => { /* ... */ },
   screenshotsDir: "/tmp/screenshots",
 });
 ```
