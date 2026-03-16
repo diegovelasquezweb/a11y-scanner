@@ -1,6 +1,6 @@
 /**
  * Severity style mapping for UI components.
- * Severity IDs come from the engine's getSeverityLevels() knowledge.
+ * Severity IDs come from the engine's getKnowledge().severityLevels.
  */
 
 export interface SeverityStyle {
