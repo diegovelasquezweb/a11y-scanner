@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { AlertTriangle, CheckCircle, Settings2 } from "lucide-react";
+import { AlertTriangle, CheckCircle, Settings2, BrainCircuit } from "lucide-react";
 import type { ScanResult, Finding } from "@/types/scan";
 import type { EngineKnowledge } from "@diegovelasquezweb/a11y-engine";
 import { ScoreGauge } from "@/components/ScoreGauge";
@@ -96,7 +96,15 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
       {/* Header */}
       <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-extrabold mb-1">Web Accessibility Audit</h2>
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-3xl font-extrabold">Web Accessibility Audit</h2>
+            {result.aiEnhancedCount != null && result.aiEnhancedCount > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-100 text-violet-700 text-[10px] font-black uppercase tracking-widest border border-violet-200/60 self-center">
+                <BrainCircuit className="w-3 h-3" aria-hidden="true" />
+                AI Enhanced
+              </span>
+            )}
+          </div>
           <p className="text-sm font-medium text-sky-600 mb-1 truncate">{result.targetUrl}</p>
           <p className="text-slate-500 text-sm">
             {new Date(result.scanDate).toLocaleDateString("en-US", {

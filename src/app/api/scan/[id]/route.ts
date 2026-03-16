@@ -131,6 +131,7 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
   const patternSummary = rawPatternFindings?.summary as { total: number; confirmed: number; potential: number } | undefined;
   const repoScanned = rawPatternFindings?.project_dir as string | undefined;
   const patternFindings = (rawPatternFindings?.findings as unknown[]) ?? null;
+  const aiEnhancedCount = aiMap.size;
 
   return NextResponse.json({
     success: true,
@@ -152,6 +153,7 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
       patternSummary: patternSummary ?? null,
       repoScanned: repoScanned ?? null,
       patternFindings: patternFindings ?? null,
+      aiEnhancedCount,
     },
   });
 }

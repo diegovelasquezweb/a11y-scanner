@@ -117,14 +117,11 @@ export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFo
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
             Web Accessibility Scanner
           </h1>
-          <button
-            type="button"
-            onClick={() => setHowItWorksOpen(true)}
-            className="inline-flex items-center gap-1 rounded-full px-1.5 py-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30"
-          >
-            <Info className="w-4 h-4" aria-hidden="true" />
-            <span className="text-[11px] font-medium sm:sr-only">Help</span>
-          </button>
+          {advanced.aiEnabled && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-100 text-violet-700 text-[10px] font-black uppercase tracking-widest border border-violet-200/60 self-center">
+              AI Enhanced
+            </span>
+          )}
         </div>
         <p className="text-sm text-slate-500 mt-1">
           Scan any URL for actionable accessibility issues.

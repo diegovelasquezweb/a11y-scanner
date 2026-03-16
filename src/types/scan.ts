@@ -47,6 +47,7 @@ export interface ScanResult {
     patternSummary?: { total: number; confirmed: number; potential: number } | null;
     repoScanned?: string | null;
     patternFindings?: PatternFinding[] | null;
+    aiEnhancedCount?: number;
   };
 }
 

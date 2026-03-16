@@ -127,12 +127,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                       {finding.pagesAffected} pages
                     </span>
                   )}
-                  {(finding as Finding & { aiEnhanced?: boolean }).aiEnhanced && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-200" title="Fix suggestions improved by Claude AI">
-                      <Sparkles className="w-3 h-3" aria-hidden="true" />
-                      AI Enhanced
-                    </span>
-                  )}
+
                 </div>
                 <h3 className="searchable-field text-lg md:text-xl font-extrabold text-slate-900 leading-tight mb-3 group-hover:text-sky-900 transition-colors">
                   {finding.title}
