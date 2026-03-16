@@ -45,7 +45,7 @@ const payload = await runAudit({
   },
   // Optional: track progress per step — see engine API reference for step keys and statuses
   onProgress: (step, status, extra) => {},
-  screenshotsDir: "/tmp/screenshots",
+  screenshotsDir: getScreenshotsDir(scanId), // e.g. os.tmpdir()/a11y-scans/<scanId>.screenshots
 });
 ```
 
