@@ -89,7 +89,7 @@ const findings = getFindings(payload, { screenshotUrlBuilder }).map((f) => {
 });
 ```
 
-> `getFindings` uses the `ai_enriched_findings` fast path when the payload contains them and no `screenshotUrlBuilder` is provided. When a `screenshotUrlBuilder` is needed, always normalize from `findings` and merge AI fields manually as shown above.
+
 
 ---
 
