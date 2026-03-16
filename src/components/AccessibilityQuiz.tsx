@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Check, X, ArrowRight, RotateCcw } from "lucide-react";
 import type { EngineKnowledge } from "@diegovelasquezweb/a11y-engine";
 
@@ -103,8 +103,7 @@ interface AccessibilityQuizProps {
 }
 
 export function AccessibilityQuiz({ knowledge, visible }: AccessibilityQuizProps) {
-  const [round, setRound] = useState(0);
-  const questions = useMemo(() => knowledge ? buildQuestions(knowledge) : [], [knowledge, round]);
+  const [questions, setQuestions] = useState<Question[]>(() => knowledge ? buildQuestions(knowledge) : []);
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
@@ -128,12 +127,12 @@ export function AccessibilityQuiz({ knowledge, visible }: AccessibilityQuizProps
   }, []);
 
   const handleRestart = useCallback(() => {
-    setRound((r) => r + 1);
+    if (knowledge) setQuestions(buildQuestions(knowledge));
     setCurrent(0);
     setSelected(null);
     setScore(0);
     setAnswered(false);
-  }, []);
+  }, [knowledge]);
 
   if (!visible || !knowledge || questions.length === 0) return null;
 
