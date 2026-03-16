@@ -4,25 +4,7 @@ import { useState, useCallback } from "react";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import { ChevronDown, Copy, Check, FileCode } from "lucide-react";
 import type { PatternFinding } from "@/types/scan";
-
-const SEVERITY_STYLES: Record<string, { badge: string; border: string }> = {
-  Critical: {
-    badge: "bg-rose-100 text-rose-800 border-rose-200",
-    border: "border-rose-200 hover:border-rose-300",
-  },
-  Serious: {
-    badge: "bg-orange-100 text-orange-800 border-orange-200",
-    border: "border-orange-200 hover:border-orange-300",
-  },
-  Moderate: {
-    badge: "bg-amber-100 text-amber-800 border-amber-200",
-    border: "border-amber-200 hover:border-amber-300",
-  },
-  Minor: {
-    badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    border: "border-emerald-200 hover:border-emerald-300",
-  },
-};
+import { getSeverityStyle } from "@/lib/severity";
 
 interface PatternCardProps {
   finding: PatternFinding;
@@ -32,7 +14,7 @@ export function PatternCard({ finding }: PatternCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const styles = SEVERITY_STYLES[finding.severity] ?? SEVERITY_STYLES.Minor;
+  const styles = getSeverityStyle(finding.severity);
 
   const copyContext = useCallback(async () => {
     try {

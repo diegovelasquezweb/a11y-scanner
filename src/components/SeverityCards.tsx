@@ -4,13 +4,7 @@ import * as Tooltip from "@radix-ui/react-tooltip";
 import { Info } from "lucide-react";
 import type { SeverityTotals } from "@/types/scan";
 import type { SeverityLevel } from "@diegovelasquezweb/a11y-engine";
-
-const ORDER_COLORS: Record<number, { color: string; textColor: string }> = {
-  1: { color: "border-rose-500",    textColor: "text-rose-600" },
-  2: { color: "border-orange-500",  textColor: "text-orange-700" },
-  3: { color: "border-amber-400",   textColor: "text-amber-700" },
-  4: { color: "border-emerald-500", textColor: "text-emerald-700" },
-};
+import { ORDER_COLORS } from "@/lib/severity";
 
 interface SeverityCardsProps {
   totals: SeverityTotals;

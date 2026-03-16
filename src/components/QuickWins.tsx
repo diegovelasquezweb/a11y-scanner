@@ -3,13 +3,7 @@
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { Zap, ArrowRight, Info } from "lucide-react";
 import type { Finding } from "@/types/scan";
-
-const SEVERITY_BADGE: Record<string, string> = {
-  Critical: "bg-rose-500/20 text-rose-400",
-  Serious: "bg-orange-500/20 text-orange-400",
-  Moderate: "bg-amber-500/20 text-amber-400",
-  Minor: "bg-emerald-500/20 text-emerald-400",
-};
+import { SEVERITY_BADGE } from "@/lib/severity";
 
 interface QuickWinsProps {
   quickWins: Finding[];

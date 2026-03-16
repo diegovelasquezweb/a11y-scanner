@@ -44,6 +44,7 @@ interface ActionsPanelProps {
   scanId: string;
   targetUrl: string;
   totals: SeverityTotals;
+  totalFindings: number;
   findings: Finding[];
   knowledge?: EngineKnowledge | null;
   onNewScan: () => void;
@@ -94,6 +95,7 @@ export function ActionsPanel({
   scanId,
   targetUrl,
   totals,
+  totalFindings,
   findings,
   knowledge,
   onNewScan,
@@ -203,6 +205,7 @@ export function ActionsPanel({
       <JiraIntegration
         targetUrl={targetUrl}
         totals={totals}
+        totalFindings={totalFindings}
         findings={findings}
         open={jiraOpen}
         onOpenChange={setJiraOpen}

@@ -1,4 +1,6 @@
 import JSZip from "jszip";
+import type { EngineSelection } from "@diegovelasquezweb/a11y-engine";
+import type { AdvancedScanOptions } from "@/types/scan";
 
 const API = "https://api.github.com";
 
@@ -26,20 +28,7 @@ function ghHeaders(token: string): HeadersInit {
   };
 }
 
-interface EngineSelection {
-  axe?: boolean;
-  cdp?: boolean;
-  pa11y?: boolean;
-}
-
-interface AdvancedOptions {
-  maxRoutes?: number;
-  crawlDepth?: number;
-  waitUntil?: string;
-  timeoutMs?: number;
-  viewport?: { width: number; height: number };
-  colorScheme?: string;
-}
+type AdvancedOptions = Partial<AdvancedScanOptions>;
 
 export async function triggerScan(params: {
   scanToken: string;

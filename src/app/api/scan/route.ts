@@ -1,26 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
+import type { EngineSelection } from "@diegovelasquezweb/a11y-engine";
+import type { AdvancedScanOptions } from "@/types/scan";
 import { triggerScan } from "@/lib/github";
 import { SCANS_DIR, getScanPath, getScreenshotsDir } from "@/lib/scans";
 
 export const maxDuration = 60;
 
-interface EngineSelection {
-  axe?: boolean;
-  cdp?: boolean;
-  pa11y?: boolean;
-}
-
-interface AdvancedOptions {
-  maxRoutes?: number;
-  crawlDepth?: number;
-  waitUntil?: string;
-  timeoutMs?: number;
-  viewport?: { width: number; height: number };
-  colorScheme?: string;
-  aiEnabled?: boolean;
-  aiSystemPrompt?: string;
-}
+type AdvancedOptions = Partial<Omit<AdvancedScanOptions, "waitUntil">> & { waitUntil?: string };
 
 interface ScanRequestBody {
   targetUrl: string;
@@ -51,19 +38,18 @@ function validateGithubUrl(url: string): boolean {
   }
 }
 
-function normalizeAdvanced(raw?: AdvancedOptions): Required<AdvancedOptions> {
+function normalizeAdvanced(raw?: AdvancedOptions): AdvancedScanOptions {
+  const validWaitUntil = ["domcontentloaded", "load", "networkidle"];
   return {
     maxRoutes: Math.min(Math.max(Math.round(raw?.maxRoutes ?? 1), 1), 50),
     crawlDepth: Math.min(Math.max(Math.round(raw?.crawlDepth ?? 2), 1), 3),
-    waitUntil: ["domcontentloaded", "load", "networkidle"].includes(raw?.waitUntil ?? "")
-      ? (raw!.waitUntil as string)
-      : "domcontentloaded",
+    waitUntil: (validWaitUntil.includes(raw?.waitUntil ?? "") ? raw!.waitUntil : "domcontentloaded") as AdvancedScanOptions["waitUntil"],
     timeoutMs: Math.min(Math.max(Math.round(raw?.timeoutMs ?? 30000), 5000), 120000),
     viewport: {
       width: Math.min(Math.max(Math.round(raw?.viewport?.width ?? 1280), 320), 2560),
       height: Math.min(Math.max(Math.round(raw?.viewport?.height ?? 800), 320), 2560),
     },
-    colorScheme: raw?.colorScheme === "dark" ? "dark" : "light",
+    colorScheme: (raw?.colorScheme === "dark" ? "dark" : "light") as AdvancedScanOptions["colorScheme"],
     aiEnabled: raw?.aiEnabled !== false,
     aiSystemPrompt: typeof raw?.aiSystemPrompt === "string" && raw.aiSystemPrompt.trim()
       ? raw.aiSystemPrompt.trim()

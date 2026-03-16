@@ -18,6 +18,7 @@ interface JiraSettings {
 export interface JiraIntegrationProps {
   targetUrl: string;
   totals: SeverityTotals;
+  totalFindings: number;
   findings: Finding[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -32,10 +33,10 @@ const defaultSettings: JiraSettings = {
 function buildJiraPayload(
   targetUrl: string,
   totals: SeverityTotals,
-  findings: Finding[]
+  findings: Finding[],
+  totalCount: number
 ): { summary: string; description: string } {
   const summary = `[A11y] ${targetUrl} — Accessibility Audit`;
-  const totalCount = totals.Critical + totals.Serious + totals.Moderate + totals.Minor;
   const reportUrl = typeof window !== "undefined" ? window.location.href : "";
 
   const lines: string[] = [
@@ -71,6 +72,7 @@ function buildJiraPayload(
 export function JiraIntegration({
   targetUrl,
   totals,
+  totalFindings,
   findings,
   open,
   onOpenChange,
@@ -95,7 +97,7 @@ export function JiraIntegration({
       return;
     }
 
-    const { summary, description } = buildJiraPayload(targetUrl, totals, findings);
+    const { summary, description } = buildJiraPayload(targetUrl, totals, findings, totalFindings);
 
     try {
       await navigator.clipboard.writeText(`${summary}\n\n${description}`);

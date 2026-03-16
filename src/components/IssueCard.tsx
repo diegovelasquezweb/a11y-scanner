@@ -6,26 +6,7 @@ import * as Tabs from "@radix-ui/react-tabs";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import { Code, ChevronDown, Info, Zap, Check, Copy, BookOpen, Globe, Sparkles, BrainCircuit } from "lucide-react";
 import type { Finding } from "@/types/scan";
-
-
-const SEVERITY_STYLES: Record<string, { badge: string; border: string }> = {
-  Critical: {
-    badge: "bg-rose-100 text-rose-800 border-rose-200",
-    border: "border-rose-200 hover:border-rose-300",
-  },
-  Serious: {
-    badge: "bg-orange-100 text-orange-800 border-orange-200",
-    border: "border-orange-200 hover:border-orange-300",
-  },
-  Moderate: {
-    badge: "bg-amber-100 text-amber-800 border-amber-200",
-    border: "border-amber-200 hover:border-amber-300",
-  },
-  Minor: {
-    badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    border: "border-emerald-200 hover:border-emerald-300",
-  },
-};
+import { getSeverityStyle } from "@/lib/severity";
 
 type TabKey = "problem" | "fix" | "ai" | "technical" | "visual";
 
@@ -40,9 +21,9 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
 
   const isExpanded = forceExpanded ?? localExpanded;
 
-  const styles = SEVERITY_STYLES[finding.severity] ?? SEVERITY_STYLES.Minor;
+  const styles = getSeverityStyle(finding.severity);
 
-  const effortLevel = finding.effort ?? (finding.fixCode ? "low" : "high");
+  const effortLevel = finding.effort ?? "high";
   const effortConfig = {
     low: { text: "Low Effort", dot: "bg-emerald-400", style: "bg-slate-50 text-slate-600 border-slate-200" },
     medium: { text: "Med Effort", dot: "bg-amber-400", style: "bg-slate-50 text-slate-600 border-slate-200" },

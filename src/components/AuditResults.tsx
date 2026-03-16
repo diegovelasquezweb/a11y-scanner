@@ -274,6 +274,7 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
         scanId={scanId}
         targetUrl={result.targetUrl}
         totals={result.totals}
+        totalFindings={result.totalFindings}
         findings={result.findings}
         knowledge={knowledge}
         onNewScan={onRunNewTest || (() => window.location.assign("/"))}
