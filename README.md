@@ -44,7 +44,7 @@ const payload = await runAudit({
     githubToken: process.env.GH_TOKEN,
   },
   // Optional: track progress per step — see engine API reference for step keys and statuses
-  onProgress: (step, status, extra) => { /* ... */ },
+  onProgress: (step, status, extra) => {},
   screenshotsDir: "/tmp/screenshots",
 });
 ```
