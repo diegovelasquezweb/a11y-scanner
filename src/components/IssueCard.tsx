@@ -214,18 +214,18 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                 </Tabs.Content>
 
                 <Tabs.Content value="fix">
-                  <div className="bg-linear-to-br from-sky-50 to-white border border-sky-100/80 rounded-md p-5 relative overflow-hidden shadow-sm">
-                    <h4 className="text-[11px] font-black text-sky-700 uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-sky-500" aria-hidden="true" />
+                  <div className="bg-white border border-slate-200/60 rounded-md p-5 relative overflow-hidden shadow-sm">
+                    <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-slate-400" aria-hidden="true" />
                       The Fix
                     </h4>
                     <div className="relative z-10 space-y-4">
                       {finding.fixDescription ? (
-                        <p className="text-sm text-sky-800 leading-relaxed">
+                        <p className="text-sm text-slate-700 leading-relaxed">
                           {finding.fixDescription}
                         </p>
                       ) : finding.recommendedFix ? (
-                        <p className="text-sm text-sky-800/80 leading-relaxed">
+                        <p className="text-sm text-slate-600 leading-relaxed">
                           {finding.recommendedFix}
                         </p>
                       ) : null}
@@ -233,7 +233,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                         <div className="relative group/code">
                           <pre
                             tabIndex={0}
-                            className="bg-slate-900 text-emerald-300 p-3 rounded overflow-x-auto text-xs font-mono border border-slate-700 whitespace-pre-wrap"
+                            className="bg-slate-900 text-slate-300 p-3 rounded overflow-x-auto text-xs font-mono border border-slate-700 whitespace-pre-wrap"
                           >
                             <code>{finding.fixCode}</code>
                           </pre>
@@ -245,7 +245,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                             className={`absolute top-2 right-2 p-1.5 rounded text-white opacity-0 group-hover/code:opacity-100 transition-all ${
                               copiedId === `fix-${finding.id}`
                                 ? "bg-emerald-500"
-                                : "bg-sky-500/50 hover:bg-sky-500"
+                                : "bg-slate-500/50 hover:bg-slate-500"
                             }`}
                           >
                             {copiedId === `fix-${finding.id}` ? (
@@ -257,7 +257,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                         </div>
                       )}
                       {(finding.frameworkNotes || finding.cmsNotes) && (
-                        <p className="text-xs text-sky-800/70 leading-relaxed bg-sky-50 border border-sky-200/50 rounded p-2.5">
+                        <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 border border-slate-200/50 rounded p-2.5">
                           {finding.frameworkNotes || finding.cmsNotes}
                         </p>
                       )}
@@ -280,15 +280,15 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
 
                 {aiEnhanced && (
                   <Tabs.Content value="ai">
-                    <div className="bg-linear-to-br from-violet-50 to-white border border-violet-100/80 rounded-md p-5 shadow-sm">
-                      <h4 className="text-[11px] font-black text-violet-700 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <BrainCircuit className="w-4 h-4 text-violet-500" aria-hidden="true" />
+                    <div className="bg-white border border-slate-200/60 rounded-md p-5 shadow-sm">
+                      <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <BrainCircuit className="w-4 h-4 text-violet-400" aria-hidden="true" />
                         AI Hint
-                        <span className="text-[9px] font-bold bg-violet-100 text-violet-600 border border-violet-200 px-1.5 py-0.5 rounded ml-1">Claude</span>
+                        <span className="text-[9px] font-bold bg-violet-50 text-violet-500 border border-violet-200/60 px-1.5 py-0.5 rounded ml-1">Claude</span>
                       </h4>
                       <div className="space-y-4">
                         {(finding as Finding & { aiFixDescription?: string }).aiFixDescription && (
-                          <p className="text-sm text-violet-900 leading-relaxed">
+                          <p className="text-sm text-slate-700 leading-relaxed">
                             {(finding as Finding & { aiFixDescription?: string }).aiFixDescription}
                           </p>
                         )}
@@ -296,7 +296,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                           <div className="relative group/aicode">
                             <pre
                               tabIndex={0}
-                              className="bg-slate-900 text-violet-300 p-3 rounded overflow-x-auto text-xs font-mono border border-slate-700 whitespace-pre-wrap"
+                              className="bg-slate-900 text-slate-200 p-3 rounded overflow-x-auto text-xs font-mono border border-slate-700 whitespace-pre-wrap"
                             >
                               <code>{(finding as Finding & { aiFixCode?: string }).aiFixCode}</code>
                             </pre>
@@ -308,7 +308,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                               className={`absolute top-2 right-2 p-1.5 rounded text-white opacity-0 group-hover/aicode:opacity-100 transition-all ${
                                 copiedId === `ai-${finding.id}`
                                   ? "bg-emerald-500"
-                                  : "bg-violet-500/50 hover:bg-violet-500"
+                                  : "bg-slate-500/50 hover:bg-slate-500"
                               }`}
                             >
                               {copiedId === `ai-${finding.id}` ? (
@@ -327,7 +327,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                 {finding.evidence.length > 0 && (
                   <Tabs.Content value="technical">
                     <div className="bg-slate-900 rounded-md p-6 border border-slate-700 shadow-2xl relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" aria-hidden="true" />
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-slate-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" aria-hidden="true" />
                       <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2">
                         Technical Evidence
                       </h4>
