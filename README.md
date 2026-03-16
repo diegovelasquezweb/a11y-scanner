@@ -34,6 +34,14 @@ const payload = await runAudit({
   colorScheme: "light",
   axeTags: ["wcag2a", "wcag21a", "wcag22a", "wcag2aa", "wcag21aa", "wcag22aa"],
   engines: { axe: true, cdp: true, pa11y: true },
+  // Optional: scan source code via GitHub API — no clone required
+  repoUrl: "https://github.com/owner/repo",
+  githubToken: process.env.GH_TOKEN,
+  // Optional: AI-powered fix suggestions via Claude
+  ai: {
+    enabled: !!process.env.ANTHROPIC_API_KEY,
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  },
 });
 ```
 
@@ -42,23 +50,33 @@ const payload = await runAudit({
 ```ts
 import { getFindings, getOverview } from "@diegovelasquezweb/a11y-engine";
 
-const findings = getFindings(payload);
-const { score, wcagStatus, totals, personaGroups, quickWins } = getOverview(findings, payload);
+const findings = getFindings(payload, {
+  screenshotUrlBuilder: (path) => `/api/scan/${scanId}/screenshot?path=${encodeURIComponent(path)}`,
+});
+const { score, scoreLabel, wcagStatus, totals, personaGroups, quickWins, detectedStack } = getOverview(findings, payload);
+
+// score: 0–100
+// scoreLabel: "Excellent" | "Good" | "Fair" | "Poor" | "Critical"
+// wcagStatus: "Pass" | "Conditional Pass" | "Fail"
+// detectedStack: { framework: "nextjs", cms: null, uiLibraries: ["radix-ui"] }
+
+// AI-enhanced findings have extra fields when AI ran:
+// findings[0].aiEnhanced       → true
+// findings[0].aiFixDescription → Claude-generated fix description
+// findings[0].aiFixCode        → Claude-generated code snippet
 ```
 
 ### Generate reports
 
 ```ts
-import { getPDFReport, getChecklist, getRemediationGuide, getFindings, getOverview } from "@diegovelasquezweb/a11y-engine";
+import { getPDFReport, getHTMLReport, getChecklist, getRemediationGuide } from "@diegovelasquezweb/a11y-engine";
 
 const pdf       = await getPDFReport(payload, { baseUrl });
+const html      = await getHTMLReport(payload, { baseUrl });
 const checklist = await getChecklist({ baseUrl });
-const guide     = await getRemediationGuide(payload);
-
-// JSON export: same data as the results endpoint, serialized for download
-const findings  = getFindings(payload);
-const overview  = getOverview(findings, payload);
-const json      = JSON.stringify({ ...overview, findings }, null, 2);
+const guide     = await getRemediationGuide(payload, {
+  patternFindings: payload.patternFindings ?? null,
+});
 ```
 
 ### Load the knowledge pack
@@ -67,8 +85,13 @@ const json      = JSON.stringify({ ...overview, findings }, null, 2);
 import { getKnowledge } from "@diegovelasquezweb/a11y-engine";
 
 const knowledge = getKnowledge({ locale: "en" });
-// knowledge.conformanceLevels, knowledge.wcagPrinciples, knowledge.severityLevels
-// knowledge.concepts, knowledge.docs, knowledge.scanner, knowledge.personas
+// knowledge.scanner          → scan options and engine descriptions (for Advanced Settings UI)
+// knowledge.conformanceLevels → WCAG A/AA/AAA with axe-core tag mappings
+// knowledge.wcagPrinciples   → the 4 WCAG principles
+// knowledge.severityLevels   → Critical/Serious/Moderate/Minor definitions
+// knowledge.personas         → persona labels and descriptions
+// knowledge.concepts         → UI concept definitions
+// knowledge.glossary         → accessibility glossary
 ```
 
 ## Infrastructure utilities
