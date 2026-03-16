@@ -18,6 +18,7 @@ interface AdvancedOptions {
   timeoutMs?: number;
   viewport?: { width: number; height: number };
   colorScheme?: string;
+  aiEnabled?: boolean;
 }
 
 interface ScanRequestBody {
@@ -62,6 +63,7 @@ function normalizeAdvanced(raw?: AdvancedOptions): Required<AdvancedOptions> {
       height: Math.min(Math.max(Math.round(raw?.viewport?.height ?? 800), 320), 2560),
     },
     colorScheme: raw?.colorScheme === "dark" ? "dark" : "light",
+    aiEnabled: raw?.aiEnabled !== false,
   };
 }
 
@@ -98,6 +100,7 @@ export async function POST(request: NextRequest) {
       axeTags: axeTags?.length ? axeTags : undefined,
       engines,
       advanced: normalizedAdvanced,
+      aiEnabled: normalizedAdvanced.aiEnabled,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to start scan.";

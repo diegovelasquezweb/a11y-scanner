@@ -48,6 +48,7 @@ export async function triggerScan(params: {
   axeTags?: string[];
   engines?: EngineSelection;
   advanced?: AdvancedOptions;
+  aiEnabled?: boolean;
 }): Promise<void> {
   const { token, owner, repo, workflowFile, ref } = cfg();
 
@@ -72,7 +73,7 @@ export async function triggerScan(params: {
     if (a.viewport) inputs.viewport = `${a.viewport.width}x${a.viewport.height}`;
     if (a.colorScheme) inputs.color_scheme = a.colorScheme;
   }
-
+  if (params.aiEnabled === false) inputs.ai_enabled = "false";
 
   const res = await fetch(
     `${API}/repos/${owner}/${repo}/actions/workflows/${workflowFile}/dispatches`,

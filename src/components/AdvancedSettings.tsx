@@ -76,6 +76,38 @@ export function AdvancedSettings({
     >
       <div className="space-y-8" aria-disabled={disabled}>
 
+        {/* AI Intelligence */}
+        <section>
+          <SectionHeading>AI Intelligence</SectionHeading>
+          <label className={`block rounded-md border p-3.5 cursor-pointer select-none transition-all ${
+            advanced.aiEnabled ? "bg-sky-50 border-sky-300" : "bg-white border-slate-200 hover:border-slate-300"
+          } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                checked={advanced.aiEnabled}
+                onChange={() => setField("aiEnabled", !advanced.aiEnabled)}
+                disabled={disabled}
+                className="sr-only"
+              />
+              <span
+                className={`w-4 h-4 mt-0.5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                  advanced.aiEnabled ? "bg-sky-600 border-sky-600" : "border-slate-300 bg-white"
+                }`}
+                aria-hidden="true"
+              >
+                {advanced.aiEnabled && <Check className="w-3 h-3 text-white" strokeWidth={3} aria-hidden="true" />}
+              </span>
+              <div className="flex-1 min-w-0">
+                <span className="text-sm font-semibold text-slate-800">AI-powered fix suggestions</span>
+                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                  Uses Claude to improve fix descriptions and code examples for Critical and Serious findings.
+                </p>
+              </div>
+            </div>
+          </label>
+        </section>
+
         {/* Scan Engines */}
         <section>
           <div className="flex items-center justify-between mb-1">

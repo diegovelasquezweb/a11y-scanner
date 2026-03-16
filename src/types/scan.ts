@@ -85,6 +85,7 @@ export interface AdvancedScanOptions {
   timeoutMs: number;
   viewport: { width: number; height: number };
   colorScheme: ColorScheme;
+  aiEnabled: boolean;
 }
 
 export const DEFAULT_ADVANCED: AdvancedScanOptions = {
@@ -94,4 +95,5 @@ export const DEFAULT_ADVANCED: AdvancedScanOptions = {
   timeoutMs: 30000,
   viewport: { width: 1280, height: 800 },
   colorScheme: "light",
+  aiEnabled: true,
 };
