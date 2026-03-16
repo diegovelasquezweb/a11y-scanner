@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Check, X, ArrowRight, RotateCcw } from "lucide-react";
 import type { EngineKnowledge } from "@diegovelasquezweb/a11y-engine";
 
@@ -32,66 +32,90 @@ function buildQuestions(knowledge: EngineKnowledge): Question[] {
   const severities = knowledge.severityLevels ?? [];
   const docs = knowledge.docs?.sections ?? [];
 
-  
   for (const p of principles) {
-    const wrong = shuffle(principles.filter((x) => x.id !== p.id)).slice(0, 3).map((x) => x.name);
-    pool.push(mc(`Which WCAG principle states: "${p.description}"`, p.name, wrong));
+    const wrong = shuffle(principles.filter((x) => x.id !== p.id))
+      .slice(0, 3)
+      .map((x) => x.name);
+    pool.push(
+      mc(`Which WCAG principle states: "${p.description}"`, p.name, wrong),
+    );
   }
 
-  
   for (const l of levels) {
-    const wrong = shuffle(levels.filter((x) => x.id !== l.id)).map((x) => x.label);
-    pool.push(mc(`Which conformance level is described as "${l.shortDescription}"?`, l.label, wrong));
+    const wrong = shuffle(levels.filter((x) => x.id !== l.id)).map(
+      (x) => x.label,
+    );
+    pool.push(
+      mc(
+        `Which conformance level is described as "${l.shortDescription}"?`,
+        l.label,
+        wrong,
+      ),
+    );
   }
 
-  
   for (const p of personas) {
-    const wrong = shuffle(personas.filter((x) => x.id !== p.id)).slice(0, 3).map((x) => x.label);
-    pool.push(mc(`"${p.description}" describes which user group?`, p.label, wrong));
+    const wrong = shuffle(personas.filter((x) => x.id !== p.id))
+      .slice(0, 3)
+      .map((x) => x.label);
+    pool.push(
+      mc(`"${p.description}" describes which user group?`, p.label, wrong),
+    );
   }
 
-  
   for (const s of severities) {
-    const wrong = shuffle(severities.filter((x) => x.id !== s.id)).slice(0, 3).map((x) => x.label);
-    pool.push(mc(`Which severity level means "${s.shortDescription}"?`, s.label, wrong));
+    const wrong = shuffle(severities.filter((x) => x.id !== s.id))
+      .slice(0, 3)
+      .map((x) => x.label);
+    pool.push(
+      mc(`Which severity level means "${s.shortDescription}"?`, s.label, wrong),
+    );
   }
 
-  
   const glossary = knowledge.glossary ?? [];
   for (const g of glossary) {
     if (g.definition && severities.some((s) => s.id === g.term)) {
-      const wrong = shuffle(glossary.filter((x) => x.term !== g.term).map((x) => x.term)).slice(0, 3);
+      const wrong = shuffle(
+        glossary.filter((x) => x.term !== g.term).map((x) => x.term),
+      ).slice(0, 3);
       if (wrong.length >= 2) {
         pool.push(mc(`"${g.definition}" defines which term?`, g.term, wrong));
       }
     }
   }
 
-  
   const allArticles = docs.flatMap((s) => [
     ...(s.articles ?? []),
     ...(s.groups ?? []).flatMap((g) => g.articles),
   ]);
-  const taggedArticles = allArticles.filter((a) => a.tag && /^\d{4}$/.test(a.tag));
+  const taggedArticles = allArticles.filter(
+    (a) => a.tag && /^\d{4}$/.test(a.tag),
+  );
   for (const a of taggedArticles) {
-    const wrongYears = shuffle(taggedArticles.filter((x) => x.id !== a.id).map((x) => x.tag!)).slice(0, 2);
+    const wrongYears = shuffle(
+      taggedArticles.filter((x) => x.id !== a.id).map((x) => x.tag!),
+    ).slice(0, 2);
     if (wrongYears.length >= 2) {
       pool.push(mc(`What year was ${a.title} published?`, a.tag!, wrongYears));
     }
   }
 
-  
   if (principles.length >= 3) {
     const count = String(principles.length);
     const wrong = ["3", "5", "6"].filter((n) => n !== count);
     pool.push(mc("How many principles does WCAG define?", count, wrong));
   }
 
-  
   const aaLevel = levels.find((l) => l.id === "AA");
   if (aaLevel && levels.length >= 2) {
     const wrong = levels.filter((l) => l.id !== "AA").map((l) => l.label);
-    pool.push(mc("Which conformance level is recommended for most websites?", aaLevel.label, wrong));
+    pool.push(
+      mc(
+        "Which conformance level is recommended for most websites?",
+        aaLevel.label,
+        wrong,
+      ),
+    );
   }
 
   return shuffle(pool).slice(0, 6);
@@ -103,7 +127,15 @@ interface AccessibilityQuizProps {
 }
 
 export function AccessibilityQuiz({ knowledge, visible }: AccessibilityQuizProps) {
-  const [questions, setQuestions] = useState<Question[]>(() => knowledge ? buildQuestions(knowledge) : []);
+  const [round, setRound] = useState(0);
+
+  if (!visible || !knowledge) return null;
+
+  return <QuizRound key={round} knowledge={knowledge} onRestart={() => setRound((r) => r + 1)} />;
+}
+
+function QuizRound({ knowledge, onRestart }: { knowledge: EngineKnowledge; onRestart: () => void }) {
+  const questions = useMemo(() => buildQuestions(knowledge), [knowledge]);
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
@@ -111,14 +143,17 @@ export function AccessibilityQuiz({ knowledge, visible }: AccessibilityQuizProps
 
   const isFinished = current >= questions.length;
 
-  const handleSelect = useCallback((idx: number) => {
-    if (answered) return;
-    setSelected(idx);
-    setAnswered(true);
-    if (idx === questions[current]?.correctIndex) {
-      setScore((s) => s + 1);
-    }
-  }, [answered, current, questions]);
+  const handleSelect = useCallback(
+    (idx: number) => {
+      if (answered) return;
+      setSelected(idx);
+      setAnswered(true);
+      if (idx === questions[current]?.correctIndex) {
+        setScore((s) => s + 1);
+      }
+    },
+    [answered, current, questions],
+  );
 
   const handleNext = useCallback(() => {
     setCurrent((c) => c + 1);
@@ -126,31 +161,29 @@ export function AccessibilityQuiz({ knowledge, visible }: AccessibilityQuizProps
     setAnswered(false);
   }, []);
 
-  const handleRestart = useCallback(() => {
-    if (knowledge) setQuestions(buildQuestions(knowledge));
-    setCurrent(0);
-    setSelected(null);
-    setScore(0);
-    setAnswered(false);
-  }, [knowledge]);
-
-  if (!visible || !knowledge || questions.length === 0) return null;
+  if (questions.length === 0) return null;
 
   if (isFinished) {
     const pct = Math.round((score / questions.length) * 100);
     return (
       <div className="w-full max-w-2xl mt-6">
         <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-md px-5 py-5 shadow-sm text-center">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Quiz Complete</p>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+            Quiz Complete
+          </p>
           <p className="text-2xl font-extrabold text-slate-900 mb-1">
             {score}/{questions.length}
           </p>
           <p className="text-sm text-slate-500 mb-4">
-            {pct >= 80 ? "Excellent knowledge!" : pct >= 50 ? "Good effort!" : "Keep learning!"}
+            {pct >= 80
+              ? "Excellent knowledge!"
+              : pct >= 50
+                ? "Good effort!"
+                : "Keep learning!"}
           </p>
           <button
             type="button"
-            onClick={handleRestart}
+            onClick={onRestart}
             className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-slate-600 border border-slate-200 rounded-md bg-white hover:bg-slate-50 hover:border-slate-300 transition-colors"
           >
             <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
@@ -183,10 +216,13 @@ export function AccessibilityQuiz({ knowledge, visible }: AccessibilityQuizProps
           {q.options.map((option, idx) => {
             const isCorrect = idx === q.correctIndex;
             const isSelected = idx === selected;
-            let style = "bg-white border-slate-200 hover:border-slate-300 text-slate-700";
+            let style =
+              "bg-white border-slate-200 hover:border-slate-300 text-slate-700";
             if (answered) {
-              if (isCorrect) style = "bg-emerald-50 border-emerald-300 text-emerald-800";
-              else if (isSelected) style = "bg-rose-50 border-rose-300 text-rose-800";
+              if (isCorrect)
+                style = "bg-emerald-50 border-emerald-300 text-emerald-800";
+              else if (isSelected)
+                style = "bg-rose-50 border-rose-300 text-rose-800";
               else style = "bg-white border-slate-100 text-slate-400";
             }
 
@@ -199,8 +235,18 @@ export function AccessibilityQuiz({ knowledge, visible }: AccessibilityQuizProps
                 className={`w-full text-left px-4 py-3 rounded-md border text-sm font-medium transition-all ${style} disabled:cursor-default`}
               >
                 <span className="flex items-center gap-2.5">
-                  {answered && isCorrect && <Check className="w-4 h-4 text-emerald-600 shrink-0" aria-hidden="true" />}
-                  {answered && isSelected && !isCorrect && <X className="w-4 h-4 text-rose-600 shrink-0" aria-hidden="true" />}
+                  {answered && isCorrect && (
+                    <Check
+                      className="w-4 h-4 text-emerald-600 shrink-0"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {answered && isSelected && !isCorrect && (
+                    <X
+                      className="w-4 h-4 text-rose-600 shrink-0"
+                      aria-hidden="true"
+                    />
+                  )}
                   {option}
                 </span>
               </button>
