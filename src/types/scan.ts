@@ -35,7 +35,6 @@ export const VIEWPORT_PRESETS: ViewportPreset[] = [
 export type { EnrichedFinding as Finding, SeverityTotals, PersonaGroup, DetectedStack, ConformanceLevel, EngineSelection, ViewportPreset };
 export type { SourcePatternFinding as PatternFinding };
 
-// Internal alias for use within this file
 type PatternFinding = SourcePatternFinding;
 
 export interface ScanResult {

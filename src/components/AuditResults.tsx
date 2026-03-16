@@ -93,7 +93,6 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
   return (
     <div id="results" className="pb-16">
 
-      {/* Header */}
       <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -158,7 +157,6 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
         </div>
       </div>
 
-      {/* Score + Severity + Persona */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-12 items-stretch">
         <div className="xl:col-span-8 grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
           <div className="md:col-span-5 flex">
@@ -237,7 +235,6 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
         )}
       </div>
 
-      {/* Source Code Pattern Findings */}
       {result.patternFindings && result.patternFindings.length > 0 && (
         <div className="mt-12">
           <div className="flex items-center gap-3 mb-6">

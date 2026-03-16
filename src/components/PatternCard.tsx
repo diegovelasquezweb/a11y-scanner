@@ -84,7 +84,6 @@ export function PatternCard({ finding }: PatternCardProps) {
         <Collapsible.Content>
           <div className="px-5 md:px-6 pb-6 space-y-5 border-t border-slate-100">
 
-            {/* Location */}
             <div className="pt-4">
               <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Location</h4>
               <code className="text-xs font-mono text-violet-700 bg-violet-50 border border-violet-100 px-2.5 py-1 rounded">
@@ -92,7 +91,6 @@ export function PatternCard({ finding }: PatternCardProps) {
               </code>
             </div>
 
-            {/* Code context */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Code</h4>
@@ -118,7 +116,6 @@ export function PatternCard({ finding }: PatternCardProps) {
               </pre>
             </div>
 
-            {/* Fix */}
             {finding.fix_description && (
               <div>
                 <h4 className="text-[10px] font-black text-sky-700 uppercase tracking-widest mb-2">The Fix</h4>

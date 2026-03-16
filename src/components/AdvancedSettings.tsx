@@ -1,9 +1,10 @@
 "use client";
 
 import { useId } from "react";
-import { Check } from "lucide-react";
+import { Check, Info } from "lucide-react";
+import * as Tooltip from "@radix-ui/react-tooltip";
 import { SidePanel } from "@/components/SidePanel";
-import type { EngineKnowledge, ScannerOptionHelp } from "@diegovelasquezweb/a11y-engine";
+import type { EngineKnowledge } from "@diegovelasquezweb/a11y-engine";
 import type {
   EngineSelection,
   AdvancedScanOptions,
@@ -23,9 +24,6 @@ import {
 
 
 
-function getOptionHelp(options: ScannerOptionHelp[] | undefined, id: string): ScannerOptionHelp | undefined {
-  return options?.find((entry) => entry.id === id);
-}
 
 interface AdvancedSettingsProps {
   open: boolean;
@@ -75,70 +73,8 @@ export function AdvancedSettings({
       title="Advanced Settings"
       description="Configure scan scope, browser behavior, and engines."
     >
-      <div className="space-y-8" aria-disabled={disabled}>
+      <div className="space-y-8 pb-16" aria-disabled={disabled}>
 
-        {/* AI Intelligence */}
-        <section>
-          <SectionHeading>AI Intelligence</SectionHeading>
-          <label className={`block rounded-md border p-3.5 cursor-pointer select-none transition-all ${
-            advanced.aiEnabled ? "bg-sky-50 border-sky-300" : "bg-white border-slate-200 hover:border-slate-300"
-          } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
-            <div className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                checked={advanced.aiEnabled}
-                onChange={() => setField("aiEnabled", !advanced.aiEnabled)}
-                disabled={disabled}
-                className="sr-only"
-              />
-              <span
-                className={`w-4 h-4 mt-0.5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
-                  advanced.aiEnabled ? "bg-sky-600 border-sky-600" : "border-slate-300 bg-white"
-                }`}
-                aria-hidden="true"
-              >
-                {advanced.aiEnabled && <Check className="w-3 h-3 text-white" strokeWidth={3} aria-hidden="true" />}
-              </span>
-              <div className="flex-1 min-w-0">
-                <span className="text-sm font-semibold text-slate-800">AI-powered fix suggestions</span>
-                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                  Uses Claude to improve fix descriptions and code examples for Critical and Serious findings.
-                </p>
-              </div>
-            </div>
-          </label>
-
-          {advanced.aiEnabled && (
-            <div className="mt-3">
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-widest">
-                  System Prompt
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setField("aiSystemPrompt", DEFAULT_AI_SYSTEM_PROMPT)}
-                  disabled={disabled}
-                  className="text-xs font-medium text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors disabled:opacity-50"
-                >
-                  Reset to default
-                </button>
-              </div>
-              <textarea
-                value={advanced.aiSystemPrompt}
-                onChange={(e) => setField("aiSystemPrompt", e.target.value)}
-                disabled={disabled}
-                rows={8}
-                className="w-full text-xs font-mono text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-3 resize-y focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400 disabled:opacity-50 disabled:cursor-not-allowed leading-relaxed"
-                placeholder="Enter custom system prompt for Claude..."
-              />
-              <p className="text-[10px] text-slate-400 mt-1">
-                Customize how Claude interprets and improves accessibility findings.
-              </p>
-            </div>
-          )}
-        </section>
-
-        {/* Scan Engines */}
         <section>
           <div className="flex items-center justify-between mb-1">
             <SectionHeading noMargin>Scan Engines</SectionHeading>
@@ -154,14 +90,9 @@ export function AdvancedSettings({
               Reset to defaults
             </button>
           </div>
-          <p className="text-xs text-slate-500 mb-3 leading-relaxed">
-            More engines = broader coverage and longer scan time.
-            {enabledCount === 0 && (
-              <span className="block mt-1 text-rose-600 font-medium">
-                At least one engine must be selected.
-              </span>
-            )}
-          </p>
+          {enabledCount === 0 && (
+            <p className="text-xs text-rose-600 font-medium mb-2">At least one engine must be selected.</p>
+          )}
           <fieldset disabled={disabled} className="space-y-2.5">
             <legend className="sr-only">Scan engines</legend>
             {engineList.map((engine) => {
@@ -194,14 +125,13 @@ export function AdvancedSettings({
                         <span className={`text-sm font-bold ${checked ? "text-sky-800" : "text-slate-700"}`}>
                           {engine.label}
                         </span>
-                        <span className="text-[10px] text-slate-400 font-medium">{engine.description}</span>
+                        <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                          engine.speed === "Fast" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                        }`}>
+                          {engine.speed}
+                        </span>
                       </div>
-                      <p className="text-xs text-slate-500 leading-relaxed mb-1.5">{engine.coverage}</p>
-                      <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
-                        engine.speed === "Fast" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
-                      }`}>
-                        {engine.speed}
-                      </span>
+                      <p className="text-xs text-slate-500 leading-relaxed">{engine.coverage}</p>
                     </div>
                   </div>
                 </label>
@@ -210,12 +140,8 @@ export function AdvancedSettings({
           </fieldset>
         </section>
 
-        {/* Crawling */}
         <section>
           <SectionHeading>Crawling</SectionHeading>
-          <p className="text-xs text-slate-500 mb-3 leading-relaxed">
-            Control how many pages the scanner discovers and how deep it follows links from the starting URL.
-          </p>
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-0.5">
@@ -233,7 +159,6 @@ export function AdvancedSettings({
                   {advanced.maxRoutes === 1 ? "1 page" : `${advanced.maxRoutes} pages`}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mb-2 leading-relaxed">How many unique pages to discover and scan.</p>
               <input
                 id={maxRoutesId}
                 type="range"
@@ -249,9 +174,6 @@ export function AdvancedSettings({
                 <span className="text-[10px] text-slate-400">1</span>
                 <span className="text-[10px] text-slate-400">10</span>
               </div>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                {getOptionHelp(helpOptions, "maxRoutes")?.description}
-              </p>
             </div>
 
             <div>
@@ -270,7 +192,6 @@ export function AdvancedSettings({
                   {advanced.crawlDepth === 1 ? "1 level" : `${advanced.crawlDepth} levels`}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mb-2 leading-relaxed">How many link levels to follow from the starting URL.</p>
               <input
                 id={crawlDepthId}
                 type="range"
@@ -283,30 +204,21 @@ export function AdvancedSettings({
                 className="w-full accent-sky-600 disabled:opacity-50"
               />
               <div className="flex justify-between mt-1">
-                <span className="text-[10px] text-slate-400">1 — entry page only</span>
-                <span className="text-[10px] text-slate-400">3 — deep crawl</span>
+                <span className="text-[10px] text-slate-400">1 (entry page only)</span>
+                <span className="text-[10px] text-slate-400">3 (deep crawl)</span>
               </div>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                {getOptionHelp(helpOptions, "crawlDepth")?.description}
-              </p>
             </div>
           </div>
         </section>
 
-        {/* Emulation */}
         <section>
           <SectionHeading>Emulation</SectionHeading>
-          <p className="text-xs text-slate-500 mb-3 leading-relaxed">
-            Set the viewport and color scheme used during the audit to catch issues specific to screen size or dark mode.
-          </p>
           <div className="space-y-4">
 
-            {/* Viewport */}
             <div>
-              <p className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-0.5">
+              <p className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
                 Viewport
               </p>
-              <p className="text-xs text-slate-400 mb-2 leading-relaxed">Browser window size used during the audit.</p>
               <div className="flex flex-wrap gap-2 mb-2.5">
                 {VIEWPORT_PRESETS.map((preset) => {
                   const active = advanced.viewport.width === preset.width && advanced.viewport.height === preset.height;
@@ -382,12 +294,10 @@ export function AdvancedSettings({
               </div>
             </div>
 
-            {/* Color Scheme */}
             <div>
               <p className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-0.5">
                 Color Scheme
               </p>
-              <p className="text-xs text-slate-400 mb-2 leading-relaxed">Emulates light or dark mode during the scan.</p>
               <div className="flex gap-2">
                 {(["light", "dark"] as ColorScheme[]).map((scheme) => (
                   <button
@@ -405,28 +315,19 @@ export function AdvancedSettings({
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                {getOptionHelp(helpOptions, "colorScheme")?.description}
-              </p>
             </div>
 
           </div>
         </section>
 
-        {/* Browser Behavior */}
         <section>
           <SectionHeading>Browser Behavior</SectionHeading>
-          <p className="text-xs text-slate-500 mb-3 leading-relaxed">
-            Configure how the browser loads each page before scanning and how long it waits per route.
-          </p>
           <div className="space-y-4">
 
-            {/* Wait Strategy */}
             <div>
-              <p className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-0.5">
+              <p className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
                 Wait Strategy
               </p>
-              <p className="text-xs text-slate-400 mb-2 leading-relaxed">When the browser considers a page ready to scan.</p>
               <div className="space-y-2">
                 {waitUntilValues.map((opt) => (
                   <label
@@ -469,12 +370,11 @@ export function AdvancedSettings({
               </div>
             </div>
 
-            {/* Per-page Timeout */}
             <div>
-              <label htmlFor={timeoutId} className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-0.5">
+              <label htmlFor={timeoutId} className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
                 Per-page Timeout
               </label>
-              <p className="text-xs text-slate-400 mb-2 leading-relaxed">Maximum time to wait for each page to load before aborting.</p>              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
                 <input
                   id={timeoutId}
                   type="number"
@@ -492,13 +392,70 @@ export function AdvancedSettings({
                 <span className="text-xs text-slate-500">ms</span>
                 <span className="text-xs text-slate-400">({(advanced.timeoutMs / 1000).toFixed(0)}s)</span>
               </div>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                {getOptionHelp(helpOptions, "timeoutMs")?.description}
-              </p>
             </div>
           </div>
         </section>
 
+        <section>
+          <SectionHeading>AI Intelligence</SectionHeading>
+          <label className={`block rounded-md border p-3.5 cursor-pointer select-none transition-all ${
+            advanced.aiEnabled ? "bg-sky-50 border-sky-300" : "bg-white border-slate-200 hover:border-slate-300"
+          } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                checked={advanced.aiEnabled}
+                onChange={() => setField("aiEnabled", !advanced.aiEnabled)}
+                disabled={disabled}
+                className="sr-only"
+              />
+              <span
+                className={`w-4 h-4 mt-0.5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                  advanced.aiEnabled ? "bg-sky-600 border-sky-600" : "border-slate-300 bg-white"
+                }`}
+                aria-hidden="true"
+              >
+                {advanced.aiEnabled && <Check className="w-3 h-3 text-white" strokeWidth={3} aria-hidden="true" />}
+              </span>
+              <div className="flex-1 min-w-0">
+                <span className="text-sm font-semibold text-slate-800">AI-powered fix suggestions</span>
+                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                  Uses Claude to improve fix descriptions and code examples for Critical and Serious findings.
+                </p>
+              </div>
+            </div>
+          </label>
+
+          {advanced.aiEnabled && (
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-widest">
+                  System Prompt
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setField("aiSystemPrompt", DEFAULT_AI_SYSTEM_PROMPT)}
+                  disabled={disabled}
+                  className="text-xs font-medium text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors disabled:opacity-50"
+                >
+                  Reset to default
+                </button>
+              </div>
+              <textarea
+                value={advanced.aiSystemPrompt}
+                onChange={(e) => setField("aiSystemPrompt", e.target.value)}
+                disabled={disabled}
+                rows={6}
+                className="w-full text-xs font-mono text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-3 resize-y focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400 disabled:opacity-50 disabled:cursor-not-allowed leading-relaxed"
+                placeholder="Enter custom system prompt for Claude..."
+              />
+            </div>
+          )}
+        </section>
+
+      </div>
+
+      <div className="sticky bottom-0 bg-white border-t border-slate-100 p-4 -mx-6 -mb-6">
         <button
           type="button"
           onClick={() => onOpenChange(false)}
