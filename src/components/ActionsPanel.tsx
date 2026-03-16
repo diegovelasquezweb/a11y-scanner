@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ScanSearch, Upload, FileText, ClipboardCheck, FileJson, ChevronRight, Brain } from "lucide-react";
+import { Upload, FileText, ClipboardCheck, FileJson, ChevronRight, Brain } from "lucide-react";
 import { SidePanel } from "@/components/SidePanel";
 import { ExportModal } from "@/components/ExportModal";
 import { JiraIntegration } from "@/components/JiraIntegration";
@@ -47,7 +47,6 @@ interface ActionsPanelProps {
   totalFindings: number;
   findings: Finding[];
   knowledge?: EngineKnowledge | null;
-  onNewScan: () => void;
 }
 
 interface ActionCardProps {
@@ -98,7 +97,6 @@ export function ActionsPanel({
   totalFindings,
   findings,
   knowledge,
-  onNewScan,
 }: ActionsPanelProps) {
   const [modal, setModal] = useState<ModalType>(null);
   const [jiraOpen, setJiraOpen] = useState(false);
@@ -120,15 +118,7 @@ export function ActionsPanel({
     <>
       <SidePanel open={open} onOpenChange={onOpenChange} title="Actions">
         <div className="space-y-2.5">
-          <ActionCard
-            variant="primary"
-            icon={<ScanSearch className="w-5 h-5" aria-hidden="true" />}
-            title="New Scan"
-            description="Run a fresh accessibility audit on a new URL."
-            onClick={() => { onOpenChange(false); onNewScan(); }}
-          />
-
-          <div className="pt-1 pb-0.5">
+          <div className="pb-0.5">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Export & Share</p>
           </div>
 

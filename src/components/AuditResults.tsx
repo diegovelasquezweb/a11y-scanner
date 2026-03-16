@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { AlertTriangle, CheckCircle, Settings2, BrainCircuit } from "lucide-react";
+import { Settings2, ScanSearch, BrainCircuit } from "lucide-react";
 import type { ScanResult, Finding } from "@/types/scan";
 import type { EngineKnowledge } from "@diegovelasquezweb/a11y-engine";
 import { ScoreGauge } from "@/components/ScoreGauge";
@@ -139,23 +139,14 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <div
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${
-              result.totalFindings > 0
-                ? "text-rose-700 bg-rose-50 border-rose-200"
-                : "text-emerald-600 bg-emerald-50 border-emerald-200"
-            }`}
+          <button
+            type="button"
+            onClick={() => { onRunNewTest ? onRunNewTest() : window.location.assign("/"); }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-slate-200 bg-white text-slate-600 text-sm font-bold hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 transition-colors"
           >
-            {result.totalFindings > 0 ? (
-              <AlertTriangle className="w-5 h-5" aria-hidden="true" />
-            ) : (
-              <CheckCircle className="w-5 h-5" aria-hidden="true" />
-            )}
-            <span className="text-sm font-bold">
-              {result.totalFindings > 0 ? "WCAG Violations Found" : "Audit Passed"}
-            </span>
-          </div>
-
+            <ScanSearch className="w-4 h-4" aria-hidden="true" />
+            New Scan
+          </button>
           <button
             type="button"
             onClick={() => setActionsOpen(true)}
@@ -277,7 +268,6 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
         totalFindings={result.totalFindings}
         findings={result.findings}
         knowledge={knowledge}
-        onNewScan={onRunNewTest || (() => window.location.assign("/"))}
       />
     </div>
   );

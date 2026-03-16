@@ -111,7 +111,15 @@ export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFo
 
   return (
     <>
-    <div className="premium-card rounded-md p-8 w-full max-w-2xl">
+    <div className="premium-card rounded-md p-8 w-full max-w-2xl relative">
+      <button
+        type="button"
+        onClick={() => setHowItWorksOpen(true)}
+        className="absolute top-4 right-4 w-7 h-7 rounded-full border border-slate-200 bg-white text-slate-400 hover:text-slate-600 hover:border-slate-300 transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+        aria-label="Help"
+      >
+        <Info className="w-3.5 h-3.5" aria-hidden="true" />
+      </button>
       <div className="mb-6">
         <div className="flex items-center gap-2">
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -311,42 +319,31 @@ export function AuditForm({ status, errorMessage, onSubmit, knowledge }: AuditFo
                 (beyond WCAG)
               </span>
             </Toggle.Root>
-            <button
-              type="button"
-              onClick={() => setHowItWorksOpen(true)}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-800 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:ring-offset-2 rounded"
-            >
-              <Info className="w-3.5 h-3.5" aria-hidden="true" />
-              Help
-            </button>
           </div>
         </fieldset>
 
-        <div className="mb-6">
-          <button
-            type="button"
-            onClick={() => setAdvancedOpen(true)}
-            disabled={isRunning}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:ring-offset-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Settings className="w-4 h-4" aria-hidden="true" />
-            Advanced Settings
-          </button>
-          {validationErrors.engines && (
-            <p className="mt-1 text-xs font-medium text-rose-600" role="alert">
-              {validationErrors.engines}
-            </p>
-          )}
-        </div>
+        {validationErrors.engines && (
+          <p className="mb-4 text-xs font-medium text-rose-600" role="alert">
+            {validationErrors.engines}
+          </p>
+        )}
 
         {!isRunning && (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
               type="submit"
               className="px-8 py-3 bg-sky-600 text-white font-bold text-sm rounded-md shadow-md hover:bg-sky-700 focus:outline-none focus:ring-4 focus:ring-sky-600/20 transition-all flex items-center gap-2"
             >
               <Search className="w-4 h-4" aria-hidden="true" />
               Run Audit
+            </button>
+            <button
+              type="button"
+              onClick={() => setAdvancedOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-3 text-xs font-bold text-slate-600 uppercase tracking-widest border border-slate-200 rounded-md bg-white hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+            >
+              <Settings className="w-3.5 h-3.5" aria-hidden="true" />
+              Advanced
             </button>
 
             <div

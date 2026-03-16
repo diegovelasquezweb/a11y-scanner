@@ -1,7 +1,6 @@
 /**
  * Severity style mapping for UI components.
  * Severity IDs come from the engine's getSeverityLevels() knowledge.
- * CSS classes are a scanner/presentation concern.
  */
 
 export interface SeverityStyle {
