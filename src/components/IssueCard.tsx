@@ -44,9 +44,9 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
 
   const effortLevel = finding.effort ?? (finding.fixCode ? "low" : "high");
   const effortConfig = {
-    low: { text: "Low Effort", style: "bg-emerald-50 text-emerald-700 border-emerald-200/60" },
-    medium: { text: "Med Effort", style: "bg-amber-50 text-amber-700 border-amber-200/60" },
-    high: { text: "High Effort", style: "bg-rose-50 text-rose-700 border-rose-200/60" },
+    low: { text: "Low Effort", dot: "bg-emerald-400", style: "bg-slate-50 text-slate-600 border-slate-200" },
+    medium: { text: "Med Effort", dot: "bg-amber-400", style: "bg-slate-50 text-slate-600 border-slate-200" },
+    high: { text: "High Effort", dot: "bg-rose-400", style: "bg-slate-50 text-slate-600 border-slate-200" },
   };
   const effort = effortConfig[effortLevel as keyof typeof effortConfig] ?? effortConfig.high;
 
@@ -108,22 +108,23 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                     {finding.severity}
                   </span>
                   <span
-                    className={`px-3 py-1 rounded-full text-[11px] font-bold border ${effort.style} shadow-sm backdrop-blur-sm uppercase tracking-wider`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${effort.style} uppercase tracking-wider`}
                   >
+                    <span className={`w-1.5 h-1.5 rounded-full ${effort.dot}`} aria-hidden="true" />
                     {effort.text}
                   </span>
                   {finding.wcag && (
-                    <span className="wcag-label px-3 py-1 rounded-full text-[11px] font-bold bg-sky-50/80 text-sky-700 border border-sky-100/80 shadow-sm backdrop-blur-sm">
+                    <span className="wcag-label px-3 py-1 rounded-full text-[11px] font-bold bg-slate-50 text-slate-600 border border-slate-200">
                       WCAG {finding.wcag}
                     </span>
                   )}
                   {finding.category && (
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-violet-50 text-violet-700 border border-violet-200">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-50 text-slate-600 border border-slate-200">
                       {normalizeBadgeText(finding.category, true)}
                     </span>
                   )}
                   {finding.pagesAffected != null && finding.pagesAffected > 1 && (
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200">
                       {finding.pagesAffected} pages
                     </span>
                   )}
