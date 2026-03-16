@@ -13,9 +13,12 @@ pnpm dev
 
 Copy `.env.example` and fill in the required values:
 
-- `GH_TOKEN` — [Fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) with **Actions (Read and write)** permission on the workflow repo (required)
-- `GH_OWNER`, `GH_REPO` — GitHub username and repo name where the scan workflow lives (required)
-- `ANTHROPIC_API_KEY` — enables AI-powered fix suggestions (optional)
+| Variable | Required | Description |
+|---|---|---|
+| `GH_TOKEN` | Yes | [Fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) with **Actions (Read and write)** permission on the workflow repo |
+| `GH_OWNER` | Yes | GitHub username where the scan workflow lives |
+| `GH_REPO` | Yes | Repo name where the scan workflow lives |
+| `ANTHROPIC_API_KEY` | No | Enables AI-powered fix suggestions via Claude |
 
 ## How the engine is used
 
@@ -34,7 +37,7 @@ const payload = await runAudit({
   colorScheme: "light",
   axeTags: ["wcag2a", "wcag21a", "wcag22a", "wcag2aa", "wcag21aa", "wcag22aa"],
   engines: { axe: true, cdp: true, pa11y: true },
-  // Optional: scan source code via GitHub API — no clone required
+  // Optional: scan source code via GitHub API (no clone required)
   repoUrl: "https://github.com/owner/repo",
   githubToken: process.env.GH_TOKEN,
   // Optional: AI-powered fix suggestions via Claude
