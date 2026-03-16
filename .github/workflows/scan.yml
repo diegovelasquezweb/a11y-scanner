@@ -49,6 +49,10 @@ on:
         description: "Emulated color scheme (light|dark)"
         required: false
         type: string
+      include_incomplete:
+        description: "Include axe incomplete findings (true|false)"
+        required: false
+        type: string
       ai_enabled:
         description: "Enable AI enrichment (true|false)"
         required: false
@@ -141,6 +145,11 @@ jobs:
             COLOR_SCHEME_ARG="--color-scheme ${{ inputs.color_scheme }}"
           fi
 
+          INCLUDE_INCOMPLETE_ARG=""
+          if [ "${{ inputs.include_incomplete }}" = "true" ]; then
+            INCLUDE_INCOMPLETE_ARG="--include-incomplete"
+          fi
+
           pnpm exec a11y-audit \
             --base-url "${{ inputs.target_url }}" \
             $MAX_ROUTES_ARG \
@@ -154,7 +163,8 @@ jobs:
             $WAIT_UNTIL_ARG \
             $TIMEOUT_ARG \
             $VIEWPORT_ARG \
-            $COLOR_SCHEME_ARG
+            $COLOR_SCHEME_ARG \
+            $INCLUDE_INCOMPLETE_ARG
 
       - name: Powering up your report
         run: echo "Preparing report bundle"

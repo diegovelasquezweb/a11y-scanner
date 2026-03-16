@@ -32,7 +32,8 @@ export const VIEWPORT_PRESETS: ViewportPreset[] = [
   { label: "Tablet",  width: 768,  height: 1024 },
   { label: "Mobile",  width: 375,  height: 812 },
 ];
-export type { EnrichedFinding as Finding, SeverityTotals, PersonaGroup, DetectedStack, ConformanceLevel, EngineSelection, ViewportPreset };
+export type Finding = EnrichedFinding & { needsVerification?: boolean };
+export type { SeverityTotals, PersonaGroup, DetectedStack, ConformanceLevel, EngineSelection, ViewportPreset };
 export type { SourcePatternFinding as PatternFinding };
 
 type PatternFinding = SourcePatternFinding;
@@ -49,8 +50,8 @@ export interface ScanResult {
     wcagStatus: "Pass" | "Conditional Pass" | "Fail";
     totals: SeverityTotals;
     personaGroups: Record<string, PersonaGroup>;
-    findings: EnrichedFinding[];
-    quickWins: EnrichedFinding[];
+    findings: Finding[];
+    quickWins: Finding[];
     totalFindings: number;
     detectedStack?: DetectedStack;
     conformanceLevel?: string | null;
@@ -78,6 +79,7 @@ export interface AdvancedScanOptions {
   timeoutMs: number;
   viewport: { width: number; height: number };
   colorScheme: ColorScheme;
+  includeIncomplete: boolean;
   aiEnabled: boolean;
   aiSystemPrompt: string;
 }
@@ -91,6 +93,7 @@ export const DEFAULT_ADVANCED: AdvancedScanOptions = {
   timeoutMs: 30000,
   viewport: { width: 1280, height: 800 },
   colorScheme: "light",
+  includeIncomplete: false,
   aiEnabled: true,
   aiSystemPrompt: DEFAULT_AI_SYSTEM_PROMPT,
 };

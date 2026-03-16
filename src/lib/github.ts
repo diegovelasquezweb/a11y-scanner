@@ -62,6 +62,7 @@ export async function triggerScan(params: {
     if (a.timeoutMs != null) inputs.timeout_ms = String(a.timeoutMs);
     if (a.viewport) inputs.viewport = `${a.viewport.width}x${a.viewport.height}`;
     if (a.colorScheme) inputs.color_scheme = a.colorScheme;
+    if (a.includeIncomplete) inputs.include_incomplete = "true";
   }
   if (params.aiEnabled === false) inputs.ai_enabled = "false";
   if (params.aiSystemPrompt) inputs.ai_system_prompt = params.aiSystemPrompt;

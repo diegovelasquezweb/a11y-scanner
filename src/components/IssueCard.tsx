@@ -88,6 +88,11 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                   >
                     {finding.severity}
                   </span>
+                  {finding.needsVerification && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border border-amber-200 bg-amber-50 text-amber-700 uppercase tracking-wider">
+                      Needs verification
+                    </span>
+                  )}
                   <span
                     className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${effort.style} uppercase tracking-wider`}
                   >

@@ -50,6 +50,7 @@ function normalizeAdvanced(raw?: AdvancedOptions): AdvancedScanOptions {
       height: Math.min(Math.max(Math.round(raw?.viewport?.height ?? 800), 320), 2560),
     },
     colorScheme: (raw?.colorScheme === "dark" ? "dark" : "light") as AdvancedScanOptions["colorScheme"],
+    includeIncomplete: raw?.includeIncomplete === true,
     aiEnabled: raw?.aiEnabled !== false,
     aiSystemPrompt: typeof raw?.aiSystemPrompt === "string" && raw.aiSystemPrompt.trim()
       ? raw.aiSystemPrompt.trim()
@@ -177,7 +178,7 @@ async function runLocal(params: {
     try {
       const { runAudit, getPDFReport, getChecklist } = await import("@diegovelasquezweb/a11y-engine");
 
-      const payload = await runAudit({
+      const runAuditOptions: Parameters<typeof runAudit>[0] = {
         baseUrl: targetUrl,
         maxRoutes: advanced.maxRoutes,
         crawlDepth: advanced.crawlDepth,
@@ -211,7 +212,13 @@ async function runLocal(params: {
           progress.scanId = scanId;
           fs.writeFileSync(progressPath, JSON.stringify(progress, null, 2));
         },
-      });
+      };
+
+      if (advanced.includeIncomplete) {
+        (runAuditOptions as Parameters<typeof runAudit>[0] & { includeIncomplete?: boolean }).includeIncomplete = true;
+      }
+
+      const payload = await runAudit(runAuditOptions);
 
       payload.metadata = payload.metadata || {};
       (payload.metadata as Record<string, unknown>).target_url = targetUrl;
