@@ -90,10 +90,13 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
 
   const payload = rawFindings as unknown as ScanPayload;
 
+  const rawFindingsList = (payload as unknown as Record<string, unknown>).findings as Record<string, unknown>[] | undefined ?? [];
+  const aiEnhancedIds = new Set(rawFindingsList.filter(f => f.aiEnhanced).map(f => f.id as string));
+
   const findings: EnrichedFinding[] = getFindings(payload, {
     screenshotUrlBuilder: (rawPath) =>
       `/api/scan/${scanId}/screenshot?path=${encodeURIComponent(rawPath)}`,
-  });
+  }).map((f: EnrichedFinding) => aiEnhancedIds.has(f.id) ? { ...f, aiEnhanced: true } : f);
 
   const {
     totals,
