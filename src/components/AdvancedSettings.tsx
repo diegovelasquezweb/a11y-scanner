@@ -412,7 +412,18 @@ export function AdvancedSettings({
               <input
                 type="checkbox"
                 checked={advanced.includeIncomplete}
-                onChange={() => setField("includeIncomplete", !advanced.includeIncomplete)}
+                onChange={() => {
+                  const next = !advanced.includeIncomplete;
+                  if (!next) {
+                    onAdvancedChange({
+                      ...advanced,
+                      includeIncomplete: false,
+                      countIncompleteInScore: false,
+                    });
+                    return;
+                  }
+                  setField("includeIncomplete", true);
+                }}
                 disabled={disabled}
                 className="sr-only"
               />
@@ -427,6 +438,11 @@ export function AdvancedSettings({
               <div className="flex-1 min-w-0">
                 <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-800">
                   Include incomplete findings
+                  <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                    advanced.includeIncomplete ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"
+                  }`}>
+                    {advanced.includeIncomplete ? "Medium" : "Fast"}
+                  </span>
                   <HintTip text="Include items that automated engines could not fully confirm, such as video captions and contrast over gradients. These findings are marked with a Needs verification badge and do not affect the compliance score." />
                 </span>
                 <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
@@ -458,6 +474,11 @@ export function AdvancedSettings({
                 <div className="flex-1 min-w-0">
                   <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-800">
                     Count in compliance score
+                    <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                      advanced.countIncompleteInScore ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"
+                    }`}>
+                      {advanced.countIncompleteInScore ? "Medium" : "Fast"}
+                    </span>
                     <HintTip text="When enabled, incomplete findings count toward severity totals and compliance score." />
                   </span>
                   <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
