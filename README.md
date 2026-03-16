@@ -184,14 +184,6 @@ const knowledge = getKnowledge({ locale: "en" });
 
 ---
 
-## Infrastructure
-
-**`src/lib/github.ts`** handles the GitHub Actions integration when `LOCAL_MODE` is not set. It triggers a `workflow_dispatch` event on `scan.yml`, polls the run status by matching the run name to the scan token, and downloads result artifacts as ZIP files using the GitHub REST API. The engine runs inside the workflow, not inside the Next.js process. Requires `GH_TOKEN`, `GH_OWNER`, and `GH_REPO` env vars.
-
-**`src/lib/scans.ts`** manages local scan file paths under `os.tmpdir()/a11y-scans/`. Each scan is identified by a UUID and stored as: `status.json`, `findings.json`, `progress.json`, `pdf`, `checklist.html`, and a `<scanId>.screenshots/` directory. Only active when `LOCAL_MODE=true`.
-
----
-
 ## Powered by
 
 [`@diegovelasquezweb/a11y-engine`](https://www.npmjs.com/package/@diegovelasquezweb/a11y-engine) — handles scanning, enrichment, reporting, and knowledge. See its [README](https://github.com/diegovelasquezweb/a11y-engine#readme) and [API reference](https://github.com/diegovelasquezweb/a11y-engine/blob/main/docs/api-reference.md) for full documentation.
