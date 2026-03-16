@@ -46,7 +46,9 @@ export async function GET(
 
   const { getRemediationGuide } = await loadEngine();
   const payload = rawFindings as unknown as ScanPayload;
-  const { markdown } = await getRemediationGuide(payload);
+  const metadata = (payload as unknown as Record<string, unknown>)?.metadata as Record<string, unknown> | undefined;
+  const baseUrl = metadata?.target_url as string | undefined;
+  const { markdown } = await getRemediationGuide(payload, { baseUrl });
 
   const filename = `a11y-remediation-${scanId}.md`;
 
