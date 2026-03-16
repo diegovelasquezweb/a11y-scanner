@@ -109,7 +109,7 @@ export function JiraIntegration({
     window.open(jiraUrl, "_blank", "noopener,noreferrer");
     onOpenChange(false);
     onSend?.();
-  }, [settings, targetUrl, totals, findings, onOpenChange, onSend]);
+  }, [settings, targetUrl, totals, totalFindings, findings, onOpenChange, onSend]);
 
   return (
     <Dialog.Root open={open} onOpenChange={(v) => { setFeedback(""); onOpenChange(v); }}>

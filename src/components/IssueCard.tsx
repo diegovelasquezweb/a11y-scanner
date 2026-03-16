@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import Image from "next/image";
 import * as Tabs from "@radix-ui/react-tabs";
 import * as Collapsible from "@radix-ui/react-collapsible";
-import { Code, ChevronDown, Info, Zap, Check, Copy, BookOpen, Globe, Sparkles, BrainCircuit } from "lucide-react";
+import { Code, ChevronDown, Info, Zap, Check, Copy, BookOpen, Sparkles, BrainCircuit } from "lucide-react";
 import type { Finding } from "@/types/scan";
 import { getSeverityStyle } from "@/lib/severity";
 

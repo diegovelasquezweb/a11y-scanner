@@ -73,6 +73,7 @@ export function AdvancedSettings({
       title="Advanced Settings"
       description="Configure scan scope, browser behavior, and engines."
     >
+      <Tooltip.Provider delayDuration={200}>
       <div className="space-y-8 pb-16" aria-disabled={disabled}>
 
         <section>
@@ -146,8 +147,9 @@ export function AdvancedSettings({
             <div>
               <div className="flex items-center justify-between mb-0.5">
                 <div className="flex items-center gap-2">
-                  <label htmlFor={maxRoutesId} className="text-xs font-bold text-slate-700 uppercase tracking-widest">
+                  <label htmlFor={maxRoutesId} className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-widest">
                     Max Pages
+                    <HintTip text="How many unique pages to discover and scan from the starting URL." />
                   </label>
                   <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
                     advanced.maxRoutes <= 3 ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
@@ -179,8 +181,9 @@ export function AdvancedSettings({
             <div>
               <div className="flex items-center justify-between mb-0.5">
                 <div className="flex items-center gap-2">
-                  <label htmlFor={crawlDepthId} className="text-xs font-bold text-slate-700 uppercase tracking-widest">
+                  <label htmlFor={crawlDepthId} className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-widest">
                     Crawl Depth
+                    <HintTip text="How many link levels to follow from the starting URL." />
                   </label>
                   <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
                     advanced.crawlDepth === 1 ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
@@ -216,8 +219,9 @@ export function AdvancedSettings({
           <div className="space-y-4">
 
             <div>
-              <p className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
+              <p className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
                 Viewport
+                <HintTip text="Browser window size used during the audit." />
               </p>
               <div className="flex flex-wrap gap-2 mb-2.5">
                 {VIEWPORT_PRESETS.map((preset) => {
@@ -295,8 +299,9 @@ export function AdvancedSettings({
             </div>
 
             <div>
-              <p className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-0.5">
+              <p className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
                 Color Scheme
+                <HintTip text="Emulates light or dark mode during the scan to catch theme-specific issues." />
               </p>
               <div className="flex gap-2">
                 {(["light", "dark"] as ColorScheme[]).map((scheme) => (
@@ -325,8 +330,9 @@ export function AdvancedSettings({
           <div className="space-y-4">
 
             <div>
-              <p className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
+              <p className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
                 Wait Strategy
+                <HintTip text="When the browser considers a page fully loaded and ready to scan." />
               </p>
               <div className="space-y-2">
                 {waitUntilValues.map((opt) => (
@@ -371,8 +377,9 @@ export function AdvancedSettings({
             </div>
 
             <div>
-              <label htmlFor={timeoutId} className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
+              <label htmlFor={timeoutId} className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
                 Per-page Timeout
+                <HintTip text="Maximum time to wait for each page to load before moving on." />
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -464,6 +471,7 @@ export function AdvancedSettings({
           Done
         </button>
       </div>
+    </Tooltip.Provider>
     </SidePanel>
   );
 }
@@ -473,5 +481,28 @@ function SectionHeading({ children, noMargin }: { children: React.ReactNode; noM
     <h3 className={`text-[10px] font-bold text-slate-400 uppercase tracking-widest ${noMargin ? "" : "mb-3"}`}>
       {children}
     </h3>
+  );
+}
+
+function HintTip({ text }: { text: string }) {
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>
+        <button type="button" onClick={(e) => e.preventDefault()} className="rounded-full p-0.5 text-slate-400 hover:text-slate-600 transition-colors" aria-label={text}>
+          <Info className="w-3 h-3" aria-hidden="true" />
+        </button>
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content
+          side="top"
+          align="start"
+          sideOffset={4}
+          className="z-60 max-w-60 rounded-md bg-slate-900 px-3 py-2 text-xs leading-relaxed text-slate-300 shadow-xl animate-in fade-in-0 zoom-in-95"
+        >
+          {text}
+          <Tooltip.Arrow className="fill-slate-900" />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
   );
 }

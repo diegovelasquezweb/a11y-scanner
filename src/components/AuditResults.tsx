@@ -140,7 +140,7 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
         <div className="flex items-center gap-3 shrink-0">
           <button
             type="button"
-            onClick={() => { onRunNewTest ? onRunNewTest() : window.location.assign("/"); }}
+            onClick={() => { if (onRunNewTest) { onRunNewTest(); } else { window.location.assign("/"); } }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-slate-200 bg-white text-slate-600 text-sm font-bold hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 transition-colors"
           >
             <ScanSearch className="w-4 h-4" aria-hidden="true" />
