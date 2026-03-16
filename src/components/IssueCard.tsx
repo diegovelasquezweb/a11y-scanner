@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import Image from "next/image";
 import * as Tabs from "@radix-ui/react-tabs";
 import * as Collapsible from "@radix-ui/react-collapsible";
-import { Code, ChevronDown, Info, Zap, Check, Copy, BookOpen, Globe, Sparkles } from "lucide-react";
+import { Code, ChevronDown, Info, Zap, Check, Copy, BookOpen, Globe, Sparkles, BrainCircuit } from "lucide-react";
 import type { Finding } from "@/types/scan";
 
 
@@ -27,7 +27,7 @@ const SEVERITY_STYLES: Record<string, { badge: string; border: string }> = {
   },
 };
 
-type TabKey = "problem" | "fix" | "technical" | "visual";
+type TabKey = "problem" | "fix" | "ai" | "technical" | "visual";
 
 interface IssueCardProps {
   finding: Finding;
@@ -69,9 +69,14 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
     }
   }, []);
 
+  const aiEnhanced = !!(finding as Finding & { aiEnhanced?: boolean }).aiEnhanced;
+
   const availableTabs: { key: TabKey; label: string }[] = [
     { key: "problem", label: "The Problem" },
     { key: "fix", label: "The Fix" },
+    ...(aiEnhanced
+      ? [{ key: "ai" as TabKey, label: "AI Hint" }]
+      : []),
     ...(finding.evidence.length > 0
       ? [{ key: "technical" as TabKey, label: "Technical Evidence" }]
       : []),
@@ -276,6 +281,52 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                     </div>
                   </div>
                 </Tabs.Content>
+
+                {aiEnhanced && (
+                  <Tabs.Content value="ai">
+                    <div className="bg-linear-to-br from-violet-50 to-white border border-violet-100/80 rounded-md p-5 shadow-sm">
+                      <h4 className="text-[11px] font-black text-violet-700 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <BrainCircuit className="w-4 h-4 text-violet-500" aria-hidden="true" />
+                        AI Hint
+                        <span className="text-[9px] font-bold bg-violet-100 text-violet-600 border border-violet-200 px-1.5 py-0.5 rounded ml-1">Claude</span>
+                      </h4>
+                      <div className="space-y-4">
+                        {finding.fixDescription && (
+                          <p className="text-sm text-violet-900 leading-relaxed">
+                            {finding.fixDescription}
+                          </p>
+                        )}
+                        {finding.fixCode && (
+                          <div className="relative group/aicode">
+                            <pre
+                              tabIndex={0}
+                              className="bg-slate-900 text-violet-300 p-3 rounded overflow-x-auto text-xs font-mono border border-slate-700 whitespace-pre-wrap"
+                            >
+                              <code>{finding.fixCode}</code>
+                            </pre>
+                            <button
+                              type="button"
+                              aria-label="Copy AI code suggestion"
+                              title="Copy AI code suggestion"
+                              onClick={() => copyToClipboard(finding.fixCode!, `ai-${finding.id}`)}
+                              className={`absolute top-2 right-2 p-1.5 rounded text-white opacity-0 group-hover/aicode:opacity-100 transition-all ${
+                                copiedId === `ai-${finding.id}`
+                                  ? "bg-emerald-500"
+                                  : "bg-violet-500/50 hover:bg-violet-500"
+                              }`}
+                            >
+                              {copiedId === `ai-${finding.id}` ? (
+                                <Check className="w-3.5 h-3.5" strokeWidth={3} aria-hidden="true" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" aria-hidden="true" />
+                              )}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Tabs.Content>
+                )}
 
                 {finding.evidence.length > 0 && (
                   <Tabs.Content value="technical">
