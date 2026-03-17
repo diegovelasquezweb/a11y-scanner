@@ -64,6 +64,7 @@ export async function triggerScan(params: {
     if (a.colorScheme) inputs.color_scheme = a.colorScheme;
     if (a.includeIncomplete) inputs.include_incomplete = "true";
     if (a.countIncompleteInScore) inputs.count_incomplete_in_score = "true";
+    if (a.audience === "pm") inputs.audience = "pm";
   }
   if (params.aiEnabled === false) inputs.ai_enabled = "false";
   if (params.aiSystemPrompt) inputs.ai_system_prompt = params.aiSystemPrompt;
