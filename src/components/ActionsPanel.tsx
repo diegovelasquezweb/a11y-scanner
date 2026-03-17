@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, FileText, ClipboardCheck, FileJson, ChevronRight, Brain } from "lucide-react";
+import { FileText, ClipboardCheck, FileJson, ChevronRight, Brain } from "lucide-react";
 import { SidePanel } from "@/components/SidePanel";
 import { ExportModal } from "@/components/ExportModal";
-import { JiraIntegration } from "@/components/JiraIntegration";
 import type { Finding, SeverityTotals } from "@/types/scan";
 
 type ModalType = "pdf" | "checklist" | "json" | "remediation" | null;
@@ -99,7 +98,6 @@ export function ActionsPanel({
   knowledge,
 }: ActionsPanelProps) {
   const [modal, setModal] = useState<ModalType>(null);
-  const [jiraOpen, setJiraOpen] = useState(false);
 
   const jsonPreview = JSON.stringify(
     {
@@ -121,13 +119,6 @@ export function ActionsPanel({
           <div className="pb-0.5">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Export & Share</p>
           </div>
-
-          <ActionCard
-            icon={<Upload className="w-5 h-5" aria-hidden="true" />}
-            title="Send to Jira"
-            description="Create a prefilled Jira issue with the full findings summary."
-            onClick={() => { onOpenChange(false); setJiraOpen(true); }}
-          />
 
           <ActionCard
             icon={<FileText className="w-5 h-5" aria-hidden="true" />}
@@ -192,14 +183,6 @@ export function ActionsPanel({
         onAction={() => window.open(`/api/scan/${scanId}/remediation`, "_blank", "noopener,noreferrer")}
       />
 
-      <JiraIntegration
-        targetUrl={targetUrl}
-        totals={totals}
-        totalFindings={totalFindings}
-        findings={findings}
-        open={jiraOpen}
-        onOpenChange={setJiraOpen}
-      />
     </>
   );
 }
