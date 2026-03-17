@@ -56,6 +56,7 @@ function normalizeAdvanced(raw?: AdvancedOptions): AdvancedScanOptions {
     aiSystemPrompt: typeof raw?.aiSystemPrompt === "string" && raw.aiSystemPrompt.trim()
       ? raw.aiSystemPrompt.trim()
       : "",
+    audience: raw?.audience === "pm" ? "pm" : "dev",
   };
 }
 
@@ -194,6 +195,7 @@ async function runLocal(params: {
           enabled: advanced.aiEnabled && !!process.env.ANTHROPIC_API_KEY,
           apiKey: process.env.ANTHROPIC_API_KEY || undefined,
           githubToken: process.env.GH_TOKEN || undefined,
+          audience: advanced.audience,
         },
         axeTags: axeTags?.length ? axeTags : undefined,
         engines: engines ?? undefined,
@@ -224,6 +226,7 @@ async function runLocal(params: {
       payload.metadata = payload.metadata || {};
       (payload.metadata as Record<string, unknown>).target_url = targetUrl;
       (payload.metadata as Record<string, unknown>).countIncompleteInScore = advanced.countIncompleteInScore;
+      (payload.metadata as Record<string, unknown>).audience = advanced.audience;
       fs.writeFileSync(
         getScanPath(scanId, "findings.json"),
         JSON.stringify(payload, null, 2)

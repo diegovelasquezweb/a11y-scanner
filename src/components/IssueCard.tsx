@@ -8,14 +8,15 @@ import { Code, ChevronDown, Info, Zap, Check, Copy, BookOpen, Sparkles, BrainCir
 import type { Finding } from "@/types/scan";
 import { getSeverityStyle } from "@/lib/severity";
 
-type TabKey = "problem" | "fix" | "ai" | "technical" | "visual";
+type TabKey = "problem" | "fix" | "ai" | "technical" | "visual" | "impact";
 
 interface IssueCardProps {
   finding: Finding;
   forceExpanded?: boolean;
+  audience?: "dev" | "pm";
 }
 
-export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
+export function IssueCard({ finding, forceExpanded, audience = "dev" }: IssueCardProps) {
   const [localExpanded, setLocalExpanded] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -52,7 +53,12 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
 
   const aiEnhanced = !!(finding as Finding & { aiEnhanced?: boolean }).aiEnhanced;
 
+  const hasPmData = !!(finding.pmSummary || finding.pmImpact);
+
   const availableTabs: { key: TabKey; label: string }[] = [
+    ...(audience === "pm" && hasPmData
+      ? [{ key: "impact" as TabKey, label: "Business Impact" }]
+      : []),
     { key: "problem", label: "The Problem" },
     { key: "fix", label: "The Fix" },
     ...(aiEnhanced
@@ -146,7 +152,7 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
         <Collapsible.Content className="card-body data-[state=open]:expanded">
           <div>
             <div className="p-6 md:p-8 bg-slate-50/30 border-t border-slate-100/60">
-              <Tabs.Root defaultValue="problem">
+              <Tabs.Root defaultValue={audience === "pm" && hasPmData ? "impact" : "problem"}>
                 <Tabs.List
                   aria-label={`Issue detail sections for ${finding.id}`}
                   className="rounded-md border border-slate-200 bg-slate-100/70 p-2 mb-4 flex flex-wrap gap-2"
@@ -203,6 +209,55 @@ export function IssueCard({ finding, forceExpanded }: IssueCardProps) {
                     </div>
                   </div>
                 </Tabs.Content>
+
+                {hasPmData && (
+                  <Tabs.Content value="impact">
+                    <div className="bg-white rounded-md border border-slate-200/60 shadow-sm p-5 space-y-5">
+                      <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                        <div className="p-1 bg-slate-100 rounded-md">
+                          <Info className="w-4 h-4 text-slate-500" aria-hidden="true" />
+                        </div>
+                        Business Impact
+                      </h4>
+                      {finding.pmSummary && (
+                        <div>
+                          <span className="text-[10px] font-bold text-sky-600 uppercase tracking-wider block mb-1">
+                            Summary
+                          </span>
+                          <p className="text-[13px] text-slate-700 leading-relaxed font-medium">
+                            {finding.pmSummary}
+                          </p>
+                        </div>
+                      )}
+                      {finding.pmImpact && (
+                        <div>
+                          <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block mb-1">
+                            Impact
+                          </span>
+                          <p className="text-[13px] text-slate-700 leading-relaxed border-l-2 border-amber-300 pl-3">
+                            {finding.pmImpact}
+                          </p>
+                        </div>
+                      )}
+                      {finding.pmEffort && (
+                        <div>
+                          <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
+                            Effort Estimate
+                          </span>
+                          <span className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-full ${
+                            finding.pmEffort === "quick-win"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : finding.pmEffort === "medium"
+                                ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                : "bg-rose-50 text-rose-700 border border-rose-200"
+                          }`}>
+                            {finding.pmEffort === "quick-win" ? "Quick Win" : finding.pmEffort === "medium" ? "Medium Lift" : "Strategic"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </Tabs.Content>
+                )}
 
                 <Tabs.Content value="fix">
                   <div className="bg-white border border-slate-200/60 rounded-md p-5 relative overflow-hidden shadow-sm">

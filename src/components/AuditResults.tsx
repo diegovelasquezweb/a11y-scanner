@@ -240,6 +240,7 @@ export function AuditResults({ result, scanId, onRunNewTest, knowledge }: AuditR
               key={finding.id}
               finding={finding}
               forceExpanded={allExpanded ? true : undefined}
+              audience={result.audience ?? "dev"}
             />
           ))
         )}

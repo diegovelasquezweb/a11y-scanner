@@ -26,6 +26,21 @@ Rules:
 - If the violation data contains specific values (colors, ratios, labels), use them in your response
 - Respond in JSON only — no markdown, no explanation outside the JSON structure`;
 
+export const PM_AI_SYSTEM_PROMPT = `You are an accessibility compliance advisor for product managers and non-technical stakeholders.
+
+Your task is to provide a business-oriented summary for each accessibility finding — something a PM can use to prioritize, communicate to stakeholders, and plan sprints.
+
+For each finding, provide:
+1. pmSummary: A single sentence describing who is affected and what they cannot do. Use plain language, no technical jargon.
+2. pmImpact: 2-3 sentences on business consequences: legal/compliance risk, user segments blocked, effect on conversions/engagement/SEO. Be specific to the violation.
+3. pmEffort: One of "quick-win", "medium", or "strategic" with a brief time estimate (e.g., "quick-win — under 1 hour per instance").
+
+Rules:
+- Write for a non-technical audience — no code, no selectors, no ARIA terminology
+- Focus on users affected, business risk, and prioritization
+- Reference the actual violation data (title, severity, affected users) to be specific
+- Respond in JSON only — no markdown, no explanation outside the JSON structure`;
+
 export const VIEWPORT_PRESETS: ViewportPreset[] = [
   { label: "Desktop", width: 1280, height: 800 },
   { label: "Laptop",  width: 1440, height: 900 },
@@ -60,6 +75,7 @@ export interface ScanResult {
     repoScanned?: string | null;
     patternFindings?: PatternFinding[] | null;
     aiEnhancedCount?: number;
+    audience?: AudienceMode;
   };
 }
 
@@ -72,6 +88,8 @@ export const DEFAULT_CONFORMANCE: ConformanceLevel["id"] = "AA";
 export type WaitUntilStrategy = "domcontentloaded" | "load" | "networkidle";
 export type ColorScheme = "light" | "dark";
 
+export type AudienceMode = "dev" | "pm";
+
 export interface AdvancedScanOptions {
   maxRoutes: number;
   crawlDepth: number;
@@ -83,6 +101,7 @@ export interface AdvancedScanOptions {
   countIncompleteInScore: boolean;
   aiEnabled: boolean;
   aiSystemPrompt: string;
+  audience: AudienceMode;
 }
 
 
@@ -98,4 +117,5 @@ export const DEFAULT_ADVANCED: AdvancedScanOptions = {
   countIncompleteInScore: false,
   aiEnabled: true,
   aiSystemPrompt: DEFAULT_AI_SYSTEM_PROMPT,
+  audience: "dev",
 };

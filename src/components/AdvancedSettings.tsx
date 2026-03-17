@@ -9,6 +9,7 @@ import type {
   EngineSelection,
   AdvancedScanOptions,
   ColorScheme,
+  AudienceMode,
 } from "@/types/scan";
 
 interface EnumOptionValue {
@@ -20,6 +21,7 @@ import {
   VIEWPORT_PRESETS,
   DEFAULT_ADVANCED,
   DEFAULT_AI_SYSTEM_PROMPT,
+  PM_AI_SYSTEM_PROMPT,
 } from "@/types/scan";
 
 
@@ -405,6 +407,38 @@ export function AdvancedSettings({
 
         <section>
           <SectionHeading>Findings</SectionHeading>
+
+          <div className="mb-4">
+            <p className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
+              Audience
+              <HintTip text="Controls the tone of findings. Developer mode shows technical fixes and code. PM mode shows business impact and effort estimates." />
+            </p>
+            <div className="flex gap-2">
+              {(["dev", "pm"] as AudienceMode[]).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => {
+                    const isCurrentDefault = advanced.aiSystemPrompt === DEFAULT_AI_SYSTEM_PROMPT || advanced.aiSystemPrompt === PM_AI_SYSTEM_PROMPT || !advanced.aiSystemPrompt;
+                    onAdvancedChange({
+                      ...advanced,
+                      audience: mode,
+                      ...(isCurrentDefault ? { aiSystemPrompt: mode === "pm" ? PM_AI_SYSTEM_PROMPT : DEFAULT_AI_SYSTEM_PROMPT } : {}),
+                    });
+                  }}
+                  disabled={disabled}
+                  className={`flex-1 py-2.5 rounded-md border text-sm font-bold transition-all disabled:opacity-50 ${
+                    advanced.audience === mode
+                      ? "bg-sky-600 text-white border-sky-600"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  {mode === "dev" ? "Developer" : "Product Manager"}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <label className={`block rounded-md border p-3.5 cursor-pointer select-none transition-all ${
             advanced.includeIncomplete ? "bg-sky-50 border-sky-300" : "bg-white border-slate-200 hover:border-slate-300"
           } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
@@ -528,7 +562,7 @@ export function AdvancedSettings({
                 </label>
                 <button
                   type="button"
-                  onClick={() => setField("aiSystemPrompt", DEFAULT_AI_SYSTEM_PROMPT)}
+                  onClick={() => setField("aiSystemPrompt", advanced.audience === "pm" ? PM_AI_SYSTEM_PROMPT : DEFAULT_AI_SYSTEM_PROMPT)}
                   disabled={disabled}
                   className="text-xs font-medium text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors disabled:opacity-50"
                 >

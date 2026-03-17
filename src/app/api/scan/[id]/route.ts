@@ -110,6 +110,7 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
     return ai ? { ...f, ...ai } : f;
   });
 
+
   const metadata = (payload as unknown as Record<string, unknown>).metadata as Record<string, unknown> | undefined;
   const countIncompleteInScore = metadata?.countIncompleteInScore === true;
 
@@ -162,6 +163,7 @@ async function buildResponse(scanId: string, rawFindings: Record<string, unknown
       repoScanned: repoScanned ?? null,
       patternFindings: patternFindings ?? null,
       aiEnhancedCount,
+      audience: (metadata?.audience as string) ?? "dev",
     },
   });
 }
