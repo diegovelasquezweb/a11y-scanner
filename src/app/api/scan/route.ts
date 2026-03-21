@@ -168,6 +168,14 @@ async function runLocal(params: {
 
   const { scanId, targetUrl, githubRepoUrl, axeTags, engines, advanced } = params;
 
+  const pdfTarget = axeTags?.includes("wcag2aaa")
+    ? "WCAG 2.2 AAA"
+    : axeTags?.some((tag) => tag === "wcag2aa" || tag === "wcag21aa" || tag === "wcag22aa")
+      ? "WCAG 2.2 AA"
+      : axeTags?.some((tag) => tag === "wcag2a" || tag === "wcag21a" || tag === "wcag22a")
+        ? "WCAG 2.2 A"
+        : "WCAG 2.2 AA";
+
   fs.mkdirSync(SCANS_DIR, { recursive: true });
   await cleanupScans().catch(() => { /* non-fatal */ });
 
@@ -233,7 +241,7 @@ async function runLocal(params: {
       );
 
       const [pdfReport, checklistReport] = await Promise.all([
-        getPDFReport(payload, { baseUrl: targetUrl }),
+        getPDFReport(payload, { baseUrl: targetUrl, target: pdfTarget }),
         getChecklist({ baseUrl: targetUrl }),
       ]);
 
